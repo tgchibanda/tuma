@@ -1,0 +1,25 @@
+<?php
+namespace App\Http\Requests\Auth;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
+
+class ChangePinRequest extends FormRequest
+{
+    public function authorize(): bool { return true; }
+    public function rules(): array
+    {
+        return [
+            'current_pin'      => ['required', 'string', 'digits:4'],
+            'pin'              => ['required', 'string', 'digits:4', 'confirmed'],
+            'pin_confirmation' => ['required'],
+        ];
+    }
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'success' => false, 'message' => 'Validation failed',
+            'data' => null, 'errors' => $validator->errors(),
+        ], 422));
+    }
+}
