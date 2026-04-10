@@ -9,9 +9,37 @@ class CountrySeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('countries')->insert([
-            ['name' => 'Australia', 'iso_code' => 'AU', 'currency_code' => 'AUD', 'currency_symbol' => '$', 'currency_name' => 'Australian Dollar', 'flag_emoji' => '🇦🇺', 'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Zimbabwe', 'iso_code' => 'ZW', 'currency_code' => 'USD', 'currency_symbol' => 'US$', 'currency_name' => 'US Dollar', 'flag_emoji' => '🇿🇼', 'is_active' => 1, 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        $countries = [
+            [
+                'name'            => 'Australia',
+                'iso_code'        => 'AU',
+                'currency_code'   => 'AUD',
+                'currency_symbol' => '$',
+                'currency_name'   => 'Australian Dollar',
+                'flag_emoji'      => '🇦🇺',
+                'is_active'       => 1,
+            ],
+            [
+                'name'            => 'Zimbabwe',
+                'iso_code'        => 'ZW',
+                'currency_code'   => 'USD',
+                'currency_symbol' => 'US$',
+                'currency_name'   => 'US Dollar',
+                'flag_emoji'      => '🇿🇼',
+                'is_active'       => 1,
+            ],
+        ];
+
+        foreach ($countries as $country) {
+            DB::table('countries')->updateOrInsert(
+                ['iso_code' => $country['iso_code']],
+                array_merge($country, [
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ])
+            );
+        }
+
+        $this->command->info('  ✓ Countries seeded (Australia, Zimbabwe)');
     }
 }
