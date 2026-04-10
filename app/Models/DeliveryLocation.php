@@ -6,30 +6,42 @@ use Illuminate\Database\Eloquent\Model;
 
 class DeliveryLocation extends Model
 {
-    protected $fillable = ['country_id', 'name', 'slug', 'province', 'is_active', 'sort_order'];
-    protected $casts = ['is_active' => 'boolean'];
+    protected $fillable = [
+        'country_id', 'name', 'slug', 'province', 'is_active', 'sort_order',
+    ];
+
+    protected $casts = [
+        'is_active'  => 'boolean',
+        'sort_order' => 'integer',
+    ];
+
     public function country()
     {
         return $this->belongsTo(Country::class);
     }
+
     public function swapOrders()
     {
         return $this->hasMany(SwapOrder::class, 'zim_delivery_location_id');
     }
-    public function cashDeliveries()
+
+    public function scopeActive($query)
     {
-        return $this->hasMany(CashDelivery::class, 'delivery_location_id');
+        return $query->where('is_active', true);
     }
-    public function savedRecipients()
+
+    public function scopeForCountry($query, int $countryId)
     {
-        return $this->hasMany(SavedRecipient::class, 'delivery_location_id');
+        return $query->where('country_id', $countryId);
     }
-    public function deliveryTimeEstimates()
+
+    /**
+     * Check if this location currently has active open orders on either side.
+     */
+    public function hasActiveOrders(): bool
     {
-        return $this->hasMany(DeliveryTimeEstimate::class);
-    }
-    public function scopeActive($q)
-    {
-        return $q->where('is_active', 1)->orderBy('sort_order');
+        return SwapOrder::where('zim_delivery_location_id', $this->id)
+            ->where('status', SwapOrder::STATUS_OPEN)
+            ->exists();
     }
 }

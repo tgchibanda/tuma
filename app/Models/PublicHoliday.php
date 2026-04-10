@@ -6,14 +6,26 @@ use Illuminate\Database\Eloquent\Model;
 
 class PublicHoliday extends Model
 {
-    protected $fillable = ['country_id', 'name', 'holiday_date', 'description', 'affects_deliveries'];
-    protected $casts = ['holiday_date' => 'date', 'affects_deliveries' => 'boolean'];
-    public function country()
+    protected $table = 'public_holidays';
+
+    protected $fillable = [
+        'country_id', 'name', 'holiday_date', 'description', 'affects_deliveries',
+    ];
+
+    protected $casts = [
+        'holiday_date'       => 'date',
+        'affects_deliveries' => 'boolean',
+    ];
+
+    public function country() { return $this->belongsTo(Country::class); }
+
+    public function scopeUpcoming($query, int $days = 7)
     {
-        return $this->belongsTo(Country::class);
+        return $query->whereBetween('holiday_date', [now()->toDateString(), now()->addDays($days)->toDateString()]);
     }
-    public function scopeUpcoming($q, int $days = 7)
+
+    public function scopeAffectsDeliveries($query)
     {
-        return $q->whereBetween('holiday_date', [now()->toDateString(), now()->addDays($days)->toDateString()]);
+        return $query->where('affects_deliveries', true);
     }
 }

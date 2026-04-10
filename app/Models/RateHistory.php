@@ -7,14 +7,26 @@ use Illuminate\Database\Eloquent\Model;
 class RateHistory extends Model
 {
     public $timestamps = false;
-    protected $fillable = ['from_currency', 'to_currency', 'rate', 'recorded_at', 'source'];
-    protected $casts = ['rate' => 'decimal:8', 'recorded_at' => 'datetime'];
-    public function scopeForPair($q, $from, $to)
+
+    protected $table = 'rate_history';
+
+    protected $fillable = [
+        'from_currency', 'to_currency', 'rate', 'recorded_at', 'source',
+    ];
+
+    protected $casts = [
+        'rate'        => 'decimal:8',
+        'recorded_at' => 'datetime',
+    ];
+
+    public function scopeForPair($query, string $from, string $to)
     {
-        return $q->where('from_currency', $from)->where('to_currency', $to);
+        return $query->where('from_currency', strtoupper($from))
+                     ->where('to_currency', strtoupper($to));
     }
-    public function scopeLastDays($q, int $days)
+
+    public function scopeLastDays($query, int $days)
     {
-        return $q->where('recorded_at', '>=', now()->subDays($days));
+        return $query->where('recorded_at', '>=', now()->subDays($days));
     }
 }
