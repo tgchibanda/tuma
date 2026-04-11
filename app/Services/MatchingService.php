@@ -2,430 +2,172 @@
 
 namespace App\Services;
 
-use App\Exceptions\TumaException;
 use App\Models\ExchangeRate;
 use App\Models\MatchNegotiation;
-use App\Models\PlatformDeposit;
 use App\Models\SwapMatch;
 use App\Models\SwapOrder;
 use App\Models\SystemSetting;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use App\Exceptions\TumaException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class MatchingService
 {
     public function __construct(
-        protected FeeCalculationService $feeService,
         protected NotificationService $notificationService,
+        protected FeeCalculationService $feeService,
+        protected EscrowService $escrowService,
         protected AuditService $auditService
     ) {}
 
     /**
-     * Find compatible open orders that can be matched against the given order.
-     *
-     * Filters:
-     * - Opposite order_type
-     * - Same zim_delivery_location_id  ← primary location filter
-     * - Status = open
-     * - Not the same user
-     * - Not already in an active negotiation
-     */
-    public function findMatches(SwapOrder $order): Collection
-    {
-        return SwapOrder::where('order_type', $order->oppositeType())
-            ->where('zim_delivery_location_id', $order->zim_delivery_location_id)
-            ->where('status', SwapOrder::STATUS_OPEN)
-            ->where('user_id', '!=', $order->user_id)
-            ->where('expires_at', '>', now())
-            ->with(['user', 'deliveryLocation'])
-            ->orderByDesc('is_boosted')
-            ->orderByDesc('created_at')
-            ->get();
-    }
-
-    /**
-     * Create a match proposal between two orders.
-     *
-     * The proposing user provides opening AUD/USD amounts.
-     * Creates a SwapMatch (status = proposed) and first MatchNegotiation record.
+     * Propose a match between two orders.
+     * Proposer must own one of the orders; the other must be owned by someone else.
      */
     public function proposeMatch(
-        SwapOrder $orderA,
-        SwapOrder $orderB,
-        User $proposedBy,
+        SwapOrder $targetOrder,
+        User $proposer,
         float $proposedAud,
         float $proposedUsd,
         ?string $message = null
     ): SwapMatch {
-        // Validate same location
-        if ($orderA->zim_delivery_location_id !== $orderB->zim_delivery_location_id) {
-            throw new TumaException('Orders must be for the same Zimbabwe delivery location.', 422);
+        // Determine which order is proposer's and which is target's
+        $proposerOrder = SwapOrder::where('user_id', $proposer->id)
+            ->where('order_type', $this->oppositeType($targetOrder->order_type))
+            ->where('status', 'open')
+            ->where('zim_delivery_location_id', $targetOrder->zim_delivery_location_id)
+            ->latest()
+            ->first();
+
+        if (! $proposerOrder) {
+            throw new TumaException(
+                'You need an open order for the opposite direction in the same Zimbabwe city to propose a match.',
+                422
+            );
         }
 
-        // Validate opposite types
-        if ($orderA->order_type === $orderB->order_type) {
-            throw new TumaException('Cannot match two orders of the same type.', 422);
-        }
-
-        // Validate user is not matching with themselves
-        if ($orderA->user_id === $orderB->user_id) {
+        if ($proposerOrder->user_id === $targetOrder->user_id) {
             throw new TumaException('You cannot match with your own order.', 422);
         }
 
-        // Validate proposer owns one of the orders
-        if ($proposedBy->id !== $orderA->user_id && $proposedBy->id !== $orderB->user_id) {
-            throw new TumaException('You must own one of the orders to propose a match.', 403);
-        }
-
-        // Validate user can only have one active negotiation per order
-        $sendOrderId    = $orderA->order_type === SwapOrder::TYPE_SEND_TO_ZIM ? $orderA->id : $orderB->id;
-        $receiveOrderId = $orderA->order_type === SwapOrder::TYPE_RECEIVE_FROM_ZIM ? $orderA->id : $orderB->id;
-
-        $existingMatch = SwapMatch::where(function ($q) use ($sendOrderId, $receiveOrderId) {
-            $q->where('send_order_id', $sendOrderId)
-              ->orWhere('receive_order_id', $receiveOrderId);
-        })->whereIn('status', [SwapMatch::STATUS_PROPOSED, SwapMatch::STATUS_NEGOTIATING])->exists();
-
-        if ($existingMatch) {
-            throw new TumaException('One of these orders already has an active negotiation.', 422);
-        }
-
+        // Check max rounds setting
         $maxRounds = (int) SystemSetting::get('max_negotiation_rounds', 5);
 
-        return DB::transaction(function () use (
-            $sendOrderId, $receiveOrderId, $proposedBy,
-            $proposedAud, $proposedUsd, $message, $maxRounds,
-            $orderA, $orderB
-        ) {
+        return DB::transaction(function () use ($targetOrder, $proposerOrder, $proposer, $proposedAud, $proposedUsd, $message, $maxRounds) {
+            // Determine send/receive order based on type
+            $sendOrder    = $proposerOrder->order_type === 'send_to_zim' ? $proposerOrder : $targetOrder;
+            $receiveOrder = $proposerOrder->order_type === 'receive_from_zim' ? $proposerOrder : $targetOrder;
+
             $match = SwapMatch::create([
-                'send_order_id'       => $sendOrderId,
-                'receive_order_id'    => $receiveOrderId,
-                'proposed_aud'        => $proposedAud,
-                'proposed_usd'        => $proposedUsd,
-                'proposed_by'         => $proposedBy->id,
-                'proposed_at'         => now(),
-                'negotiation_rounds'  => 1,
-                'max_negotiation_rounds' => $maxRounds,
-                'status'              => SwapMatch::STATUS_PROPOSED,
-                'initiated_by'        => $proposedBy->id,
-                'initiated_at'        => now(),
+                'ulid'                  => (string) \Symfony\Component\Uid\Ulid::generate(),
+                'send_order_id'         => $sendOrder->id,
+                'receive_order_id'      => $receiveOrder->id,
+                'proposed_aud'          => $proposedAud,
+                'proposed_usd'          => $proposedUsd,
+                'proposed_by'           => $proposer->id,
+                'proposed_at'           => now(),
+                'initiated_by'          => $proposer->id,
+                'initiated_at'          => now(),
+                'negotiation_rounds'    => 1,
+                'max_negotiation_rounds'=> $maxRounds,
+                'status'                => SwapMatch::STATUS_PROPOSED,
+                'delivery_method'       => 'pending',
             ]);
 
-            // First negotiation record
+            // Create negotiation record
             MatchNegotiation::create([
                 'swap_match_id' => $match->id,
-                'proposed_by'   => $proposedBy->id,
+                'proposed_by'   => $proposer->id,
                 'proposed_aud'  => $proposedAud,
                 'proposed_usd'  => $proposedUsd,
                 'message'       => $message,
-                'status'        => MatchNegotiation::STATUS_PENDING,
+                'status'        => 'pending',
             ]);
 
-            // Update order statuses to negotiating
-            $orderA->update(['status' => SwapOrder::STATUS_NEGOTIATING]);
-            $orderB->update(['status' => SwapOrder::STATUS_NEGOTIATING]);
-
-            // Notify the OTHER party (not the proposer)
-            $otherUser = $proposedBy->id === $orderA->user_id ? $orderB->user : $orderA->user;
-
-            $this->notificationService->notify(
-                $otherUser,
-                new \App\Notifications\MatchProposedNotification($match, $proposedBy),
-                ['email', 'inapp']
-            );
-
-            $this->auditService->log('match.proposed', $proposedBy, $match);
+            // Lock both orders
+            $sendOrder->update(['status' => 'negotiating']);
+            $receiveOrder->update(['status' => 'negotiating']);
 
             return $match;
         });
     }
 
     /**
-     * Handle a negotiation action: accept or counter.
-     *
-     * accept  → locks rate, calculates fee, creates deposit record, notifies sender.
-     * counter → saves new amounts, increments rounds, notifies other party.
+     * Accept, counter, or reject the current negotiation proposal.
      */
     public function negotiate(
         SwapMatch $match,
-        User $user,
+        User $responder,
         string $action,
-        ?float $proposedAud = null,
-        ?float $proposedUsd = null,
+        ?float $counterAud = null,
+        ?float $counterUsd = null,
         ?string $message = null
     ): SwapMatch {
-        // Only the non-proposing party can respond
-        if ($match->proposed_by === $user->id) {
-            throw new TumaException('You cannot respond to your own proposal. Wait for the other party.', 422);
-        }
-
-        // Must be one of the two matched parties
-        if (! $match->involvesUser($user)) {
-            throw new TumaException('You are not part of this match.', 403);
-        }
-
-        // Can only negotiate in valid statuses
         if (! in_array($match->status, [SwapMatch::STATUS_PROPOSED, SwapMatch::STATUS_NEGOTIATING])) {
-            throw new TumaException(
-                "Cannot negotiate when match status is '{$match->status}'.",
-                422
-            );
+            throw new TumaException('This match is not in a negotiable state.', 422);
         }
 
-        // Check max rounds
-        if ($match->negotiation_rounds >= $match->max_negotiation_rounds && $action === 'counter') {
-            $this->cancelMatch($match, $user);
-            throw new TumaException(
-                'Maximum negotiation rounds reached. The match has been cancelled. Your orders are open again.',
-                422
-            );
+        // Must be the other party (not the proposer of the last round)
+        if ($match->proposed_by === $responder->id) {
+            throw new TumaException('It is not your turn to respond.', 422);
         }
 
-        return DB::transaction(function () use ($match, $user, $action, $proposedAud, $proposedUsd, $message) {
-            if ($action === 'accept') {
-                return $this->acceptNegotiation($match, $user);
-            }
-            return $this->counterNegotiation($match, $user, $proposedAud, $proposedUsd, $message);
-        });
+        return match ($action) {
+            'accept'  => $this->acceptRate($match, $responder),
+            'counter' => $this->counterOffer($match, $responder, $counterAud, $counterUsd, $message),
+            'reject'  => $this->cancelMatch($match, $responder),
+            default   => throw new TumaException('Invalid negotiation action.', 422),
+        };
     }
 
     /**
-     * Cancel a match during negotiation.
-     * Both orders return to 'open' status.
+     * Accept the current proposed rate.
      */
-    public function cancelMatch(SwapMatch $match, User $cancelledBy): void
+    private function acceptRate(SwapMatch $match, User $acceptor): SwapMatch
     {
-        if (! in_array($match->status, [
-            SwapMatch::STATUS_PROPOSED,
-            SwapMatch::STATUS_NEGOTIATING,
-            SwapMatch::STATUS_RATE_AGREED,
-            SwapMatch::STATUS_DELIVERY_METHOD_SELECTING,
-        ])) {
-            throw new TumaException(
-                "Cannot cancel a match with status '{$match->status}'.",
-                422
-            );
+        $rate = ExchangeRate::where('from_currency', 'AUD')
+            ->where('to_currency', 'USD')
+            ->where('is_active', 1)
+            ->latest('created_at')
+            ->first();
+
+        if (! $rate) {
+            throw new TumaException('No active exchange rate found.', 503);
         }
 
-        DB::transaction(function () use ($match, $cancelledBy) {
-            $match->update(['status' => SwapMatch::STATUS_CANCELLED]);
+        $feeCalc = $this->feeService->calculateUsd($match->proposed_aud, $rate, $match->sendOrder->user);
 
-            // Return both orders to open
-            $match->sendOrder->update(['status' => SwapOrder::STATUS_OPEN]);
-            $match->receiveOrder->update(['status' => SwapOrder::STATUS_OPEN]);
+        DB::transaction(function () use ($match, $acceptor, $rate, $feeCalc) {
+            // Update the last negotiation record
+            MatchNegotiation::where('swap_match_id', $match->id)
+                ->latest()
+                ->first()
+                ?->update(['status' => 'accepted', 'responded_at' => now()]);
 
-            // Mark latest negotiation as rejected
-            $latest = $match->negotiations()->latest('created_at')->first();
-            $latest?->update(['status' => MatchNegotiation::STATUS_REJECTED]);
-
-            // Notify both parties
-            $otherUser = $cancelledBy->id === $match->sendOrder->user_id
-                ? $match->receiveOrder->user
-                : $match->sendOrder->user;
-
-            $this->notificationService->notify(
-                $otherUser,
-                new \App\Notifications\MatchCancelledNotification($match, $cancelledBy),
-                ['email', 'inapp']
-            );
-
-            $this->auditService->log('match.cancelled', $cancelledBy, $match);
-        });
-    }
-
-    /**
-     * Select the delivery method after rate is agreed.
-     * One party proposes; the other must confirm.
-     */
-    public function proposeDeliveryMethod(
-        SwapMatch $match,
-        User $proposedBy,
-        string $method,
-        ?string $riskPayoutMethod = null
-    ): SwapMatch {
-        if ($match->status !== SwapMatch::STATUS_RATE_AGREED) {
-            throw new TumaException(
-                'Delivery method can only be selected after both parties agree on the rate.',
-                422
-            );
-        }
-
-        if (! $match->involvesUser($proposedBy)) {
-            throw new TumaException('You are not part of this match.', 403);
-        }
-
-        if ($method === SwapMatch::DELIVERY_RISK
-            && ! (bool) SystemSetting::get('risk_delivery_enabled', true)) {
-            throw new TumaException('Risk delivery is currently disabled on this platform.', 422);
-        }
-
-        $match->update([
-            'delivery_method'             => $method,
-            'risk_payout_method'          => $method === 'risk' ? $riskPayoutMethod : null,
-            'delivery_method_proposed_by' => $proposedBy->id,
-            'delivery_method_proposed_at' => now(),
-            'status'                      => SwapMatch::STATUS_DELIVERY_METHOD_SELECTING,
-        ]);
-
-        // Notify the other party
-        $otherUser = $proposedBy->id === $match->sendOrder->user_id
-            ? $match->receiveOrder->user
-            : $match->sendOrder->user;
-
-        $this->notificationService->notify(
-            $otherUser,
-            new \App\Notifications\DeliveryMethodProposedNotification($match, $proposedBy),
-            ['email', 'inapp']
-        );
-
-        $this->auditService->log('match.delivery_method_proposed', $proposedBy, $match);
-
-        return $match->fresh();
-    }
-
-    /**
-     * Confirm or reject the proposed delivery method.
-     */
-    public function confirmDeliveryMethod(SwapMatch $match, User $confirmedBy, bool $confirmed): SwapMatch
-    {
-        if ($match->status !== SwapMatch::STATUS_DELIVERY_METHOD_SELECTING) {
-            throw new TumaException('No delivery method proposal is pending confirmation.', 422);
-        }
-
-        // Only the non-proposing party can confirm
-        if ($match->delivery_method_proposed_by === $confirmedBy->id) {
-            throw new TumaException('You cannot confirm your own delivery method proposal.', 422);
-        }
-
-        if (! $match->involvesUser($confirmedBy)) {
-            throw new TumaException('You are not part of this match.', 403);
-        }
-
-        if (! $confirmed) {
-            // Rejected — cancel the match
-            $this->cancelMatch($match, $confirmedBy);
-            return $match->fresh();
-        }
-
-        return DB::transaction(function () use ($match, $confirmedBy) {
             $match->update([
-                'delivery_method_confirmed_by'  => $confirmedBy->id,
-                'delivery_method_confirmed_at'  => now(),
-                'delivery_method_agreed'        => true,
-                'delivery_method_agreed_at'     => now(),
-                'status'                        => SwapMatch::STATUS_AGREED,
+                'status'           => SwapMatch::STATUS_RATE_AGREED,
+                'agreed_aud'       => $match->proposed_aud,
+                'agreed_usd'       => $feeCalc['amount_usd'],
+                'exchange_rate_id' => $rate->id,
+                'platform_fee_aud' => $feeCalc['fee_aud'],
+                'agreed_by_send'   => 1,
+                'agreed_by_receive'=> 1,
+                'agreed_at'        => now(),
             ]);
 
-            // Now proceed to the appropriate flow
-            if ($match->delivery_method === SwapMatch::DELIVERY_SECURE) {
-                $this->initiateSecureDeposit($match);
-            } else {
-                $this->initiateRiskDelivery($match);
+            // Apply fee discount if any
+            if ($feeCalc['discount_id']) {
+                \App\Models\FeeDiscount::where('id', $feeCalc['discount_id'])
+                    ->decrement('uses_remaining');
+                $match->sendOrder->update([
+                    'fee_discount_id'   => $feeCalc['discount_id'],
+                    'discounted_fee_aud'=> $feeCalc['fee_aud'],
+                ]);
             }
-
-            // Notify both parties
-            foreach ([$match->sendOrder->user, $match->receiveOrder->user] as $user) {
-                $this->notificationService->notify(
-                    $user,
-                    new \App\Notifications\DeliveryMethodConfirmedNotification($match),
-                    ['email', 'inapp']
-                );
-            }
-
-            $this->auditService->log('match.delivery_method_confirmed', $confirmedBy, $match);
-
-            return $match->fresh();
         });
-    }
 
-    /**
-     * Handle partial match — if agreed amounts differ from the full order amount,
-     * split the order and create a remainder.
-     * This is called after agreement is reached.
-     */
-    public function handlePartialMatch(SwapMatch $match): void
-    {
-        $sendOrder    = $match->sendOrder;
-        $agreedAud    = (float) $match->agreed_aud;
-        $orderAud     = (float) $sendOrder->amount_aud;
-
-        if (abs($agreedAud - $orderAud) < 0.01) {
-            return; // Full match — no split needed
-        }
-
-        $remainder = $orderAud - $agreedAud;
-        if ($remainder <= 0) return;
-
-        // Create a remainder order
-        $rate        = ExchangeRate::currentRate('AUD', 'USD');
-        $feeCalc     = $this->feeService->calculateUsd($remainder, $rate, $sendOrder->user);
-        $expiryHours = (int) SystemSetting::get('order_expiry_hours', 48);
-
-        SwapOrder::create([
-            'user_id'                  => $sendOrder->user_id,
-            'order_type'               => $sendOrder->order_type,
-            'amount_aud'               => $remainder,
-            'amount_usd'               => $feeCalc['amount_usd'],
-            'exchange_rate_id'         => $rate->id,
-            'platform_fee_aud'         => $feeCalc['fee_aud'],
-            'platform_fee_percent'     => $feeCalc['fee_percent'],
-            'zim_recipient_name'       => $sendOrder->zim_recipient_name,
-            'zim_recipient_phone'      => $sendOrder->zim_recipient_phone,
-            'zim_delivery_location_id' => $sendOrder->zim_delivery_location_id,
-            'zim_delivery_address'     => $sendOrder->zim_delivery_address,
-            'zim_delivery_notes'       => $sendOrder->zim_delivery_notes,
-            'aud_recipient_name'       => $sendOrder->aud_recipient_name,
-            'aud_bank_account_id'      => $sendOrder->aud_bank_account_id,
-            'status'                   => SwapOrder::STATUS_OPEN,
-            'expires_at'               => now()->addHours($expiryHours),
-        ]);
-
-        $this->auditService->log('match.partial_split', $sendOrder->user, $match, [], [
-            'original_aud' => $orderAud,
-            'agreed_aud'   => $agreedAud,
-            'remainder'    => $remainder,
-        ]);
-    }
-
-    // ── Private helpers ────────────────────────────────────────────────────────
-
-    private function acceptNegotiation(SwapMatch $match, User $user): SwapMatch
-    {
-        // Mark the latest negotiation as accepted
-        $latest = $match->negotiations()->latest('created_at')->first();
-        $latest?->update([
-            'status'       => MatchNegotiation::STATUS_ACCEPTED,
-            'responded_at' => now(),
-        ]);
-
-        // Lock the exchange rate
-        $rate = ExchangeRate::currentRate('AUD', 'USD');
-
-        // Determine agreed amounts from the latest proposal
-        $agreedAud = $match->proposed_aud;
-        $agreedUsd = $match->proposed_usd;
-
-        // Calculate final fee on agreed amount
-        $depositorUser = $match->sendOrder->user;
-        $feeCalc       = $this->feeService->calculateUsd((float) $agreedAud, $rate, $depositorUser);
-
-        $match->update([
-            'agreed_aud'        => $agreedAud,
-            'agreed_usd'        => $agreedUsd,
-            'exchange_rate_id'  => $rate->id,
-            'platform_fee_aud'  => $feeCalc['effective_fee_aud'],
-            'agreed_by_send'    => true,
-            'agreed_by_receive' => true,
-            'agreed_at'         => now(),
-            'status'            => SwapMatch::STATUS_RATE_AGREED,
-        ]);
-
-        // Both orders move to agreed status
-        $match->sendOrder->update(['status' => SwapOrder::STATUS_AGREED]);
-        $match->receiveOrder->update(['status' => SwapOrder::STATUS_AGREED]);
-
-        // Notify both parties to now choose delivery method
+        // Notify both parties to now select delivery method
         foreach ([$match->sendOrder->user, $match->receiveOrder->user] as $party) {
             $this->notificationService->notify(
                 $party,
@@ -434,117 +176,225 @@ class MatchingService
             );
         }
 
-        $this->auditService->log('match.rate_agreed', $user, $match);
-
         return $match->fresh();
     }
 
-    private function counterNegotiation(
+    /**
+     * Counter-offer with new rates.
+     */
+    private function counterOffer(
         SwapMatch $match,
-        User $user,
-        float $proposedAud,
-        float $proposedUsd,
+        User $proposer,
+        ?float $newAud,
+        ?float $newUsd,
         ?string $message
     ): SwapMatch {
-        // Mark current proposal as countered
-        $latest = $match->negotiations()->latest('created_at')->first();
-        $latest?->update([
-            'status'       => MatchNegotiation::STATUS_COUNTERED,
-            'responded_at' => now(),
-        ]);
+        if (! $newAud || ! $newUsd) {
+            throw new TumaException('Counter-offer requires both AUD and USD amounts.', 422);
+        }
 
-        // Create new negotiation record
-        MatchNegotiation::create([
-            'swap_match_id' => $match->id,
-            'proposed_by'   => $user->id,
-            'proposed_aud'  => $proposedAud,
-            'proposed_usd'  => $proposedUsd,
-            'message'       => $message,
-            'status'        => MatchNegotiation::STATUS_PENDING,
-        ]);
+        $maxRounds = (int) SystemSetting::get('max_negotiation_rounds', 5);
 
-        $newRounds = $match->negotiation_rounds + 1;
+        if ($match->negotiation_rounds >= $maxRounds) {
+            throw new TumaException("Maximum negotiation rounds ({$maxRounds}) reached. Match cancelled.", 422);
+        }
 
-        $match->update([
-            'proposed_aud'        => $proposedAud,
-            'proposed_usd'        => $proposedUsd,
-            'proposed_by'         => $user->id,
-            'proposed_at'         => now(),
-            'negotiation_rounds'  => $newRounds,
-            'status'              => SwapMatch::STATUS_NEGOTIATING,
-        ]);
+        DB::transaction(function () use ($match, $proposer, $newAud, $newUsd, $message) {
+            MatchNegotiation::where('swap_match_id', $match->id)
+                ->latest()
+                ->first()
+                ?->update(['status' => 'countered', 'responded_at' => now()]);
+
+            MatchNegotiation::create([
+                'swap_match_id' => $match->id,
+                'proposed_by'   => $proposer->id,
+                'proposed_aud'  => $newAud,
+                'proposed_usd'  => $newUsd,
+                'message'       => $message,
+                'status'        => 'pending',
+            ]);
+
+            $match->update([
+                'status'               => SwapMatch::STATUS_NEGOTIATING,
+                'proposed_aud'         => $newAud,
+                'proposed_usd'         => $newUsd,
+                'proposed_by'          => $proposer->id,
+                'proposed_at'          => now(),
+                'negotiation_rounds'   => $match->negotiation_rounds + 1,
+            ]);
+        });
 
         // Notify the other party
-        $otherUser = $user->id === $match->sendOrder->user_id
+        $other = $match->sendOrder->user_id === $proposer->id
             ? $match->receiveOrder->user
             : $match->sendOrder->user;
 
         $this->notificationService->notify(
-            $otherUser,
-            new \App\Notifications\CounterOfferNotification($match, $user),
+            $other,
+            new \App\Notifications\NegotiationCounterNotification($match),
             ['email', 'inapp']
         );
 
-        $this->auditService->log('match.counter_offered', $user, $match);
+        return $match->fresh();
+    }
 
-        // Auto-cancel if max rounds reached
-        if ($newRounds >= $match->max_negotiation_rounds) {
+    /**
+     * Cancel a match and return both orders to open.
+     */
+    public function cancelMatch(SwapMatch $match, ?User $cancelledBy = null): SwapMatch
+    {
+        DB::transaction(function () use ($match, $cancelledBy) {
+            MatchNegotiation::where('swap_match_id', $match->id)
+                ->where('status', 'pending')
+                ->update(['status' => 'rejected', 'responded_at' => now()]);
+
+            $match->update(['status' => SwapMatch::STATUS_CANCELLED]);
+            $match->sendOrder->update(['status' => 'open']);
+            $match->receiveOrder->update(['status' => 'open']);
+        });
+
+        // Notify other party
+        if ($cancelledBy) {
+            $other = $match->sendOrder->user_id === $cancelledBy->id
+                ? $match->receiveOrder->user
+                : $match->sendOrder->user;
+
             $this->notificationService->notify(
-                $otherUser,
-                new \App\Notifications\NegotiationExpiredNotification($match),
-                ['inapp']
+                $other,
+                new \App\Notifications\MatchCancelledNotification($match, $cancelledBy),
+                ['email', 'inapp']
             );
-            $this->notificationService->notify(
-                $user,
-                new \App\Notifications\NegotiationExpiredNotification($match),
-                ['inapp']
-            );
-            // The job AutoCancelMaxRounds will pick this up and cancel
         }
 
         return $match->fresh();
     }
 
-    private function initiateSecureDeposit(SwapMatch $match): void
-    {
-        $reference = 'TM-' . strtoupper(substr($match->ulid, 0, 8));
+    /**
+     * Propose or confirm a delivery method after rate has been agreed.
+     */
+    public function proposeDeliveryMethod(
+        SwapMatch $match,
+        User $proposer,
+        string $method,
+        ?string $riskPayoutMethod = null
+    ): SwapMatch {
+        if ($match->status !== SwapMatch::STATUS_RATE_AGREED) {
+            throw new TumaException('Delivery method can only be set after the rate is agreed.', 422);
+        }
 
-        // Create platform deposit record
-        PlatformDeposit::create([
-            'swap_match_id'      => $match->id,
-            'depositor_user_id'  => $match->sendOrder->user_id,
-            'amount_aud'         => $match->agreed_aud,
-            'our_bank_reference' => $reference,
-            'status'             => PlatformDeposit::STATUS_PENDING,
+        if (! in_array($method, ['secure', 'risk'])) {
+            throw new TumaException('Invalid delivery method.', 422);
+        }
+
+        if ($method === 'risk' && SystemSetting::get('risk_delivery_enabled') === 'false') {
+            throw new TumaException('Risk delivery is currently disabled on this platform.', 422);
+        }
+
+        $match->update([
+            'delivery_method'            => $method,
+            'risk_payout_method'         => $method === 'risk' ? ($riskPayoutMethod ?? 'platform_then_bank') : null,
+            'delivery_method_proposed_by'=> $proposer->id,
+            'delivery_method_proposed_at'=> now(),
+            'status'                     => SwapMatch::STATUS_DELIVERY_METHOD_SELECTING,
         ]);
 
-        $match->update(['status' => SwapMatch::STATUS_AWAITING_DEPOSIT]);
+        $other = $match->sendOrder->user_id === $proposer->id
+            ? $match->receiveOrder->user
+            : $match->sendOrder->user;
 
-        // Notify the sender with deposit instructions
         $this->notificationService->notify(
-            $match->sendOrder->user,
-            new \App\Notifications\DepositInstructionsNotification($match, $reference),
+            $other,
+            new \App\Notifications\DeliveryMethodProposedNotification($match),
             ['email', 'inapp']
         );
+
+        return $match->fresh();
     }
 
-    private function initiateRiskDelivery(SwapMatch $match): void
+    /**
+     * Accept or reject the proposed delivery method.
+     */
+    public function confirmDeliveryMethod(SwapMatch $match, User $confirmer, bool $confirmed): SwapMatch
     {
-        $match->update(['status' => SwapMatch::STATUS_AWAITING_RISK_DELIVERY]);
+        if ($match->status !== SwapMatch::STATUS_DELIVERY_METHOD_SELECTING) {
+            throw new TumaException('Not in delivery method selection stage.', 422);
+        }
 
-        // Notify deliverer to proceed with cash delivery
-        $deliverer = $match->receiveOrder->user;
-        $this->notificationService->notify(
-            $deliverer,
-            new \App\Notifications\RiskDeliveryProceedNotification($match),
-            ['email', 'inapp']
-        );
+        if ($match->delivery_method_proposed_by === $confirmer->id) {
+            throw new TumaException('You cannot confirm your own delivery method proposal.', 422);
+        }
 
-        // Notify sender that deliverer is going first
-        $this->notificationService->notify(
-            $match->sendOrder->user,
-            new \App\Notifications\RiskDeliveryNoticeNotification($match),
-            ['email', 'inapp']
-        );
+        if (! $confirmed) {
+            return $this->cancelMatch($match, $confirmer);
+        }
+
+        DB::transaction(function () use ($match, $confirmer) {
+            $match->update([
+                'delivery_method_confirmed_by' => $confirmer->id,
+                'delivery_method_confirmed_at' => now(),
+                'delivery_method_agreed'       => 1,
+                'delivery_method_agreed_at'    => now(),
+                'status'                       => SwapMatch::STATUS_AGREED,
+            ]);
+        });
+
+        // Trigger the correct escrow flow
+        if ($match->delivery_method === 'secure') {
+            $this->escrowService->secureFlow_initiate($match->fresh());
+        } else {
+            $this->escrowService->riskFlow_initiate($match->fresh());
+        }
+
+        return $match->fresh();
+    }
+
+    /**
+     * Find potential matches for an order.
+     */
+    public function findMatches(SwapOrder $order, int $limit = 10): \Illuminate\Database\Eloquent\Collection
+    {
+        return SwapOrder::where('order_type', $this->oppositeType($order->order_type))
+            ->where('status', 'open')
+            ->where('zim_delivery_location_id', $order->zim_delivery_location_id)
+            ->where('user_id', '!=', $order->user_id)
+            ->orderByDesc('is_boosted')
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Handle partial match splitting.
+     */
+    public function handlePartialMatch(SwapOrder $order, float $matchedAmount): SwapOrder
+    {
+        $remaining = $order->amount_aud - $matchedAmount;
+
+        // Create a new order for the remaining amount
+        return SwapOrder::create([
+            'ulid'                     => (string) \Symfony\Component\Uid\Ulid::generate(),
+            'user_id'                  => $order->user_id,
+            'order_type'               => $order->order_type,
+            'amount_aud'               => $remaining,
+            'amount_usd'               => round($remaining * $order->amount_usd / $order->amount_aud, 2),
+            'exchange_rate_id'         => $order->exchange_rate_id,
+            'platform_fee_aud'         => round($remaining * $order->platform_fee_aud / $order->amount_aud, 2),
+            'platform_fee_percent'     => $order->platform_fee_percent,
+            'zim_recipient_name'       => $order->zim_recipient_name,
+            'zim_recipient_phone'      => $order->zim_recipient_phone,
+            'zim_delivery_location_id' => $order->zim_delivery_location_id,
+            'zim_delivery_address'     => $order->zim_delivery_address,
+            'zim_delivery_notes'       => $order->zim_delivery_notes,
+            'aud_recipient_name'       => $order->aud_recipient_name,
+            'aud_bank_account_id'      => $order->aud_bank_account_id,
+            'status'                   => 'open',
+            'expires_at'               => $order->expires_at,
+            'template_id'              => $order->template_id,
+        ]);
+    }
+
+    private function oppositeType(string $type): string
+    {
+        return $type === 'send_to_zim' ? 'receive_from_zim' : 'send_to_zim';
     }
 }

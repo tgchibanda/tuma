@@ -10,15 +10,8 @@ use Illuminate\Support\Facades\Route;
 
 class RouteServiceProvider extends ServiceProvider
 {
-    /**
-     * The path to your application's "home" route.
-     * This is used after authentication.
-     */
     public const HOME = '/dashboard';
 
-    /**
-     * Define your route model bindings, pattern filters, and other route configuration.
-     */
     public function boot(): void
     {
         $this->configureRateLimiting();
@@ -33,65 +26,34 @@ class RouteServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Configure the rate limiters for the application.
-     */
     protected function configureRateLimiting(): void
     {
-        // Login: 5 attempts per minute per IP
+        // Auth endpoints — tight limits to prevent brute force
         RateLimiter::for('login', function (Request $request) {
-            return Limit::perMinute(5)
-                ->by($request->ip())
-                ->response(function () {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Too many login attempts. Please try again in a minute.',
-                        'data'    => null,
-                        'errors'  => null,
-                    ], 429);
-                });
+            return Limit::perMinute(5)->by($request->ip());
         });
 
-        // Registration: 3 attempts per minute per IP
         RateLimiter::for('register', function (Request $request) {
-            return Limit::perMinute(3)
-                ->by($request->ip())
-                ->response(function () {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Too many registration attempts. Please try again in a minute.',
-                        'data'    => null,
-                        'errors'  => null,
-                    ], 429);
-                });
+            return Limit::perMinute(3)->by($request->ip());
         });
 
-        // General API: 60 requests per minute per user (or IP if unauthenticated)
+        RateLimiter::for('forgot-password', function (Request $request) {
+            return Limit::perHour(5)->by($request->ip());
+        });
+
+        // Standard API — 60 requests per minute per user or IP
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)
-                ->by($request->user()?->id ?: $request->ip())
-                ->response(function () {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Too many requests. Please slow down.',
-                        'data'    => null,
-                        'errors'  => null,
-                    ], 429);
-                });
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
 
-        // File uploads: 10 per hour per user
+        // File uploads — stricter limit
         RateLimiter::for('uploads', function (Request $request) {
-            return Limit::perHour(10)
-                ->by($request->user()?->id ?: $request->ip())
-                ->response(function () {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Upload limit reached. You can upload up to 10 files per hour.',
-                        'data'    => null,
-                        'errors'  => null,
-                    ], 429);
-                });
+            return Limit::perHour(20)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Admin API — more lenient (admins do bulk actions)
+        RateLimiter::for('admin', function (Request $request) {
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
         });
     }
 }

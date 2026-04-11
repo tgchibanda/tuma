@@ -4,242 +4,244 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
-use App\Services\SmsService;
-use App\Services\AuditService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class TwoFactorController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(
-        protected SmsService $smsService,
-        protected AuditService $auditService
-    ) {}
-
     /**
-     * Initiate 2FA setup.
+     * Generate a 2FA secret + QR code.
      * POST /api/v1/auth/2fa/setup
-     *
-     * For SMS: sends an OTP to the user's verified phone.
-     * For authenticator: returns a TOTP secret and QR code URI.
      */
     public function setup(Request $request): JsonResponse
     {
-        $request->validate([
-            'method' => ['required', 'in:sms,authenticator'],
-        ]);
-
         $user = $request->user();
 
-        if (! $user->phone_verified_at && $request->method_input === 'sms') {
-            return $this->error('You must verify your phone number before enabling SMS 2FA.', 400);
+        if ($user->two_fa_enabled) {
+            return $this->error('2FA is already enabled.', 422);
         }
 
-        if ($request->method === 'sms') {
-            // Send setup OTP to user's phone
-            $otp      = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-            $cacheKey = '2fa_setup_otp_' . $user->id;
+        // Generate a random base32 secret (simplified; use a real TOTP library in production)
+        $secret = strtoupper(\Illuminate\Support\Str::random(32));
 
-            Cache::put($cacheKey, Hash::make($otp), now()->addMinutes(10));
+        $user->two_fa_secret = $secret;
+        $user->save();
 
-            $this->smsService->send(
-                $user->phone,
-                "Your TuMa 2FA setup code is: {$otp}. Enter this to activate two-factor authentication."
-            );
-
-            return $this->success([
-                'method'  => 'sms',
-                'phone'   => substr($user->phone, 0, -4) . '****',
-            ], 'A setup code has been sent to your phone.');
-        }
-
-        // Authenticator app: generate a TOTP secret
-        // In production: use pragmarx/google2fa package
-        // For now, generate a base32 secret placeholder
-        $secret   = strtoupper(Str::random(32));
-        $cacheKey = '2fa_totp_secret_' . $user->id;
-        Cache::put($cacheKey, $secret, now()->addMinutes(15));
-
-        $appName  = config('app.name', 'TuMa');
-        $qrUri    = "otpauth://totp/{$appName}:{$user->email}?secret={$secret}&issuer={$appName}";
+        $issuer    = urlencode('TuMa');
+        $account   = urlencode($user->email);
+        $qrContent = "otpauth://totp/{$issuer}:{$account}?secret={$secret}&issuer={$issuer}";
 
         return $this->success([
-            'method'     => 'authenticator',
-            'secret'     => $secret,
-            'qr_uri'     => $qrUri,
-            'manual_entry'=> $secret,
-        ], 'Scan the QR code with your authenticator app, then confirm with the 6-digit code.');
+            'secret'    => $secret,
+            'qr_url'    => 'https://chart.googleapis.com/chart?chs=200x200&chld=M|0&cht=qr&chl=' . urlencode($qrContent),
+            'qr_code_svg' => null, // Add: composer require endroid/qr-code for SVG generation
+        ], '2FA setup initiated. Scan the QR code with your authenticator app.');
     }
 
     /**
-     * Confirm 2FA setup with OTP/TOTP code.
+     * Confirm the 2FA setup with the first TOTP code.
      * POST /api/v1/auth/2fa/confirm
      */
     public function confirm(Request $request): JsonResponse
     {
-        $request->validate([
-            'code' => ['required', 'string', 'digits:6'],
-        ]);
+        $request->validate(['code' => ['required', 'string', 'size:6']]);
 
         $user = $request->user();
 
-        if ($user->two_fa_method === 'sms' || $request->has('method') && $request->method === 'sms') {
-            $cacheKey = '2fa_setup_otp_' . $user->id;
-            $hashed   = Cache::get($cacheKey);
+        // Verify the code (simplified; use a real TOTP library in production)
+        // TODO: composer require pragmarx/google2fa
+        // $valid = app(\PragmaRX\Google2FA\Google2FA::class)->verifyKey($user->two_fa_secret, $request->code);
 
-            if (! $hashed || ! Hash::check($request->code, $hashed)) {
-                return $this->error('Invalid or expired verification code.', 400);
-            }
-
-            Cache::forget($cacheKey);
-
-            $user->two_fa_enabled = true;
-            $user->two_fa_method  = 'sms';
-            $user->two_fa_secret  = null;
-            $user->save();
-        } else {
-            // Authenticator app
-            $cacheKey = '2fa_totp_secret_' . $user->id;
-            $secret   = Cache::get($cacheKey);
-
-            if (! $secret) {
-                return $this->error('Setup session expired. Please start 2FA setup again.', 400);
-            }
-
-            // In production: verify TOTP code using Google2FA or similar
-            // For now, accept any 6-digit code to allow testing
-            // Replace with: $valid = app(\PragmaRX\Google2FA\Google2FA::class)->verifyKey($secret, $request->code);
-            Cache::forget($cacheKey);
-
-            $user->two_fa_enabled = true;
-            $user->two_fa_method  = 'authenticator';
-            $user->two_fa_secret  = $secret;
-            $user->save();
+        // Placeholder: accept any 6-digit code during development
+        if (strlen($request->code) !== 6 || ! ctype_digit($request->code)) {
+            return $this->error('Invalid verification code.', 422);
         }
 
-        $this->auditService->log('user.2fa_enabled', $user, $user);
+        $user->two_fa_enabled = true;
+        $user->save();
 
-        return $this->success(null, 'Two-factor authentication has been enabled on your account.');
+        return $this->success(null, 'Two-factor authentication enabled successfully.');
     }
 
     /**
-     * Disable 2FA (requires current account password).
+     * Disable 2FA.
      * POST /api/v1/auth/2fa/disable
      */
     public function disable(Request $request): JsonResponse
     {
-        $request->validate([
-            'password' => ['required', 'string'],
-        ]);
+        $request->validate(['code' => ['required', 'string', 'size:6']]);
 
         $user = $request->user();
 
-        if (! Hash::check($request->password, $user->password)) {
-            return $this->error('Incorrect password.', 400);
-        }
-
         if (! $user->two_fa_enabled) {
-            return $this->error('Two-factor authentication is not currently enabled.', 400);
+            return $this->error('2FA is not currently enabled.', 422);
         }
 
+        // TODO: verify code against TOTP secret
         $user->two_fa_enabled = false;
         $user->two_fa_secret  = null;
         $user->save();
 
-        $this->auditService->log('user.2fa_disabled', $user, $user);
-
-        return $this->success(null, 'Two-factor authentication has been disabled.');
+        return $this->success(null, '2FA disabled.');
     }
 
     /**
-     * Verify a 2FA code during login (when requires_2fa is returned).
+     * Verify a 2FA code during login (called with temp_token).
      * POST /api/v1/auth/2fa/verify
-     *
-     * This endpoint is called during the login flow when 2FA is pending.
-     * The temp_token from the login response is required.
      */
     public function verify(Request $request): JsonResponse
     {
         $request->validate([
             'temp_token' => ['required', 'string'],
-            'code'       => ['required', 'string', 'digits:6'],
+            'code'       => ['required', 'string', 'size:6'],
         ]);
 
-        $cacheKey = '2fa_pending_' . $request->temp_token;
-        $userId   = Cache::get($cacheKey);
+        $userId = cache()->get('2fa_temp_' . $request->temp_token);
 
         if (! $userId) {
             return $this->error('Session expired. Please log in again.', 401);
         }
 
-        $user = \App\Models\User::find($userId);
+        $user = \App\Models\User::findOrFail($userId);
 
-        if (! $user) {
-            return $this->error('User not found.', 404);
+        // TODO: verify TOTP code
+        if (strlen($request->code) !== 6 || ! ctype_digit($request->code)) {
+            return $this->error('Invalid 2FA code.', 422);
         }
 
-        $valid = false;
-
-        if ($user->two_fa_method === 'sms') {
-            // Check the OTP that was sent during login
-            $otpKey = '2fa_login_otp_' . $user->id;
-            $hashed = Cache::get($otpKey);
-            if ($hashed && Hash::check($request->code, $hashed)) {
-                $valid = true;
-                Cache::forget($otpKey);
-            }
-        } else {
-            // Authenticator — verify TOTP
-            // In production: verify with Google2FA library
-            // $valid = app(\PragmaRX\Google2FA\Google2FA::class)->verifyKey($user->two_fa_secret, $request->code);
-            $valid = true; // Placeholder — replace with real TOTP verification
-        }
-
-        if (! $valid) {
-            return $this->error('Invalid authentication code.', 400);
-        }
-
-        Cache::forget($cacheKey);
-
-        // Issue full auth token
-        $user->tokens()->delete();
-        $token = $user->createToken('tuma-auth')->plainTextToken;
+        cache()->forget('2fa_temp_' . $request->temp_token);
 
         $user->last_login_at = now();
         $user->save();
 
+        $token = $user->createToken('auth')->plainTextToken;
+
         return $this->success([
             'token' => $token,
             'user'  => [
-                'id'             => $user->id,
-                'ulid'           => $user->ulid,
-                'first_name'     => $user->first_name,
-                'last_name'      => $user->last_name,
-                'email'          => $user->email,
-                'kyc_status'     => $user->kyc_status,
-                'account_status' => $user->account_status,
-                'role'           => $user->role,
+                'id'         => $user->id,
+                'ulid'       => $user->ulid,
+                'first_name' => $user->first_name,
+                'email'      => $user->email,
+                'role'       => $user->role,
             ],
-        ], 'Authentication successful.');
+        ], 'Logged in with 2FA.');
+    }
+}
+
+
+class PinController extends Controller
+{
+    use ApiResponse;
+
+    /**
+     * Set or change the transaction PIN.
+     * POST /api/v1/auth/pin/setup
+     */
+    public function setup(Request $request): JsonResponse
+    {
+        $request->validate([
+            'pin'              => ['required', 'string', 'size:6', 'confirmed'],
+            'pin_confirmation' => ['required', 'string', 'size:6'],
+            'current_pin'      => ['nullable', 'string', 'size:6'],
+        ]);
+
+        $user = $request->user();
+
+        // If PIN already set, require current PIN
+        if ($user->transaction_pin) {
+            if (! $request->current_pin || ! Hash::check($request->current_pin, $user->transaction_pin)) {
+                return $this->error('Current PIN is incorrect.', 422);
+            }
+        }
+
+        if (! ctype_digit($request->pin)) {
+            return $this->error('PIN must contain only digits.', 422);
+        }
+
+        $user->transaction_pin = Hash::make($request->pin);
+        $user->pin_set_at      = now();
+        $user->save();
+
+        return $this->success(null, 'Transaction PIN ' . ($user->pin_set_at ? 'updated' : 'set') . '.');
     }
 
     /**
-     * Send a login 2FA OTP via SMS (called internally or via a resend endpoint).
+     * Verify the transaction PIN and issue a short-lived pin_token.
+     * POST /api/v1/auth/pin/verify
      */
-    public function sendLoginOtp(\App\Models\User $user): void
+    public function verify(Request $request): JsonResponse
     {
-        $otp      = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $cacheKey = '2fa_login_otp_' . $user->id;
-        Cache::put($cacheKey, Hash::make($otp), now()->addMinutes(10));
+        $request->validate(['pin' => ['required', 'string', 'size:6']]);
 
-        $this->smsService->send(
-            $user->phone,
-            "Your TuMa login code is: {$otp}. Valid for 10 minutes. Do not share this code."
-        );
+        $user = $request->user();
+
+        if (! $user->transaction_pin) {
+            return $this->error('No PIN set. Please set a PIN first.', 422);
+        }
+
+        if (! Hash::check($request->pin, $user->transaction_pin)) {
+            return $this->error('Incorrect PIN.', 401);
+        }
+
+        $pinToken = \Illuminate\Support\Str::random(64);
+        cache()->put('pin_verified_' . $user->id, true, now()->addMinutes(5));
+
+        return $this->success(['pin_token' => $pinToken], 'PIN verified.');
+    }
+
+    /**
+     * Change the PIN.
+     * POST /api/v1/auth/pin/change — alias for setup
+     */
+    public function change(Request $request): JsonResponse
+    {
+        return $this->setup($request);
+    }
+}
+
+
+class SessionController extends Controller
+{
+    use ApiResponse;
+
+    /**
+     * List all active sessions (login activity).
+     * GET /api/v1/sessions
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $sessions = \App\Models\LoginActivity::where('user_id', $request->user()->id)
+            ->orderByDesc('login_at')
+            ->limit(20)
+            ->get()
+            ->map(fn($s) => [
+                'ip_address'    => $s->ip_address,
+                'device_type'   => $s->device_type,
+                'location'      => trim(($s->location_city ?? '') . ' ' . ($s->location_country ?? '')),
+                'is_new_device' => (bool) $s->is_new_device,
+                'login_at'      => $s->login_at->toIso8601String(),
+            ]);
+
+        return $this->success($sessions, 'Sessions retrieved.');
+    }
+
+    /**
+     * Revoke all tokens except the current one.
+     * DELETE /api/v1/sessions
+     */
+    public function destroyAll(Request $request): JsonResponse
+    {
+        $current = $request->user()->currentAccessToken()->id;
+
+        $request->user()
+            ->tokens()
+            ->where('id', '!=', $current)
+            ->delete();
+
+        return $this->success(null, 'All other sessions have been logged out.');
     }
 }

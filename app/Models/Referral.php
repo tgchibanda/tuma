@@ -1,50 +1,11 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Referral extends Model
-{
-    const STATUS_PENDING   = 'pending';
-    const STATUS_QUALIFIED = 'qualified';
-    const STATUS_REWARDED  = 'rewarded';
-
-    protected $fillable = [
-        'referrer_id',
-        'referred_id',
-        'referral_code',
-        'status',
-        'qualified_at',
-        'reward_applied_at',
-        'referrer_discount_percent',
-        'referred_discount_percent',
-    ];
-
-    protected $casts = [
-        'qualified_at'              => 'datetime',
-        'reward_applied_at'         => 'datetime',
-        'referrer_discount_percent' => 'decimal:2',
-        'referred_discount_percent' => 'decimal:2',
-    ];
-
-    public function referrer()
-    {
-        return $this->belongsTo(User::class, 'referrer_id');
-    }
-
-    public function referred()
-    {
-        return $this->belongsTo(User::class, 'referred_id');
-    }
-
-    public function scopePending($query)
-    {
-        return $query->where('status', self::STATUS_PENDING);
-    }
-
-    public function scopeQualified($query)
-    {
-        return $query->where('status', self::STATUS_QUALIFIED);
-    }
+class Referral extends Model {
+    protected $fillable = ['referrer_id','referred_id','referral_code','status','qualified_at','reward_applied_at','referrer_discount_percent','referred_discount_percent'];
+    protected $casts = ['qualified_at' => 'datetime','reward_applied_at' => 'datetime','referrer_discount_percent' => 'decimal:2','referred_discount_percent' => 'decimal:2'];
+    public function referrer(): BelongsTo { return $this->belongsTo(User::class, 'referrer_id'); }
+    public function referred(): BelongsTo { return $this->belongsTo(User::class, 'referred_id'); }
 }

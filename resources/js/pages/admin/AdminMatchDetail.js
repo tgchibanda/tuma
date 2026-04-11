@@ -54,7 +54,9 @@ export default {
             this.actionLoading = false
         }
     },
-    template: `<div class="min-h-screen bg-gray-100">
+    template: `<div class="min-h-screen bg-gray-100 flex">
+  <admin-nav />
+  <div class="flex-1 min-w-0 lg:ml-60">
   <div class="bg-white border-b px-6 py-3 flex items-center gap-3 sticky top-0 z-40 shadow-sm">
     <router-link to="/admin/matches" class="text-gray-400 hover:text-gray-700"><i class="fas fa-arrow-left"></i></router-link>
     <div class="w-7 h-7 bg-green-700 rounded-lg flex items-center justify-center">
@@ -245,6 +247,7 @@ export default {
         </div>
       </div>
     </div>
+  </div>
   </div>
 </div>`
 }

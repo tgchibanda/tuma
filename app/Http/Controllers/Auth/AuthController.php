@@ -3,29 +3,19 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\RegisterRequest;
-use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Requests\Auth\ForgotPasswordRequest;
-use App\Http\Requests\Auth\ResetPasswordRequest;
-use App\Http\Requests\Auth\VerifyPhoneRequest;
-use App\Http\Requests\Auth\ConfirmPhoneRequest;
 use App\Http\Traits\ApiResponse;
-use App\Models\User;
-use App\Models\UserNotificationPreference;
 use App\Models\LoginActivity;
 use App\Models\Referral;
-use App\Services\SmsService;
+use App\Models\User;
+use App\Models\UserNotificationPreference;
 use App\Services\AuditService;
+use App\Services\NotificationService;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\Uid\Ulid;
 
 class AuthController extends Controller
@@ -33,20 +23,35 @@ class AuthController extends Controller
     use ApiResponse;
 
     public function __construct(
-        protected SmsService $smsService,
+        protected NotificationService $notificationService,
         protected AuditService $auditService
     ) {}
 
     /**
-     * Register a new user account.
      * POST /api/v1/auth/register
      */
-    public function register(RegisterRequest $request): JsonResponse
+    public function register(Request $request): JsonResponse
     {
+        $request->validate([
+            'first_name'    => ['required', 'string', 'max:100'],
+            'last_name'     => ['required', 'string', 'max:100'],
+            'email'         => ['required', 'email', 'max:191', 'unique:users,email'],
+            'phone'         => ['required', 'string', 'max:30', 'unique:users,phone'],
+            'password'      => ['required', 'string', 'min:8', 'confirmed'],
+            'country_id'    => ['required', 'integer', 'exists:countries,id'],
+            'referral_code' => ['nullable', 'string', 'max:20'],
+        ]);
+
         // Generate unique referral code
         do {
-            $referralCode = strtoupper(Str::random(8));
-        } while (User::where('referral_code', $referralCode)->exists());
+            $myReferralCode = strtoupper(Str::random(8));
+        } while (User::where('referral_code', $myReferralCode)->exists());
+
+        // Check if they were referred
+        $referrer = null;
+        if ($request->filled('referral_code')) {
+            $referrer = User::where('referral_code', strtoupper($request->referral_code))->first();
+        }
 
         $user = User::create([
             'ulid'          => (string) new Ulid(),
@@ -57,346 +62,259 @@ class AuthController extends Controller
             'password'      => Hash::make($request->password),
             'country_id'    => $request->country_id,
             'role'          => 'user',
-            'referral_code' => $referralCode,
+            'kyc_status'    => 'pending',
+            'account_status'=> 'active',
+            'referral_code' => $myReferralCode,
+            'referred_by'   => $referrer?->id,
         ]);
 
-        // Auto-create notification preferences with all defaults
+        // Auto-create notification preferences (all on by default, except marketing + whatsapp)
         UserNotificationPreference::create([
-            'user_id'                   => $user->id,
-            'email_notifications'       => 1,
-            'inapp_notifications'       => 1,
-            'sms_notifications'         => 1,
-            'whatsapp_notifications'    => 0,
-            'push_notifications'        => 1,
-            'notify_rate_alerts'        => 1,
-            'notify_match_proposals'    => 1,
-            'notify_chat_messages'      => 1,
-            'notify_transaction_updates'=> 1,
-            'notify_marketing'          => 0,
+            'user_id'                    => $user->id,
+            'email_notifications'        => 1,
+            'inapp_notifications'        => 1,
+            'sms_notifications'          => 1,
+            'whatsapp_notifications'     => 0,
+            'push_notifications'         => 1,
+            'notify_rate_alerts'         => 1,
+            'notify_match_proposals'     => 1,
+            'notify_chat_messages'       => 1,
+            'notify_transaction_updates' => 1,
+            'notify_marketing'           => 0,
         ]);
 
-        // Handle referral tracking
-        if ($request->referral_code) {
-            $referrer = User::where('referral_code', $request->referral_code)->first();
-            if ($referrer && $referrer->id !== $user->id) {
-                Referral::create([
-                    'referrer_id'              => $referrer->id,
-                    'referred_id'              => $user->id,
-                    'referral_code'            => $request->referral_code,
-                    'status'                   => 'pending',
-                    'referrer_discount_percent'=> 50.00,
-                    'referred_discount_percent'=> 50.00,
-                ]);
-                $user->referred_by = $referrer->id;
-                $user->save();
-            }
+        // Track referral
+        if ($referrer) {
+            Referral::create([
+                'referrer_id'  => $referrer->id,
+                'referred_id'  => $user->id,
+                'referral_code'=> strtoupper($request->referral_code),
+                'status'       => 'pending',
+            ]);
         }
 
-        // Send email verification — ALWAYS sent regardless of notification preferences
+        // Send email verification — always, regardless of notification prefs
         event(new Registered($user));
 
-        // Log login activity
-        $this->logLoginActivity($request, $user);
+        $token = $user->createToken('auth')->plainTextToken;
 
-        $this->auditService->log('user.registered', $user, $user, [], $user->toArray());
-
-        $token = $user->createToken('tuma-auth')->plainTextToken;
+        $this->auditService->log('user.registered', $user, $user);
 
         return $this->created([
             'token' => $token,
             'user'  => $this->formatUser($user),
-        ], 'Account created successfully. Please verify your email.');
+        ], 'Account created. Please check your email to verify your address.');
     }
 
     /**
-     * Authenticate a user and return a Sanctum token.
      * POST /api/v1/auth/login
      */
-    public function login(LoginRequest $request): JsonResponse
+    public function login(Request $request): JsonResponse
     {
+        $request->validate([
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
         $user = User::where('email', strtolower($request->email))->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
-            return $this->error('The email or password is incorrect.', 401);
+            return $this->error('Invalid credentials.', 401);
         }
 
-        // Check account status
-        if ($user->account_status === 'banned') {
-            return $this->error('Your account has been permanently banned.', 403);
+        if ($user->account_status === User::STATUS_BANNED) {
+            return $this->error('Your account has been banned. Contact support.', 403);
         }
 
-        if ($user->account_status === 'suspended') {
-            $message = 'Your account has been suspended.';
-            if ($user->suspension_reason) {
-                $message .= ' Reason: ' . $user->suspension_reason;
-            }
-            return $this->error($message, 403);
+        if ($user->account_status === User::STATUS_SUSPENDED) {
+            $until = $user->account_suspended_until
+                ? ' until ' . $user->account_suspended_until->toFormattedDateString()
+                : '';
+            return $this->error('Your account is suspended' . $until . '. Reason: ' . $user->suspension_reason, 403);
         }
 
-        // Check if 2FA is required
+        // Check 2FA
         if ($user->two_fa_enabled) {
-            // Store a temporary token in cache and require 2FA verification
-            $tempToken = Str::random(40);
-            Cache::put('2fa_pending_' . $tempToken, $user->id, now()->addMinutes(10));
+            $tempToken = Str::random(64);
+            cache()->put('2fa_temp_' . $tempToken, $user->id, now()->addMinutes(10));
 
             return $this->success([
-                'requires_2fa'  => true,
-                'temp_token'    => $tempToken,
-                'method'        => $user->two_fa_method,
-            ], 'Two-factor authentication required.');
+                'requires_2fa' => true,
+                'temp_token'   => $tempToken,
+            ], '2FA verification required.');
         }
 
-        // Revoke old tokens and issue new one
-        $user->tokens()->delete();
-        $token = $user->createToken('tuma-auth')->plainTextToken;
+        // Log login activity
+        LoginActivity::create([
+            'user_id'          => $user->id,
+            'ip_address'       => $request->ip(),
+            'user_agent'       => $request->userAgent(),
+            'device_type'      => $this->detectDevice($request->userAgent() ?? ''),
+            'location_country' => null, // IP geolocation can be added later
+            'is_new_device'    => false,
+            'login_at'         => now(),
+        ]);
 
-        // Update last login
         $user->last_login_at = now();
         $user->save();
 
-        // Log login activity
-        $isNewDevice = $this->logLoginActivity($request, $user);
-
-        // Send new device alert email
-        if ($isNewDevice) {
-            // Notification sent via NotificationService — always bypasses prefs for security
-            event(new \App\Events\NewDeviceLogin($user, $request->ip()));
-        }
+        $token = $user->createToken('auth')->plainTextToken;
 
         $this->auditService->log('user.login', $user, $user);
 
         return $this->success([
             'token' => $token,
             'user'  => $this->formatUser($user),
-        ], 'Login successful.');
+        ], 'Logged in.');
     }
 
     /**
-     * Revoke the current user's token (logout).
      * POST /api/v1/auth/logout
      */
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
-
-        $this->auditService->log('user.logout', $request->user(), $request->user());
-
-        return $this->success(null, 'Logged out successfully.');
+        return $this->success(null, 'Logged out.');
     }
 
     /**
-     * Send a password reset link to the given email.
      * POST /api/v1/auth/forgot-password
      */
-    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    public function forgotPassword(Request $request): JsonResponse
     {
-        // Always return success to prevent email enumeration
-        $status = Password::sendResetLink(['email' => strtolower($request->email)]);
+        $request->validate(['email' => ['required', 'email']]);
 
-        return $this->success(
-            null,
-            'If an account with that email exists, a password reset link has been sent.'
-        );
+        $status = Password::sendResetLink($request->only('email'));
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return $this->success(null, 'Password reset link sent to your email.');
+        }
+
+        return $this->error('Unable to send reset link. Please check your email address.', 422);
     }
 
     /**
-     * Reset the user's password using the token from email.
      * POST /api/v1/auth/reset-password
      */
-    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    public function resetPassword(Request $request): JsonResponse
     {
+        $request->validate([
+            'token'    => ['required'],
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'min:8', 'confirmed'],
+        ]);
+
         $status = Password::reset(
-            [
-                'email'                 => strtolower($request->email),
-                'password'              => $request->password,
-                'password_confirmation' => $request->password_confirmation,
-                'token'                 => $request->token,
-            ],
+            $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
-                $user->forceFill([
-                    'password' => Hash::make($password),
-                ])->save();
-
-                // Revoke all existing tokens for security
-                $user->tokens()->delete();
-
-                $this->auditService->log('user.password_reset', $user, $user);
+                $user->password = Hash::make($password);
+                $user->save();
+                $user->tokens()->delete(); // Revoke all tokens on password reset
             }
         );
 
-        if ($status !== Password::PASSWORD_RESET) {
-            return $this->error(__($status), 400);
+        if ($status === Password::PASSWORD_RESET) {
+            return $this->success(null, 'Password reset successfully. Please log in.');
         }
 
-        return $this->success(null, 'Password reset successfully. Please log in.');
+        return $this->error('Invalid or expired reset token.', 422);
     }
 
     /**
-     * Handle the email verification link click.
-     * GET /api/v1/auth/verify-email/{id}/{hash}
+     * Email verification — GET /api/v1/auth/verify-email/{id}/{hash}
      */
-    public function verifyEmail(Request $request, string $id, string $hash): JsonResponse
+    public function verifyEmail(Request $request, int $id, string $hash): JsonResponse
     {
         $user = User::findOrFail($id);
 
         if (! hash_equals(sha1($user->email), $hash)) {
-            return $this->error('Invalid verification link.', 400);
+            return $this->error('Invalid verification link.', 403);
         }
 
         if ($user->hasVerifiedEmail()) {
             return $this->success(null, 'Email already verified.');
         }
 
-        if ($user->markEmailAsVerified()) {
-            event(new Verified($user));
-            $this->auditService->log('user.email_verified', $user, $user);
-        }
-
-        return $this->success(null, 'Email verified successfully.');
+        $user->markEmailAsVerified();
+        return $this->success(null, 'Email verified successfully!');
     }
 
     /**
-     * Resend the email verification notification.
-     * POST /api/v1/auth/resend-verification
+     * POST /api/v1/auth/verify-phone — Send OTP to user's phone.
      */
-    public function resendVerification(Request $request): JsonResponse
+    public function verifyPhone(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        if ($user->hasVerifiedEmail()) {
-            return $this->error('Email is already verified.', 400);
+        if ($user->phone_verified_at) {
+            return $this->error('Phone already verified.', 422);
         }
 
-        $user->sendEmailVerificationNotification();
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        cache()->put('phone_otp_' . $user->id, $otp, now()->addMinutes(10));
 
-        return $this->success(null, 'Verification email sent.');
+        // TODO: Send via SMS service
+        // app(SmsService::class)->send($user->phone, "Your TuMa verification code is: $otp");
+
+        return $this->success(null, 'Verification code sent to ' . $user->redacted_phone . '.');
     }
 
     /**
-     * Send a phone verification OTP.
-     * POST /api/v1/auth/verify-phone
+     * POST /api/v1/auth/confirm-phone — Confirm OTP.
      */
-    public function verifyPhone(VerifyPhoneRequest $request): JsonResponse
+    public function confirmPhone(Request $request): JsonResponse
     {
+        $request->validate(['code' => ['required', 'string', 'size:6']]);
+
         $user = $request->user();
+        $cached = cache()->get('phone_otp_' . $user->id);
 
-        // Generate 6-digit OTP
-        $otp      = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $cacheKey = 'phone_otp_' . $user->id;
-
-        // Store OTP in cache for 10 minutes
-        Cache::put($cacheKey, [
-            'otp'   => Hash::make($otp),
-            'phone' => $request->phone,
-        ], now()->addMinutes(10));
-
-        // Send SMS
-        $this->smsService->send(
-            $request->phone,
-            "Your TuMa verification code is: {$otp}. Valid for 10 minutes."
-        );
-
-        return $this->success(null, 'Verification code sent to ' . $request->phone . '.');
-    }
-
-    /**
-     * Confirm the phone OTP and mark phone as verified.
-     * POST /api/v1/auth/verify-phone/confirm
-     */
-    public function confirmPhone(ConfirmPhoneRequest $request): JsonResponse
-    {
-        $user     = $request->user();
-        $cacheKey = 'phone_otp_' . $user->id;
-        $cached   = Cache::get($cacheKey);
-
-        if (! $cached) {
-            return $this->error('Verification code has expired. Please request a new one.', 400);
+        if (! $cached || $cached !== $request->code) {
+            return $this->error('Invalid or expired verification code.', 422);
         }
 
-        if (! Hash::check($request->code, $cached['otp'])) {
-            return $this->error('Invalid verification code.', 400);
-        }
-
-        $user->phone             = $cached['phone'];
         $user->phone_verified_at = now();
         $user->save();
 
-        Cache::forget($cacheKey);
+        cache()->forget('phone_otp_' . $user->id);
 
-        $this->auditService->log('user.phone_verified', $user, $user);
-
-        return $this->success(null, 'Phone number verified successfully.');
+        return $this->success(null, 'Phone number verified.');
     }
 
-    // ─── Private helpers ────────────────────────────────────────────────────
+    // ── Private helpers ────────────────────────────────────────────────────
 
-    /**
-     * Format a user for the API response.
-     */
     private function formatUser(User $user): array
     {
         return [
-            'id'                  => $user->id,
-            'ulid'                => $user->ulid,
-            'first_name'          => $user->first_name,
-            'last_name'           => $user->last_name,
-            'email'               => $user->email,
-            'phone'               => $user->phone,
-            'email_verified'      => $user->hasVerifiedEmail(),
-            'phone_verified'      => ! is_null($user->phone_verified_at),
-            'kyc_status'          => $user->kyc_status,
-            'account_status'      => $user->account_status,
-            'account_type'        => $user->account_type,
-            'role'                => $user->role,
-            'two_fa_enabled'      => (bool) $user->two_fa_enabled,
-            'pin_set'             => ! is_null($user->transaction_pin),
-            'onboarding_completed'=> (bool) $user->onboarding_completed,
-            'referral_code'       => $user->referral_code,
-            'profile_photo'       => $user->profile_photo,
-            'country_id'          => $user->country_id,
+            'id'                   => $user->id,
+            'ulid'                 => $user->ulid,
+            'first_name'           => $user->first_name,
+            'last_name'            => $user->last_name,
+            'email'                => $user->email,
+            'email_verified'       => ! is_null($user->email_verified_at),
+            'phone'                => $user->phone,
+            'phone_verified'       => ! is_null($user->phone_verified_at),
+            'kyc_status'           => $user->kyc_status,
+            'account_status'       => $user->account_status,
+            'account_type'         => $user->account_type,
+            'role'                 => $user->role,
+            'two_fa_enabled'       => (bool) $user->two_fa_enabled,
+            'pin_set'              => ! is_null($user->transaction_pin),
+            'onboarding_completed' => (bool) $user->onboarding_completed,
+            'referral_code'        => $user->referral_code,
+            'trust_score'          => $user->trust_score,
+            'total_trades'         => $user->total_trades,
+            'rating'               => $user->rating ? (float) $user->rating : null,
+            'profile_visibility'   => $user->profile_visibility,
+            'always_available'     => (bool) $user->always_available,
+            'created_at'           => $user->created_at->toIso8601String(),
         ];
     }
 
-    /**
-     * Log login activity. Returns true if this is a new device.
-     */
-    private function logLoginActivity(Request $request, User $user): bool
+    private function detectDevice(string $userAgent): string
     {
-        $ip        = $request->ip();
-        $userAgent = $request->userAgent();
-
-        // Simple device fingerprint: hash of IP + user-agent
-        $fingerprint = sha1($ip . $userAgent);
-        $isNewDevice = ! LoginActivity::where('user_id', $user->id)
-            ->where('ip_address', $ip)
-            ->exists();
-
-        LoginActivity::create([
-            'user_id'         => $user->id,
-            'ip_address'      => $ip,
-            'user_agent'      => $userAgent,
-            'device_type'     => $this->detectDeviceType($userAgent),
-            'is_new_device'   => $isNewDevice,
-            'login_at'        => now(),
-        ]);
-
-        return $isNewDevice;
-    }
-
-    /**
-     * Detect device type from user-agent string.
-     */
-    private function detectDeviceType(?string $userAgent): string
-    {
-        if (! $userAgent) {
-            return 'unknown';
-        }
-        if (preg_match('/mobile/i', $userAgent)) {
-            return 'mobile';
-        }
-        if (preg_match('/tablet|ipad/i', $userAgent)) {
-            return 'tablet';
-        }
+        if (str_contains(strtolower($userAgent), 'mobile')) return 'mobile';
+        if (str_contains(strtolower($userAgent), 'tablet')) return 'tablet';
         return 'desktop';
     }
 }

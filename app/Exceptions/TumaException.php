@@ -1,4 +1,5 @@
 <?php
+// FILE: app/Exceptions/TumaException.php
 
 namespace App\Exceptions;
 
@@ -7,11 +8,10 @@ use RuntimeException;
 class TumaException extends RuntimeException
 {
     public function __construct(
-        string $message = '',
-        protected int $statusCode = 400,
-        ?\Throwable $previous = null
+        string $message,
+        private readonly int $statusCode = 422
     ) {
-        parent::__construct($message, $statusCode, $previous);
+        parent::__construct($message);
     }
 
     public function getStatusCode(): int
@@ -24,8 +24,6 @@ class TumaException extends RuntimeException
         return response()->json([
             'success' => false,
             'message' => $this->getMessage(),
-            'data'    => null,
-            'errors'  => null,
         ], $this->statusCode);
     }
 }
