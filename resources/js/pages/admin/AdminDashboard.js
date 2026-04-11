@@ -3,7 +3,7 @@ export default {
     data() { return { stats: null, recentMatches: [], loading: true } },
     async mounted() {
         try {
-            const { data } = await this.$http.get('/../../api/admin/dashboard')
+            const { data } = await this.$http.get('/../../api/v1/admin/dashboard')
             this.stats = data.data
             this.recentMatches = data.data.recent_matches || []
         } catch {}

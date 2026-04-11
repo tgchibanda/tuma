@@ -14,6 +14,9 @@ class SystemSetting extends Model
 
     protected $fillable = ['key', 'value', 'description', 'updated_by'];
 
+    protected $casts = [
+        'updated_at' => 'datetime',
+        ];
     /**
      * Get a setting value by key.
      * Cached for 10 minutes.

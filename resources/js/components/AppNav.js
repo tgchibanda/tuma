@@ -274,11 +274,6 @@ export default {
     </div>
   </transition>
 
-  <style>
-  .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
-  .fade-enter, .fade-leave-to { opacity: 0; }
-  .slide-left-enter-active, .slide-left-leave-active { transition: transform 0.25s ease; }
-  .slide-left-enter, .slide-left-leave-to { transform: translateX(-100%); }
-  </style>
+  
 </div>`
 }

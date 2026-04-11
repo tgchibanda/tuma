@@ -13,8 +13,10 @@ use App\Services\NotificationService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Symfony\Component\Uid\Ulid;
 
@@ -54,21 +56,21 @@ class AuthController extends Controller
         }
 
         $user = User::create([
-            'ulid'          => (string) new Ulid(),
-            'first_name'    => $request->first_name,
-            'last_name'     => $request->last_name,
-            'email'         => strtolower($request->email),
-            'phone'         => $request->phone,
-            'password'      => Hash::make($request->password),
-            'country_id'    => $request->country_id,
-            'role'          => 'user',
-            'kyc_status'    => 'pending',
-            'account_status'=> 'active',
-            'referral_code' => $myReferralCode,
-            'referred_by'   => $referrer?->id,
+            'ulid'           => (string) new Ulid(),
+            'first_name'     => $request->first_name,
+            'last_name'      => $request->last_name,
+            'email'          => strtolower($request->email),
+            'phone'          => $request->phone,
+            'password'       => Hash::make($request->password),
+            'country_id'     => $request->country_id,
+            'role'           => 'user',
+            'kyc_status'     => 'pending',    // starts pending — does NOT block trading
+            'account_status' => 'active',
+            'referral_code'  => $myReferralCode,
+            'referred_by'    => $referrer?->id,
         ]);
 
-        // Auto-create notification preferences (all on by default, except marketing + whatsapp)
+        // Auto-create notification preferences
         UserNotificationPreference::create([
             'user_id'                    => $user->id,
             'email_notifications'        => 1,
@@ -86,14 +88,14 @@ class AuthController extends Controller
         // Track referral
         if ($referrer) {
             Referral::create([
-                'referrer_id'  => $referrer->id,
-                'referred_id'  => $user->id,
-                'referral_code'=> strtoupper($request->referral_code),
-                'status'       => 'pending',
+                'referrer_id'   => $referrer->id,
+                'referred_id'   => $user->id,
+                'referral_code' => strtoupper($request->referral_code),
+                'status'        => 'pending',
             ]);
         }
 
-        // Send email verification — always, regardless of notification prefs
+        // Send email verification (always, regardless of notification preferences)
         event(new Registered($user));
 
         $token = $user->createToken('auth')->plainTextToken;
@@ -119,21 +121,24 @@ class AuthController extends Controller
         $user = User::where('email', strtolower($request->email))->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
-            return $this->error('Invalid credentials.', 401);
+            return $this->error('Invalid email or password.', 401);
         }
 
         if ($user->account_status === User::STATUS_BANNED) {
-            return $this->error('Your account has been banned. Contact support.', 403);
+            return $this->error('Your account has been banned. Please contact support.', 403);
         }
 
         if ($user->account_status === User::STATUS_SUSPENDED) {
             $until = $user->account_suspended_until
                 ? ' until ' . $user->account_suspended_until->toFormattedDateString()
                 : '';
-            return $this->error('Your account is suspended' . $until . '. Reason: ' . $user->suspension_reason, 403);
+            return $this->error(
+                'Your account is suspended' . $until . '. Reason: ' . ($user->suspension_reason ?? 'Contact support.'),
+                403
+            );
         }
 
-        // Check 2FA
+        // ── 2FA check ────────────────────────────────────────────────────
         if ($user->two_fa_enabled) {
             $tempToken = Str::random(64);
             cache()->put('2fa_temp_' . $tempToken, $user->id, now()->addMinutes(10));
@@ -144,16 +149,8 @@ class AuthController extends Controller
             ], '2FA verification required.');
         }
 
-        // Log login activity
-        LoginActivity::create([
-            'user_id'          => $user->id,
-            'ip_address'       => $request->ip(),
-            'user_agent'       => $request->userAgent(),
-            'device_type'      => $this->detectDevice($request->userAgent() ?? ''),
-            'location_country' => null, // IP geolocation can be added later
-            'is_new_device'    => false,
-            'login_at'         => now(),
-        ]);
+        // ── Log login activity (gracefully — never break login if table missing) ─
+        $this->recordLoginActivity($user, $request);
 
         $user->last_login_at = now();
         $user->save();
@@ -165,7 +162,7 @@ class AuthController extends Controller
         return $this->success([
             'token' => $token,
             'user'  => $this->formatUser($user),
-        ], 'Logged in.');
+        ], 'Logged in successfully.');
     }
 
     /**
@@ -209,19 +206,20 @@ class AuthController extends Controller
             function (User $user, string $password) {
                 $user->password = Hash::make($password);
                 $user->save();
-                $user->tokens()->delete(); // Revoke all tokens on password reset
+                // Revoke all tokens on password reset for security
+                $user->tokens()->delete();
             }
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return $this->success(null, 'Password reset successfully. Please log in.');
+            return $this->success(null, 'Password reset successfully. Please log in with your new password.');
         }
 
-        return $this->error('Invalid or expired reset token.', 422);
+        return $this->error('Invalid or expired reset token. Please request a new reset link.', 422);
     }
 
     /**
-     * Email verification — GET /api/v1/auth/verify-email/{id}/{hash}
+     * GET /api/v1/auth/verify-email/{id}/{hash}
      */
     public function verifyEmail(Request $request, int $id, string $hash): JsonResponse
     {
@@ -240,33 +238,33 @@ class AuthController extends Controller
     }
 
     /**
-     * POST /api/v1/auth/verify-phone — Send OTP to user's phone.
+     * POST /api/v1/auth/verify-phone — Send OTP SMS.
      */
     public function verifyPhone(Request $request): JsonResponse
     {
         $user = $request->user();
 
         if ($user->phone_verified_at) {
-            return $this->error('Phone already verified.', 422);
+            return $this->error('Phone number is already verified.', 422);
         }
 
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         cache()->put('phone_otp_' . $user->id, $otp, now()->addMinutes(10));
 
-        // TODO: Send via SMS service
-        // app(SmsService::class)->send($user->phone, "Your TuMa verification code is: $otp");
+        // TODO: Send via real SMS provider (Twilio, AWS SNS, etc.)
+        // app(SmsService::class)->send($user->phone, "Your TuMa code is: {$otp}");
 
-        return $this->success(null, 'Verification code sent to ' . $user->redacted_phone . '.');
+        return $this->success(null, 'Verification code sent to your phone.');
     }
 
     /**
-     * POST /api/v1/auth/confirm-phone — Confirm OTP.
+     * POST /api/v1/auth/confirm-phone — Verify OTP code.
      */
     public function confirmPhone(Request $request): JsonResponse
     {
         $request->validate(['code' => ['required', 'string', 'size:6']]);
 
-        $user = $request->user();
+        $user   = $request->user();
         $cached = cache()->get('phone_otp_' . $user->id);
 
         if (! $cached || $cached !== $request->code) {
@@ -278,10 +276,39 @@ class AuthController extends Controller
 
         cache()->forget('phone_otp_' . $user->id);
 
-        return $this->success(null, 'Phone number verified.');
+        return $this->success(null, 'Phone number verified successfully.');
     }
 
-    // ── Private helpers ────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────
+    // Private helpers
+    // ─────────────────────────────────────────────────────────────────────
+
+    /**
+     * Record a login activity entry.
+     * Wrapped in try/catch with Schema check so a missing table never blocks login.
+     */
+    private function recordLoginActivity(User $user, Request $request): void
+    {
+        try {
+            // Check table exists before inserting (safe during fresh migrations)
+            if (! Schema::hasTable('login_activities')) {
+                return;
+            }
+
+            LoginActivity::create([
+                'user_id'          => $user->id,
+                'ip_address'       => $request->ip(),
+                'user_agent'       => $request->userAgent(),
+                'device_type'      => $this->detectDevice($request->userAgent() ?? ''),
+                'location_country' => null,
+                'location_city'    => null,
+                'is_new_device'    => false,
+                'login_at'         => now(),
+            ]);
+        } catch (\Throwable) {
+            // Never let login activity logging break the login flow
+        }
+    }
 
     private function formatUser(User $user): array
     {
@@ -304,6 +331,7 @@ class AuthController extends Controller
             'referral_code'        => $user->referral_code,
             'trust_score'          => $user->trust_score,
             'total_trades'         => $user->total_trades,
+            'successful_trades'    => $user->successful_trades,
             'rating'               => $user->rating ? (float) $user->rating : null,
             'profile_visibility'   => $user->profile_visibility,
             'always_available'     => (bool) $user->always_available,
@@ -311,10 +339,15 @@ class AuthController extends Controller
         ];
     }
 
-    private function detectDevice(string $userAgent): string
+    private function detectDevice(string $ua): string
     {
-        if (str_contains(strtolower($userAgent), 'mobile')) return 'mobile';
-        if (str_contains(strtolower($userAgent), 'tablet')) return 'tablet';
+        $ua = strtolower($ua);
+        if (str_contains($ua, 'mobile') || str_contains($ua, 'android') || str_contains($ua, 'iphone')) {
+            return 'mobile';
+        }
+        if (str_contains($ua, 'tablet') || str_contains($ua, 'ipad')) {
+            return 'tablet';
+        }
         return 'desktop';
     }
 }

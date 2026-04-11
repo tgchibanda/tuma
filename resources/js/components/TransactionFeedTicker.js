@@ -1,38 +1,38 @@
 export default {
-    name: 'TransactionFeedTicker',
-    data() { return { items: [], stats: {}, loading: true } },
-    async mounted() {
-        try {
-            const [feed, stats] = await Promise.all([
-                this.$http.get('/feed?per_page=20'),
-                this.$http.get('/feed/stats')
-            ])
-            this.items = feed.data.data || []
-            this.stats = stats.data.data || {}
-        } catch {}
-        this.loading = false
+  name: 'TransactionFeedTicker',
+  data() { return { items: [], stats: {}, loading: true } },
+  async mounted() {
+    try {
+      const [feed, stats] = await Promise.all([
+        this.$http.get('/feed?per_page=20'),
+        this.$http.get('/feed/stats')
+      ])
+      this.items = feed.data.data || []
+      this.stats = stats.data.data || {}
+    } catch { }
+    this.loading = false
+  },
+  computed: {
+    totalVolumeFormatted() {
+      if (!this.stats.total_volume_aud) return '—'
+      return 'AUD $' + Number(this.stats.total_volume_aud).toLocaleString()
     },
-    computed: {
-        totalVolumeFormatted() {
-            if (!this.stats.total_volume_aud) return '—'
-            return 'AUD $' + Number(this.stats.total_volume_aud).toLocaleString()
-        },
-        statCards() {
-            return [
-                { label: 'Total Sent',     value: this.totalVolumeFormatted,                        icon: 'fa-dollar-sign',    color: 'green' },
-                { label: 'Transactions',   value: this.stats.total_count || '—',                    icon: 'fa-exchange-alt',   color: 'blue' },
-                { label: 'Success Rate',   value: this.stats.success_rate ? this.stats.success_rate + '%' : '98%', icon: 'fa-check-circle', color: 'teal' },
-                { label: 'Cities Served',  value: this.stats.cities_count || 16,                    icon: 'fa-map-marker-alt', color: 'purple' },
-            ]
-        }
-    },
-    methods: {
-        formatDate(dt) {
-            if (!dt) return ''
-            return new Date(dt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
-        }
-    },
-    template: `
+    statCards() {
+      return [
+        { label: 'Total Sent', value: this.totalVolumeFormatted, icon: 'fa-dollar-sign', color: 'green' },
+        { label: 'Transactions', value: this.stats.total_count || '—', icon: 'fa-exchange-alt', color: 'blue' },
+        { label: 'Success Rate', value: this.stats.success_rate ? this.stats.success_rate + '%' : '98%', icon: 'fa-check-circle', color: 'teal' },
+        { label: 'Cities Served', value: this.stats.cities_count || 16, icon: 'fa-map-marker-alt', color: 'purple' },
+      ]
+    }
+  },
+  methods: {
+    formatDate(dt) {
+      if (!dt) return ''
+      return new Date(dt).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })
+    }
+  },
+  template: `
 <div>
   <div v-if="!loading" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
     <div v-for="(card, i) in statCards" :key="i" class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
@@ -51,8 +51,10 @@ export default {
       <div class="flex-1 min-w-0">
         <p class="text-sm text-gray-700">
           <span class="font-medium">{{ item.display_sender }}</span>
-          sent <span class="font-semibold text-gray-900">AUD <span>{{ item.amount_aud }}</span>
-          &rarr; <span class="font-semibold text-green-700">USD <span>{{ item.amount_usd }}</span>
+          sent <span class="font-semibold text-gray-900">AUD </span>
+          <span>{{ item.amount_aud }}</span>
+          &rarr; <span class="font-semibold text-green-700">USD </span>
+          <span>{{ item.amount_usd }}</span>
           to {{ item.display_receiver }}
         </p>
       </div>

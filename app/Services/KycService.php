@@ -9,8 +9,12 @@ use App\Exceptions\TumaException;
 class KycService
 {
     /**
-     * Validate that a user can trade a specific amount.
-     * No tier limits — only min/max system settings apply.
+     * Validate that a user can create an order for the given AUD amount.
+     *
+     * Rules:
+     *  - Only banned/suspended users and maintenance mode block trading.
+     *  - KYC status NEVER blocks trading — users can trade regardless of KYC.
+     *  - Only min/max amount system settings apply.
      */
     public function validateOrderAmount(User $user, float $amountAud): void
     {
@@ -35,48 +39,49 @@ class KycService
     }
 
     /**
-     * Assert that a user is allowed to trade at all.
-     * Only blocks banned/suspended users and maintenance mode.
-     * KYC status does NOT block trading.
+     * Assert a user is allowed to trade at all.
+     *
+     * IMPORTANT: KYC status is intentionally NOT checked here.
+     * Users can trade at any verification level. KYC only affects
+     * the trust score badge displayed on their profile.
      */
     public function assertCanTrade(User $user): void
     {
         if ($user->account_status === User::STATUS_BANNED) {
-            throw new TumaException('Your account has been banned. Please contact support.', 403);
-        }
-
-        if ($user->account_status === User::STATUS_SUSPENDED) {
             throw new TumaException(
-                'Your account is currently suspended. Reason: ' . ($user->suspension_reason ?? 'Contact support.'),
+                'Your account has been permanently banned. Please contact support if you believe this is an error.',
                 403
             );
         }
 
+        if ($user->account_status === User::STATUS_SUSPENDED) {
+            $msg = 'Your account is currently suspended';
+            if ($user->account_suspended_until) {
+                $msg .= ' until ' . $user->account_suspended_until->toFormattedDateString();
+            }
+            $msg .= '. Reason: ' . ($user->suspension_reason ?? 'Contact support for details.');
+            throw new TumaException($msg, 403);
+        }
+
         if (SystemSetting::get('maintenance_mode') === 'true') {
             throw new TumaException(
-                SystemSetting::get('maintenance_message', 'TuMa is currently under maintenance. Please try again shortly.'),
+                SystemSetting::get('maintenance_message', 'TuMa is currently undergoing maintenance. Please try again shortly.'),
                 503
             );
         }
     }
 
     /**
-     * Get the user's trust tier — used for display only, not for blocking.
+     * Get the user's trust tier label — display only, never used to restrict.
      */
     public function getUserTier(User $user): array
     {
-        $trades = $user->successful_trades;
+        $trades = $user->successful_trades ?? 0;
 
-        if ($trades === 0) {
-            return ['tier' => 1, 'label' => 'New Trader', 'trades' => $trades];
-        }
-        if ($trades < 10) {
-            return ['tier' => 2, 'label' => 'Active Trader', 'trades' => $trades];
-        }
-        if ($trades < 50) {
-            return ['tier' => 3, 'label' => 'Trusted Trader', 'trades' => $trades];
-        }
+        if ($trades === 0)   return ['tier' => 1, 'label' => 'New Trader',     'trades' => $trades];
+        if ($trades < 10)    return ['tier' => 2, 'label' => 'Active Trader',  'trades' => $trades];
+        if ($trades < 50)    return ['tier' => 3, 'label' => 'Trusted Trader', 'trades' => $trades];
 
-        return ['tier' => 4, 'label' => 'Power Trader', 'trades' => $trades];
+        return                      ['tier' => 4, 'label' => 'Power Trader',   'trades' => $trades];
     }
 }
