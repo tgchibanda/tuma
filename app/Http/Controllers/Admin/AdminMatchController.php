@@ -21,7 +21,7 @@ class AdminMatchController extends Controller
 
     /**
      * List all matches with filters.
-     * GET /api/admin/matches
+     * GET /api/v1/admin/matches
      */
     public function index(Request $request): JsonResponse
     {
@@ -49,7 +49,7 @@ class AdminMatchController extends Controller
 
     /**
      * Get full match detail.
-     * GET /api/admin/matches/{ulid}
+     * GET /api/v1/admin/matches/{ulid}
      */
     public function show(string $ulid): JsonResponse
     {
@@ -70,7 +70,7 @@ class AdminMatchController extends Controller
 
     /**
      * Admin verifies AUD deposit has arrived.
-     * PUT /api/admin/matches/{ulid}/verify-deposit
+     * PUT /api/v1/admin/matches/{ulid}/verify-deposit
      */
     public function verifyDeposit(Request $request, string $ulid): JsonResponse
     {
@@ -102,7 +102,7 @@ class AdminMatchController extends Controller
 
     /**
      * Admin releases AUD funds to receiver.
-     * PUT /api/admin/matches/{ulid}/release-funds
+     * PUT /api/v1/admin/matches/{ulid}/release-funds
      */
     public function releaseFunds(Request $request, string $ulid): JsonResponse
     {
@@ -124,7 +124,7 @@ class AdminMatchController extends Controller
 
     /**
      * Admin refunds AUD to sender.
-     * PUT /api/admin/matches/{ulid}/refund
+     * PUT /api/v1/admin/matches/{ulid}/refund
      */
     public function refund(Request $request, string $ulid): JsonResponse
     {
@@ -145,7 +145,7 @@ class AdminMatchController extends Controller
 
     /**
      * Admin force-cancels a match at any stage.
-     * PUT /api/admin/matches/{ulid}/force-cancel
+     * PUT /api/v1/admin/matches/{ulid}/force-cancel
      */
     public function forceCancel(Request $request, string $ulid): JsonResponse
     {

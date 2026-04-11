@@ -6,7 +6,7 @@ export default {
         async load() {
             this.loading = true
             try {
-                const { data } = await this.$http.get('/../../api/admin/disputes/' + this.$route.params.id)
+                const { data } = await this.$http.get('/../../api/v1/admin/disputes/' + this.$route.params.id)
                 this.dispute = data.data
             } catch { this.$router.push('/admin/disputes') }
             this.loading = false
@@ -15,7 +15,7 @@ export default {
             if (!this.msg.trim()) return
             this.msgLoading = true
             try {
-                await this.$http.post('/../../api/admin/disputes/' + this.dispute.id + '/messages', { message: this.msg })
+                await this.$http.post('/../../api/v1/admin/disputes/' + this.dispute.id + '/messages', { message: this.msg })
                 this.msg = ''
                 this.$toast.success('Message sent.')
                 await this.load()
@@ -27,14 +27,16 @@ export default {
             if (!notes) return
             this.resolveLoading = true
             try {
-                await this.$http.put('/../../api/admin/disputes/' + this.dispute.id + '/resolve', { resolution, notes })
+                await this.$http.put('/../../api/v1/admin/disputes/' + this.dispute.id + '/resolve', { resolution, notes })
                 this.$toast.success('Dispute resolved.')
                 await this.load()
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }
             this.resolveLoading = false
         }
     },
-    template: `<div class="min-h-screen bg-gray-100">
+    template: `<div class="min-h-screen bg-gray-100 flex">
+  <admin-nav />
+  <div class="flex-1 min-w-0 lg:ml-60">
   <div class="bg-white border-b px-6 py-3 flex items-center gap-3 sticky top-0 z-40 shadow-sm">
     <router-link to="/admin/disputes" class="text-gray-400 hover:text-gray-700"><i class="fas fa-arrow-left"></i></router-link>
     <div class="w-7 h-7 bg-green-700 rounded-lg flex items-center justify-center"><span class="text-white font-bold text-xs">Tu</span></div>
@@ -134,6 +136,7 @@ export default {
         </div>
       </div>
     </div>
+  </div>
   </div>
 </div>`
 }

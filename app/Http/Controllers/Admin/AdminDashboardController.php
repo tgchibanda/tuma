@@ -21,7 +21,7 @@ class AdminDashboardController extends Controller
 
     /**
      * Get dashboard summary statistics.
-     * GET /api/admin/dashboard
+     * GET /api/v1/admin/dashboard
      */
     public function index(): JsonResponse
     {

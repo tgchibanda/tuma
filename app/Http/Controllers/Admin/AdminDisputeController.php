@@ -25,7 +25,7 @@ class AdminDisputeController extends Controller
 
     /**
      * List all disputes, filterable by status. Colour-coded by urgency (hours open).
-     * GET /api/admin/disputes
+     * GET /api/v1/admin/disputes
      */
     public function index(Request $request): JsonResponse
     {
@@ -62,7 +62,7 @@ class AdminDisputeController extends Controller
 
     /**
      * Get full dispute detail with message thread.
-     * GET /api/admin/disputes/{id}
+     * GET /api/v1/admin/disputes/{id}
      */
     public function show(int $id): JsonResponse
     {
@@ -128,7 +128,7 @@ class AdminDisputeController extends Controller
 
     /**
      * Resolve a dispute.
-     * PUT /api/admin/disputes/{id}/resolve
+     * PUT /api/v1/admin/disputes/{id}/resolve
      * body: { resolution: 'sender'|'receiver'|'refund', notes: '...' }
      *
      * sender   → favour sender (deliverer failed to deliver) — release to sender or no payment to receiver
@@ -196,7 +196,7 @@ class AdminDisputeController extends Controller
 
     /**
      * Admin posts a message in a dispute thread.
-     * POST /api/admin/disputes/{id}/messages
+     * POST /api/v1/admin/disputes/{id}/messages
      */
     public function sendMessage(Request $request, int $id): JsonResponse
     {

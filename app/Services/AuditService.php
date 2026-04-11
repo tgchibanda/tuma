@@ -5,51 +5,57 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Request;
 
 class AuditService
 {
     /**
-     * Log a significant action to the audit_logs table.
+     * Log an admin or system action to the audit trail.
      *
-     * @param string     $action     e.g. 'user.registered', 'match.deposit_verified'
-     * @param User|null  $user       The user performing the action
-     * @param Model|null $model      The model being acted upon
-     * @param array      $oldValues  Previous state (for updates)
-     * @param array      $newValues  New state (for creates/updates)
-     * @param string|null $riskFlag  Optional fraud/risk flag
+     * @param string     $action    e.g. 'kyc.approved', 'match.verified', 'rate.updated'
+     * @param User|null  $actor     The user who performed the action (null for system jobs)
+     * @param Model|null $subject   The model being acted upon
+     * @param array      $oldValues Values before the change
+     * @param array      $newValues Values after the change
      */
     public function log(
-        string  $action,
-        ?User   $user   = null,
-        ?Model  $model  = null,
-        array   $oldValues = [],
-        array   $newValues = [],
-        ?string $riskFlag  = null
+        string $action,
+        ?User $actor,
+        ?Model $subject = null,
+        array $oldValues = [],
+        array $newValues = []
     ): void {
-        try {
-            AuditLog::create([
-                'user_id'    => $user?->id,
-                'action'     => $action,
-                'model_type' => $model ? get_class($model) : null,
-                'model_id'   => $model?->id,
-                'old_values' => empty($oldValues) ? null : $oldValues,
-                'new_values' => empty($newValues) ? null : $newValues,
-                'ip_address' => Request::ip(),
-                'user_agent' => Request::userAgent(),
-                'risk_flag'  => $riskFlag,
-            ]);
-        } catch (\Throwable $e) {
-            // Never let audit logging break the main request
-            \Illuminate\Support\Facades\Log::error('AuditService failed: ' . $e->getMessage());
-        }
+        AuditLog::create([
+            'user_id'    => $actor?->id,
+            'action'     => $action,
+            'model_type' => $subject ? get_class($subject) : null,
+            'model_id'   => $subject?->getKey(),
+            'old_values' => empty($oldValues) ? null : $oldValues,
+            'new_values' => empty($newValues) ? null : $newValues,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'risk_flag'  => null,
+        ]);
     }
 
     /**
-     * Log a fraud/risk event and flag it for admin review.
+     * Log a fraud/risk flag to the audit trail.
      */
-    public function flag(string $action, ?User $user = null, ?Model $model = null, string $reason = ''): void
-    {
-        $this->log($action, $user, $model, [], [], $reason);
+    public function flag(
+        string $flagType,
+        ?User $actor,
+        ?Model $subject = null,
+        string $note = ''
+    ): void {
+        AuditLog::create([
+            'user_id'    => $actor?->id,
+            'action'     => 'risk.flag',
+            'model_type' => $subject ? get_class($subject) : null,
+            'model_id'   => $subject?->getKey(),
+            'old_values' => null,
+            'new_values' => ['note' => $note],
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'risk_flag'  => $flagType,
+        ]);
     }
 }

@@ -19,7 +19,7 @@ class AdminExchangeRateController extends Controller
 
     /**
      * List all exchange rates.
-     * GET /api/admin/exchange-rates
+     * GET /api/v1/admin/exchange-rates
      */
     public function index(): JsonResponse
     {
@@ -38,7 +38,7 @@ class AdminExchangeRateController extends Controller
 
     /**
      * Create a new exchange rate (deactivates the previous active rate for the same pair).
-     * POST /api/admin/exchange-rates
+     * POST /api/v1/admin/exchange-rates
      */
     public function store(Request $request): JsonResponse
     {
@@ -90,7 +90,7 @@ class AdminExchangeRateController extends Controller
 
     /**
      * Deactivate a specific rate.
-     * PUT /api/admin/exchange-rates/{id}/deactivate
+     * PUT /api/v1/admin/exchange-rates/{id}/deactivate
      */
     public function deactivate(Request $request, int $id): JsonResponse
     {
@@ -104,7 +104,7 @@ class AdminExchangeRateController extends Controller
 
     /**
      * Schedule a rate to activate at a future time.
-     * PUT /api/admin/exchange-rates/{id}/schedule
+     * PUT /api/v1/admin/exchange-rates/{id}/schedule
      */
     public function schedule(Request $request, int $id): JsonResponse
     {

@@ -14,7 +14,7 @@ class AdminAuditLogController extends Controller
 
     /**
      * List audit logs — paginated, filterable.
-     * GET /api/admin/audit-logs
+     * GET /api/v1/admin/audit-logs
      * Filters: user_id, action, risk_flag, date_from, date_to
      */
     public function index(Request $request): JsonResponse

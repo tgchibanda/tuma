@@ -3,20 +3,18 @@ import VueRouter from 'vue-router'
 import axios from 'axios'
 import router from './router'
 
-// ── Axios global config ────────────────────────────────────────────────────
+// ── Axios global config ──────────────────────────────────────────────────
 axios.defaults.baseURL = '/api/v1'
 axios.defaults.headers.common['Accept'] = 'application/json'
 axios.defaults.headers.common['Content-Type'] = 'application/json'
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 
-// Bearer token interceptor — reads from localStorage
 axios.interceptors.request.use(config => {
     const token = localStorage.getItem('tuma_token')
     if (token) config.headers.Authorization = `Bearer ${token}`
     return config
 })
 
-// Response interceptor — redirect to login on 401
 axios.interceptors.response.use(
     response => response,
     error => {
@@ -30,17 +28,16 @@ axios.interceptors.response.use(
 )
 
 Vue.prototype.$http = axios
-Vue.prototype.$api = axios
-
+Vue.prototype.$api  = axios
 Vue.use(VueRouter)
 
-// ── Global helpers on Vue prototype ────────────────────────────────────────
+// ── Global helpers ───────────────────────────────────────────────────────
 Vue.prototype.$auth = {
     get user() {
         try { return JSON.parse(localStorage.getItem('tuma_user') || 'null') } catch { return null }
     },
-    get token() { return localStorage.getItem('tuma_token') },
-    get isLoggedIn() { return !!localStorage.getItem('tuma_token') },
+    get token()     { return localStorage.getItem('tuma_token') },
+    get isLoggedIn(){ return !!localStorage.getItem('tuma_token') },
     login(token, user) {
         localStorage.setItem('tuma_token', token)
         localStorage.setItem('tuma_user', JSON.stringify(user))
@@ -71,67 +68,85 @@ Vue.prototype.$fmt = {
         return map[s] || s
     },
     statusColor(s) {
-        if (['completed'].includes(s)) return 'green'
-        if (['cancelled', 'expired', 'refunded'].includes(s)) return 'red'
-        if (['disputed'].includes(s)) return 'orange'
-        if (['confirmed', 'deposit_verified', 'awaiting_delivery'].includes(s)) return 'blue'
+        if (['completed'].includes(s))                          return 'green'
+        if (['cancelled', 'expired', 'refunded'].includes(s))  return 'red'
+        if (['disputed'].includes(s))                          return 'orange'
+        if (['confirmed', 'deposit_verified'].includes(s))     return 'blue'
         return 'yellow'
     }
 }
 
 Vue.prototype.$toast = {
-    _show(msg, type) {
+    _show(msg, type, duration = 3500) {
         const el = document.createElement('div')
-        el.className = `fixed top-4 right-4 z-50 px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all ${
-            type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-gray-800'
-        }`
-        el.textContent = msg
+        const icons = { success: '✓', error: '✕', info: 'ℹ' }
+        const colors = {
+            success: 'bg-green-600',
+            error:   'bg-red-600',
+            info:    'bg-gray-800'
+        }
+        el.className = `fixed top-5 right-5 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-white text-sm font-medium max-w-sm ${colors[type] || colors.info}`
+        el.innerHTML = `<span class="text-lg leading-none">${icons[type] || icons.info}</span><span>${msg}</span>`
+        el.style.transform = 'translateY(-10px)'
+        el.style.opacity = '0'
+        el.style.transition = 'all 0.25s ease'
         document.body.appendChild(el)
-        setTimeout(() => el.remove(), 3500)
+        requestAnimationFrame(() => {
+            el.style.transform = 'translateY(0)'
+            el.style.opacity = '1'
+        })
+        setTimeout(() => {
+            el.style.transform = 'translateY(-10px)'
+            el.style.opacity = '0'
+            setTimeout(() => el.remove(), 250)
+        }, duration)
     },
     success(msg) { this._show(msg, 'success') },
-    error(msg) { this._show(msg, 'error') },
-    info(msg) { this._show(msg, 'info') }
+    error(msg)   { this._show(msg, 'error', 5000) },
+    info(msg)    { this._show(msg, 'info') }
 }
 
-// ── Global Components ───────────────────────────────────────────────────────
-import AppNav from './components/AppNav'
-import AppFooter from './components/AppFooter'
-import LoadingSpinner from './components/LoadingSpinner'
-import AlertBanner from './components/AlertBanner'
-import StatusBadge from './components/StatusBadge'
-import UserAvatar from './components/UserAvatar'
-import RatingStars from './components/RatingStars'
-import SmartCalculator from './components/SmartCalculator'
-import StatusTimeline from './components/StatusTimeline'
-import ChatPanel from './components/ChatPanel'
+// ── Global Components ───────────────────────────────────────────────────
+import AppNav            from './components/AppNav'
+import AdminNav          from './components/AdminNav'
+import AppFooter         from './components/AppFooter'
+import LoadingSpinner    from './components/LoadingSpinner'
+import AlertBanner       from './components/AlertBanner'
+import StatusBadge       from './components/StatusBadge'
+import UserAvatar        from './components/UserAvatar'
+import RatingStars       from './components/RatingStars'
+import SmartCalculator   from './components/SmartCalculator'
+import StatusTimeline    from './components/StatusTimeline'
+import ChatPanel         from './components/ChatPanel'
 import TransactionFeedTicker from './components/TransactionFeedTicker'
-import OrderCard from './components/OrderCard'
-import MatchCard from './components/MatchCard'
-import EmptyState from './components/EmptyState'
-import ConfirmModal from './components/ConfirmModal'
-import FileUpload from './components/FileUpload'
-import PaginationLinks from './components/PaginationLinks'
+import OrderCard         from './components/OrderCard'
+import MatchCard         from './components/MatchCard'
+import EmptyState        from './components/EmptyState'
+import ConfirmModal      from './components/ConfirmModal'
+import FileUpload        from './components/FileUpload'
+import PaginationLinks   from './components/PaginationLinks'
+import BankAccountGuard  from './components/BankAccountGuard'
 
-Vue.component('app-nav', AppNav)
-Vue.component('app-footer', AppFooter)
-Vue.component('loading-spinner', LoadingSpinner)
-Vue.component('alert-banner', AlertBanner)
-Vue.component('status-badge', StatusBadge)
-Vue.component('user-avatar', UserAvatar)
-Vue.component('rating-stars', RatingStars)
-Vue.component('smart-calculator', SmartCalculator)
-Vue.component('status-timeline', StatusTimeline)
-Vue.component('chat-panel', ChatPanel)
+Vue.component('app-nav',              AppNav)
+Vue.component('admin-nav',            AdminNav)
+Vue.component('app-footer',           AppFooter)
+Vue.component('loading-spinner',      LoadingSpinner)
+Vue.component('alert-banner',         AlertBanner)
+Vue.component('status-badge',         StatusBadge)
+Vue.component('user-avatar',          UserAvatar)
+Vue.component('rating-stars',         RatingStars)
+Vue.component('smart-calculator',     SmartCalculator)
+Vue.component('status-timeline',      StatusTimeline)
+Vue.component('chat-panel',           ChatPanel)
 Vue.component('transaction-feed-ticker', TransactionFeedTicker)
-Vue.component('order-card', OrderCard)
-Vue.component('match-card', MatchCard)
-Vue.component('empty-state', EmptyState)
-Vue.component('confirm-modal', ConfirmModal)
-Vue.component('file-upload', FileUpload)
-Vue.component('pagination-links', PaginationLinks)
+Vue.component('order-card',           OrderCard)
+Vue.component('match-card',           MatchCard)
+Vue.component('empty-state',          EmptyState)
+Vue.component('confirm-modal',        ConfirmModal)
+Vue.component('file-upload',          FileUpload)
+Vue.component('pagination-links',     PaginationLinks)
+Vue.component('bank-account-guard',   BankAccountGuard)
 
-// ── Root Vue instance ───────────────────────────────────────────────────────
 new Vue({
     el: '#app',
     router,

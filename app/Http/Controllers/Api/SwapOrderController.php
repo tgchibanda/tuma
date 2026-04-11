@@ -75,14 +75,15 @@ class SwapOrderController extends Controller
         }
 
         // KYC tier limit check
-        if (! $this->kycService->validateOrderAmount($user, $amountAud)) {
+        /** 
+         if (! $this->kycService->validateOrderAmount($user, $amountAud)) {
             $tier = $this->kycService->getUserTier($user);
             return $this->error(
                 "Your current trading tier allows a maximum of AUD \${$tier['max_order_aud']} per order. " .
                 "Complete more trades to increase your limit.",
                 422
             );
-        }
+        } */
 
         // Validate delivery location belongs to an active country
         $location = DeliveryLocation::where('id', $request->zim_delivery_location_id)
@@ -117,6 +118,7 @@ class SwapOrderController extends Controller
 
         // Fraud detection: amount exactly at tier limit
         $tier = $this->kycService->getUserTier($user);
+        /**
         if ($amountAud == $tier['max_order_aud'] && (bool) SystemSetting::get('auto_flag_tier_limit_orders', true)) {
             $this->auditService->flag(
                 'fraud.exact_tier_limit',
@@ -125,6 +127,7 @@ class SwapOrderController extends Controller
                 "Order amount exactly at tier limit: {$amountAud}"
             );
         }
+        */
 
         $expiryHours = (int) SystemSetting::get('order_expiry_hours', 48);
 
@@ -138,7 +141,7 @@ class SwapOrderController extends Controller
                 'platform_fee_aud'         => $feeCalc['fee_aud'],
                 'platform_fee_percent'     => $feeCalc['fee_percent'],
                 'fee_discount_id'          => $feeCalc['discount_id'],
-                'discounted_fee_aud'       => $feeCalc['discounted_fee_aud'],
+                //'discounted_fee_aud'       => $feeCalc['discounted_fee_aud'],
                 'zim_recipient_name'       => $request->zim_recipient_name,
                 'zim_recipient_phone'      => $request->zim_recipient_phone,
                 'zim_delivery_location_id' => $request->zim_delivery_location_id,

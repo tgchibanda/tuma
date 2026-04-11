@@ -18,7 +18,7 @@ class AdminAuthController extends Controller
 
     /**
      * Admin login — separate from user login.
-     * POST /api/admin/auth/login
+     * POST /api/v1/admin/auth/login
      */
     public function login(Request $request): JsonResponse
     {
@@ -61,7 +61,7 @@ class AdminAuthController extends Controller
 
     /**
      * Admin logout.
-     * POST /api/admin/auth/logout
+     * POST /api/v1/admin/auth/logout
      */
     public function logout(Request $request): JsonResponse
     {

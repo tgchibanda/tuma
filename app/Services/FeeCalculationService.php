@@ -3,99 +3,165 @@
 namespace App\Services;
 
 use App\Models\ExchangeRate;
-use App\Models\FeeDiscount;
 use App\Models\SystemSetting;
 use App\Models\User;
 
 class FeeCalculationService
 {
     /**
-     * Calculate the USD amount from an AUD input, applying the platform fee
-     * and any available discount for the given user.
+     * Calculate the USD amount and platform fee for a given AUD amount.
      *
-     * Returns an array with all breakdown figures used in the order form
-     * and fee transparency display.
+     * @param float        $amountAud   The AUD amount being sent
+     * @param ExchangeRate $rate        The current exchange rate record
+     * @param User|null    $user        Optional — check for any available fee discounts
      *
-     * @return array{
+     * @return array {
      *   amount_aud: float,
-     *   exchange_rate: float,
-     *   amount_usd: float,
-     *   fee_percent: float,
      *   fee_aud: float,
-     *   discounted_fee_aud: float|null,
-     *   effective_fee_aud: float,
-     *   net_aud_after_fee: float,
-     *   discount_applied: bool,
+     *   fee_percent: float,
+     *   net_aud: float,
+     *   amount_usd: float,
+     *   exchange_rate: float,
      *   discount_id: int|null,
-     *   comparison_western_union_fee: float,
+     *   discount_percent: float|null,
+     *   original_fee_aud: float|null,
+     *   wu_estimated_fee: float,
      *   savings_vs_wu: float
      * }
      */
     public function calculateUsd(float $amountAud, ExchangeRate $rate, ?User $user = null): array
     {
-        $feePercent = (float) SystemSetting::get('platform_fee_percent', 1.5);
+        $feePercent  = (float) SystemSetting::get('platform_fee_percent', 1.5);
+        $rawFeeAud   = round($amountAud * ($feePercent / 100), 2);
 
-        // Raw fee before any discount
-        $feeAud = round($amountAud * ($feePercent / 100), 2);
-
-        // Check for available discount
-        $discountId        = null;
-        $discountedFeeAud  = null;
-        $discountApplied   = false;
+        // Check for any referral or promotional discount
+        $discountId      = null;
+        $discountPercent = null;
+        $originalFeeAud  = null;
+        $feeAud          = $rawFeeAud;
 
         if ($user) {
-            $discount = FeeDiscount::where('user_id', $user->id)
-                ->available()
-                ->orderBy('discount_percent', 'desc')
-                ->first();
-
-            if ($discount) {
-                $discountedFeeAud = round($feeAud * (1 - ($discount->discount_percent / 100)), 2);
-                $discountId       = $discount->id;
-                $discountApplied  = true;
+            $discountResult = app(ReferralService::class)->applyReward($user, $rawFeeAud);
+            if (isset($discountResult['discount_id'])) {
+                $feeAud          = $discountResult['fee_aud'];
+                $discountId      = $discountResult['discount_id'];
+                $discountPercent = $discountResult['discount_percent'];
+                $originalFeeAud  = $discountResult['original_fee_aud'];
             }
         }
 
-        $effectiveFeeAud = $discountedFeeAud ?? $feeAud;
-        $netAudAfterFee  = round($amountAud - $effectiveFeeAud, 2);
-        $amountUsd       = round($netAudAfterFee * (float) $rate->rate, 2);
+        $netAud     = round($amountAud - $feeAud, 2);
+        $amountUsd  = round($netAud * $rate->rate, 2);
 
-        // Savings comparison vs Western Union (approximate: 5% fee + worse rate ~0.58)
-        $wuFee           = round($amountAud * 0.05, 2);
-        $wuRate          = 0.58;
-        $wuNetAud        = $amountAud - $wuFee;
-        $wuUsd           = round($wuNetAud * $wuRate, 2);
-        $savingsVsWu     = round($amountUsd - $wuUsd, 2);
-        $wuFeeSavings    = round($wuFee - $effectiveFeeAud, 2);
+        // Estimate what Western Union would charge (approx 4–5% + fixed fee)
+        $wuFeeAud  = round(($amountAud * 0.05) + 5, 2);
+        $savingsVsWu = round($wuFeeAud - $feeAud, 2);
 
         return [
-            'amount_aud'                  => $amountAud,
-            'exchange_rate'               => (float) $rate->rate,
-            'exchange_rate_id'            => $rate->id,
-            'amount_usd'                  => $amountUsd,
-            'fee_percent'                 => $feePercent,
-            'fee_aud'                     => $feeAud,
-            'discounted_fee_aud'          => $discountedFeeAud,
-            'effective_fee_aud'           => $effectiveFeeAud,
-            'net_aud_after_fee'           => $netAudAfterFee,
-            'discount_applied'            => $discountApplied,
-            'discount_id'                 => $discountId,
-            'comparison_western_union_fee'=> $wuFee,
-            'savings_vs_wu'               => max(0, $savingsVsWu),
-            'fee_savings_vs_wu'           => max(0, $wuFeeSavings),
+            'amount_aud'       => $amountAud,
+            'fee_aud'          => $feeAud,
+            'fee_percent'      => $feePercent,
+            'net_aud'          => $netAud,
+            'amount_usd'       => $amountUsd,
+            'exchange_rate'    => (float) $rate->rate,
+            'exchange_rate_id' => $rate->id,
+            'discount_id'      => $discountId,
+            'discount_percent' => $discountPercent,
+            'original_fee_aud' => $originalFeeAud,
+            'wu_estimated_fee' => $wuFeeAud,
+            'savings_vs_wu'    => $savingsVsWu,
+        ];
+    }
+}
+
+
+class KycService
+{
+    /**
+     * Get the user's current trading tier based on completed trades.
+     *
+     * Tier 1: 0–4 trades   → max AUD $300
+     * Tier 2: 5–19 trades  → max AUD $1,500
+     * Tier 3: 20+ trades   → max AUD $5,000
+     *
+     * Returns ['tier' => int, 'max_amount_aud' => float, 'label' => string]
+     */
+    public function getUserTier(User $user): array
+    {
+        $trades = $user->successful_trades;
+
+        if ($trades < 5) {
+            return [
+                'tier'           => 1,
+                'max_amount_aud' => (float) SystemSetting::get('new_user_limit_aud', 300),
+                'label'          => 'New Trader',
+                'next_tier_at'   => 5,
+            ];
+        }
+
+        if ($trades < 20) {
+            return [
+                'tier'           => 2,
+                'max_amount_aud' => 1500.00,
+                'label'          => 'Trusted Trader',
+                'next_tier_at'   => 20,
+            ];
+        }
+
+        return [
+            'tier'           => 3,
+            'max_amount_aud' => (float) SystemSetting::get('max_order_amount_aud', 5000),
+            'label'          => 'Power Trader',
+            'next_tier_at'   => null,
         ];
     }
 
     /**
-     * Calculate the fee on an agreed match amount — used when finalising
-     * a negotiated deal. Applies any discount for the depositing user.
+     * Validate that a user can trade a specific amount.
      */
-    public function calculateMatchFee(float $agreedAud, ?User $depositor = null): array
+    public function validateOrderAmount(User $user, float $amountAud): void
     {
-        $rate = ExchangeRate::currentRate('AUD', 'USD');
-        if (! $rate) {
-            throw new \RuntimeException('No active AUD/USD exchange rate found.');
+        $this->assertCanTrade($user);
+
+        $tier = $this->getUserTier($user);
+
+        if ($amountAud < (float) SystemSetting::get('min_order_amount_aud', 50)) {
+            throw new \App\Exceptions\TumaException(
+                'Minimum order amount is AUD $' . SystemSetting::get('min_order_amount_aud', 50) . '.',
+                422
+            );
         }
-        return $this->calculateUsd($agreedAud, $rate, $depositor);
+
+        if ($amountAud > $tier['max_amount_aud']) {
+            throw new \App\Exceptions\TumaException(
+                "Your current trading tier allows a maximum of AUD \${$tier['max_amount_aud']} per order. "
+                . "Complete more trades to increase your limit.",
+                422
+            );
+        }
+    }
+
+    /**
+     * Assert that a user is allowed to trade at all.
+     */
+    public function assertCanTrade(User $user): void
+    {
+        if ($user->account_status !== 'active') {
+            throw new \App\Exceptions\TumaException('Your account is not active.', 403);
+        }
+
+        if ($user->kyc_status === 'rejected') {
+            throw new \App\Exceptions\TumaException(
+                'Your KYC verification was rejected. Please re-submit your documents.',
+                403
+            );
+        }
+
+        if (SystemSetting::get('maintenance_mode') === 'true') {
+            throw new \App\Exceptions\TumaException(
+                SystemSetting::get('maintenance_message', 'TuMa is under maintenance.'),
+                503
+            );
+        }
     }
 }
