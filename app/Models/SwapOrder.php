@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class SwapOrder extends Model
 {
@@ -43,6 +44,18 @@ class SwapOrder extends Model
         'boost_expires_at' => 'datetime',
         'is_boosted'       => 'boolean',
     ];
+
+    /**
+     * 🔥 Auto-generate ULID on create
+     */
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->ulid)) {
+                $model->ulid = (string) Str::ulid();
+            }
+        });
+    }
 
     // ── Relationships ──────────────────────────────────────────────────────
 
@@ -85,7 +98,11 @@ class SwapOrder extends Model
 
     public function scopeActive($query)
     {
-        return $query->whereNotIn('status', [self::STATUS_CANCELLED, self::STATUS_EXPIRED, self::STATUS_COMPLETED]);
+        return $query->whereNotIn('status', [
+            self::STATUS_CANCELLED,
+            self::STATUS_EXPIRED,
+            self::STATUS_COMPLETED
+        ]);
     }
 
     public function scopeCompleted($query)
