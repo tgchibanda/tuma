@@ -1,24 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-// Auth Controllers
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\Auth\PinController;
 use App\Http\Controllers\Auth\SessionController;
-
-// API Controllers
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\KycController;
 use App\Http\Controllers\Api\BankAccountController;
-use App\Http\Controllers\Api\SavedRecipientController;
-use App\Http\Controllers\Api\OrderTemplateController;
-use App\Http\Controllers\Api\RecurringOrderController;
-use App\Http\Controllers\Api\RateAlertController;
-use App\Http\Controllers\Api\CountryController;
-use App\Http\Controllers\Api\ExchangeRateController;
-use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Api\SwapOrderController;
 use App\Http\Controllers\Api\SwapMatchController;
 use App\Http\Controllers\Api\DepositController;
@@ -27,18 +17,15 @@ use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\DisputeController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\FeedbackController;
-use App\Http\Controllers\Api\TrustedContactController;
-use App\Http\Controllers\Api\UserReportController;
-use App\Http\Controllers\Api\DirectoryController;
-use App\Http\Controllers\Api\FeedController;
-use App\Http\Controllers\Api\NoticeboardController;
-use App\Http\Controllers\Api\OnboardingController;
-use App\Http\Controllers\Api\NotificationController;
-
-// Admin Controllers
+use App\Http\Controllers\Api\ExchangeRateController;
+use App\Http\Controllers\Api\CountryController;
+use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\RateAlertController;
+use App\Http\Controllers\Api\SavedRecipientController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminMatchController;
 use App\Http\Controllers\Admin\AdminDepositController;
 use App\Http\Controllers\Admin\AdminDisputeController;
@@ -47,444 +34,243 @@ use App\Http\Controllers\Admin\AdminCountryController;
 use App\Http\Controllers\Admin\AdminLocationController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
-use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminNoticeboardController;
 use App\Http\Controllers\Admin\AdminAnnouncementController;
 use App\Http\Controllers\Admin\AdminHolidayController;
-use App\Http\Controllers\Admin\AdminReconciliationController;
+use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminReferralController;
 use App\Http\Controllers\Admin\AdminBoostController;
-use App\Http\Controllers\Admin\AdminOrderController;
-
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Version: v1
-| All responses use envelope: { success, message, data, errors, meta }
-|
-*/
+use App\Http\Controllers\Admin\AdminReconciliationController;
 
 Route::prefix('v1')->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | PUBLIC ROUTES — No authentication required
-    |--------------------------------------------------------------------------
-    */
+    // ── Public ─────────────────────────────────────────────────────────────
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/login',    [AuthController::class, 'login']);
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password',  [AuthController::class, 'resetPassword']);
+    Route::get('/auth/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
 
-    // ── Authentication ──────────────────────────────────────────────────────
-    Route::prefix('auth')->name('auth.')->group(function () {
-        Route::post('register',           [AuthController::class, 'register'])
-             ->middleware('throttle:register')
-             ->name('register');
+    Route::get('/exchange-rates/{from}/{to}', [ExchangeRateController::class, 'current']);
+    Route::get('/countries',                  [CountryController::class, 'index']);
+    Route::get('/countries/{id}/locations',   [LocationController::class, 'byCountry']);
+    Route::get('/feed',                        [\App\Http\Controllers\Api\PublicFeedController::class, 'index'])->name('feed.index');
+    Route::get('/feed/stats',                  [\App\Http\Controllers\Api\PublicFeedController::class, 'stats'])->name('feed.stats');
+    Route::get('/noticeboard',                 [\App\Http\Controllers\Api\NoticeboardController::class, 'index'])->name('noticeboard.index');
+    Route::get('/public-holidays',             [AdminHolidayController::class, 'indexPublic'])->name('holidays.public');
+    Route::get('/users/{ulid}',                [UserController::class, 'publicProfile'])->name('users.public');
+    Route::get('/directory',                   [\App\Http\Controllers\Api\DirectoryController::class, 'index'])->name('directory.index');
 
-        Route::post('login',              [AuthController::class, 'login'])
-             ->middleware('throttle:login')
-             ->name('login');
+    // ── Authenticated ──────────────────────────────────────────────────────
+    Route::middleware('auth:sanctum')->group(function () {
 
-        Route::post('forgot-password',    [AuthController::class, 'forgotPassword'])
-             ->middleware('throttle:6,1')
-             ->name('forgot-password');
+        // Auth
+        Route::post('/auth/logout',        [AuthController::class, 'logout']);
+        Route::post('/auth/verify-phone',  [AuthController::class, 'verifyPhone']);
+        Route::post('/auth/confirm-phone', [AuthController::class, 'confirmPhone']);
+        Route::post('/auth/2fa/setup',     [TwoFactorController::class, 'setup']);
+        Route::post('/auth/2fa/confirm',   [TwoFactorController::class, 'confirm']);
+        Route::post('/auth/2fa/disable',   [TwoFactorController::class, 'disable']);
+        Route::post('/auth/2fa/verify',    [TwoFactorController::class, 'verify']);
+        Route::post('/auth/pin/setup',     [PinController::class, 'setup']);
+        Route::post('/auth/pin/change',    [PinController::class, 'change']);
+        Route::post('/auth/pin/verify',    [PinController::class, 'verify']);
+        Route::get('/sessions',            [SessionController::class, 'index']);
+        Route::delete('/sessions',         [SessionController::class, 'destroyAll']);
 
-        Route::post('reset-password',     [AuthController::class, 'resetPassword'])
-             ->name('reset-password');
+        // User
+        Route::get('/user',               [UserController::class, 'me']);
+        Route::put('/user/profile',       [UserController::class, 'updateProfile']);
+        Route::post('/user/profile/photo',[UserController::class, 'uploadPhoto']);
+        Route::get('/user/stats',         [UserController::class, 'stats']);
+        Route::put('/user/password',      [UserController::class, 'changePassword']);
+        Route::get('/user/history',       [UserController::class, 'history']);
+        Route::post('/user/onboarding/complete', [UserController::class, 'completeOnboarding']);
+        Route::get('/user/notifications',            [UserController::class, 'notifications']);
+        Route::post('/user/notifications/read-all',  [UserController::class, 'markAllRead']);
+        Route::post('/user/notifications/{id}/read', [UserController::class, 'markRead']);
+        Route::put('/user/notifications/preferences',[UserController::class, 'updateNotificationPreferences']);
+        Route::get('/user/reviews', [\App\Http\Controllers\Api\ReviewController::class, 'indexForMe']);
 
-        Route::get('verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])
-             ->middleware(['signed', 'throttle:6,1'])
-             ->name('verify-email');
+        // KYC
+        Route::get('/kyc',                       [KycController::class, 'status']);
+        Route::post('/kyc/upload',               [KycController::class, 'upload']);
+        Route::delete('/kyc/documents/{id}',     [KycController::class, 'deleteDocument']);
+
+        // Bank Accounts
+        Route::get('/bank-accounts',                    [BankAccountController::class, 'index']);
+        Route::post('/bank-accounts',                   [BankAccountController::class, 'store']);
+        Route::put('/bank-accounts/{id}',               [BankAccountController::class, 'update']);
+        Route::put('/bank-accounts/{id}/set-primary',   [BankAccountController::class, 'setPrimary']);
+        Route::delete('/bank-accounts/{id}',            [BankAccountController::class, 'destroy']);
+
+        // Rate Alerts
+        Route::get('/rate-alerts',          [RateAlertController::class, 'index']);
+        Route::post('/rate-alerts',         [RateAlertController::class, 'store']);
+        Route::put('/rate-alerts/{id}',     [RateAlertController::class, 'update']);
+        Route::delete('/rate-alerts/{id}',  [RateAlertController::class, 'destroy']);
+
+        // Saved Recipients
+        Route::get('/recipients',           [SavedRecipientController::class, 'index']);
+        Route::post('/recipients',          [SavedRecipientController::class, 'store']);
+        Route::put('/recipients/{id}',      [SavedRecipientController::class, 'update']);
+        Route::delete('/recipients/{id}',   [SavedRecipientController::class, 'destroy']);
+
+        // Secure file serving
+        Route::get('/files/deposits/{id}/proof',          [FileController::class, 'depositProof'])->name('files.deposit.proof');
+        Route::get('/files/deliveries/{id}/proof/{type}', [FileController::class, 'deliveryProof'])->name('files.delivery.proof');
+        Route::get('/files/kyc/{id}',                     [FileController::class, 'kycDocument'])->name('files.kyc');
+
+        // Orders
+        Route::get('/orders',              [SwapOrderController::class, 'index']);
+        Route::post('/orders',             [SwapOrderController::class, 'store']);
+        Route::get('/orders/browse',       [SwapOrderController::class, 'browse']);
+        Route::get('/orders/{ulid}',       [SwapOrderController::class, 'show']);
+        Route::put('/orders/{ulid}/cancel',[SwapOrderController::class, 'cancel']);
+        Route::put('/orders/{ulid}/extend',[SwapOrderController::class, 'extend']);
+        Route::post('/orders/{ulid}/boost',[SwapOrderController::class, 'boost']);
+        Route::post('/orders/{ulid}/repeat',[SwapOrderController::class, 'repeat']);
+        Route::post('/orders/{ulid}/propose-match', [SwapMatchController::class, 'proposeMatch']);
+
+        // Matches
+        Route::get('/matches',               [SwapMatchController::class, 'index']);
+        Route::get('/matches/{ulid}',        [SwapMatchController::class, 'show']);
+        Route::put('/matches/{ulid}/cancel', [SwapMatchController::class, 'cancel']);
+        Route::get('/matches/{ulid}/negotiations', [SwapMatchController::class, 'negotiations']);
+        Route::post('/matches/{ulid}/negotiate',   [SwapMatchController::class, 'negotiate']);
+        Route::post('/matches/{ulid}/delivery-method',          [SwapMatchController::class, 'selectDeliveryMethod']);
+        Route::post('/matches/{ulid}/delivery-method/confirm',  [SwapMatchController::class, 'confirmDeliveryMethod']);
+        Route::get('/matches/{ulid}/delivery-method',           [SwapMatchController::class, 'getDeliveryMethod']);
+
+        // Deposit
+        Route::get('/matches/{ulid}/deposit',          [DepositController::class, 'show']);
+        Route::post('/matches/{ulid}/deposit/upload',  [DepositController::class, 'upload']);
+
+        // Delivery
+        Route::get('/matches/{ulid}/delivery',          [DeliveryController::class, 'show']);
+        Route::post('/matches/{ulid}/delivery/upload',  [DeliveryController::class, 'upload']);
+        Route::post('/matches/{ulid}/delivery/confirm', [DeliveryController::class, 'confirm']);
+        Route::get('/matches/{ulid}/delivery/denominations', [DeliveryController::class, 'denominations']);
+
+        // Messages
+        Route::get('/matches/{ulid}/messages',       [MessageController::class, 'index']);
+        Route::post('/matches/{ulid}/messages',      [MessageController::class, 'store']);
+        Route::post('/matches/{ulid}/messages/read', [MessageController::class, 'markRead']);
+        Route::get('/unread-count',                  [MessageController::class, 'unreadCount']);
+
+        // Disputes
+        Route::post('/matches/{ulid}/dispute', [DisputeController::class, 'raise']);
+        Route::get('/disputes',                [DisputeController::class, 'index']);
+        Route::get('/disputes/{id}',           [DisputeController::class, 'show']);
+        Route::post('/disputes/{id}/messages', [DisputeController::class, 'sendMessage']);
+
+        // Reviews & Feedback
+        Route::post('/matches/{ulid}/rate',    [ReviewController::class, 'store']);
+        Route::get('/users/{ulid}/reviews',    [ReviewController::class, 'indexForUser']);
+        Route::post('/matches/{ulid}/feedback',[FeedbackController::class, 'store']);
     });
 
-    // ── Countries & Exchange Rates ──────────────────────────────────────────
-    Route::prefix('countries')->name('countries.')->group(function () {
-        Route::get('/',                   [CountryController::class, 'index'])->name('index');
-        Route::get('{id}/locations',      [LocationController::class, 'byCountry'])->name('locations');
-    });
+    // ── Admin ─────────────────────────────────────────────────────────────
+    Route::prefix('admin')->group(function () {
 
-    Route::prefix('exchange-rates')->name('exchange-rates.')->group(function () {
-        Route::get('/',                   [ExchangeRateController::class, 'index'])->name('index');
-        Route::get('{from}/{to}',         [ExchangeRateController::class, 'show'])->name('show');
-        Route::get('history/{from}/{to}', [ExchangeRateController::class, 'history'])->name('history');
-    });
+        Route::post('/auth/login',  [AdminAuthController::class, 'login']);
 
-    Route::prefix('locations')->name('locations.')->group(function () {
-        Route::get('availability',        [LocationController::class, 'availability'])->name('availability');
-    });
+        Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+            Route::post('/auth/logout', [AdminAuthController::class, 'logout']);
+            Route::get('/dashboard',    [AdminDashboardController::class, 'index']);
 
-    // ── Social Proof & Directory (public) ──────────────────────────────────
-    Route::prefix('feed')->name('feed.')->group(function () {
-        Route::get('/',                   [FeedController::class, 'index'])->name('index');
-        Route::get('stats',               [FeedController::class, 'stats'])->name('stats');
-    });
+            // Users
+            Route::get('/users',                          [AdminUserController::class, 'index']);
+            Route::get('/users/{id}',                     [AdminUserController::class, 'show']);
+            Route::put('/users/{id}/kyc/approve',         [AdminUserController::class, 'approveKyc']);
+            Route::put('/users/{id}/kyc/reject',          [AdminUserController::class, 'rejectKyc']);
+            Route::put('/users/{id}/suspend',             [AdminUserController::class, 'suspend']);
+            Route::put('/users/{id}/unsuspend',           [AdminUserController::class, 'unsuspend']);
+            Route::put('/users/{id}/ban',                 [AdminUserController::class, 'ban']);
+            Route::put('/users/{id}/verify-business',     [AdminUserController::class, 'verifyBusiness']);
+            Route::put('/users/{id}/toggle-available',    [AdminUserController::class, 'toggleAvailable']);
 
-    Route::prefix('directory')->name('directory.')->group(function () {
-        Route::get('/',                   [DirectoryController::class, 'index'])->name('index');
-        Route::get('{ulid}',              [DirectoryController::class, 'show'])->name('show');
-    });
+            // Secure file serving for admin
+            Route::get('/documents/{id}/file',                 [FileController::class, 'kycDocument'])->name('admin.document');
+            Route::get('/deposits/{id}/proof',                 [FileController::class, 'depositProof'])->name('admin.deposit.proof');
+            Route::get('/deliveries/{id}/proof/{type}',        [FileController::class, 'deliveryProof'])->name('admin.delivery.proof');
 
-    // ── Noticeboard (public read) ───────────────────────────────────────────
-    Route::prefix('noticeboard')->name('noticeboard.')->group(function () {
-        Route::get('/',                   [NoticeboardController::class, 'index'])->name('index');
-        Route::get('{id}',                [NoticeboardController::class, 'show'])->name('show');
-    });
+            // Orders
+            Route::get('/orders',       [AdminOrderController::class, 'index']);
+            Route::get('/orders/{ulid}',[AdminOrderController::class, 'show']);
 
-    // ── Public Holidays (public read) ──────────────────────────────────────
-    Route::get('public-holidays',         [AdminHolidayController::class, 'indexPublic'])->name('public-holidays');
-
-    // ── Public User Profiles ────────────────────────────────────────────────
-    Route::prefix('users')->name('users.')->group(function () {
-        Route::get('{ulid}',              [UserController::class, 'publicProfile'])->name('public-profile');
-        Route::get('{ulid}/reviews',      [ReviewController::class, 'indexForUser'])->name('reviews');
-        Route::get('{ulid}/badges',       [UserController::class, 'badges'])->name('badges');
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | AUTHENTICATED ROUTES — Requires Sanctum token
-    |--------------------------------------------------------------------------
-    */
-
-    Route::middleware(['auth:sanctum', 'update.last.seen'])->group(function () {
-
-        // ── Auth Actions ────────────────────────────────────────────────────
-        Route::prefix('auth')->name('auth.')->group(function () {
-            Route::post('logout',                    [AuthController::class, 'logout'])->name('logout');
-            Route::post('resend-verification',       [AuthController::class, 'resendVerification'])->name('resend-verification');
-            Route::post('verify-phone',              [AuthController::class, 'verifyPhone'])->name('verify-phone');
-            Route::post('verify-phone/confirm',      [AuthController::class, 'confirmPhone'])->name('confirm-phone');
-
-            // Two-Factor Authentication
-            Route::prefix('2fa')->name('2fa.')->group(function () {
-                Route::post('setup',                 [TwoFactorController::class, 'setup'])->name('setup');
-                Route::post('confirm',               [TwoFactorController::class, 'confirm'])->name('confirm');
-                Route::post('disable',               [TwoFactorController::class, 'disable'])->name('disable');
-                Route::post('verify',                [TwoFactorController::class, 'verify'])->name('verify');
-            });
-
-            // Transaction PIN
-            Route::prefix('pin')->name('pin.')->group(function () {
-                Route::post('setup',                 [PinController::class, 'setup'])->name('setup');
-                Route::post('change',                [PinController::class, 'change'])->name('change');
-                Route::post('verify',                [PinController::class, 'verify'])->name('verify');
-            });
-
-            // Session / Login Activity
-            Route::prefix('sessions')->name('sessions.')->group(function () {
-                Route::get('/',                      [SessionController::class, 'index'])->name('index');
-                Route::delete('/',                   [SessionController::class, 'destroyAll'])->name('destroy-all');
-            });
-        });
-
-        // ── User Profile ────────────────────────────────────────────────────
-        Route::prefix('user')->name('user.')->group(function () {
-            Route::get('/',                          [UserController::class, 'show'])->name('show');
-            Route::put('profile',                    [UserController::class, 'updateProfile'])->name('update-profile');
-            Route::put('password',                   [UserController::class, 'updatePassword'])->name('update-password');
-            Route::get('stats',                      [UserController::class, 'stats'])->name('stats');
-            Route::get('badges',                     [UserController::class, 'myBadges'])->name('badges');
-            Route::get('referral',                   [UserController::class, 'referral'])->name('referral');
-            Route::get('savings',                    [UserController::class, 'savings'])->name('savings');
-            Route::get('trust-score',                [UserController::class, 'trustScore'])->name('trust-score');
-
-            // Notifications
-            Route::prefix('notifications')->name('notifications.')->group(function () {
-                Route::get('/',                      [NotificationController::class, 'index'])->name('index');
-                Route::post('read',                  [NotificationController::class, 'markRead'])->name('read');
-            });
-
-            // Notification Preferences
-            Route::prefix('notification-preferences')->name('notification-preferences.')->group(function () {
-                Route::get('/',                      [UserController::class, 'notificationPreferences'])->name('show');
-                Route::put('/',                      [UserController::class, 'updateNotificationPreferences'])->name('update');
-            });
-        });
-
-        // ── KYC ─────────────────────────────────────────────────────────────
-        Route::prefix('kyc')->name('kyc.')->group(function () {
-            Route::get('status',                     [KycController::class, 'status'])->name('status');
-            Route::post('submit',                    [KycController::class, 'submit'])
-                 ->middleware('throttle:uploads')
-                 ->name('submit');
-            Route::get('documents',                  [KycController::class, 'documents'])->name('documents');
-        });
-
-        // ── Bank Accounts ────────────────────────────────────────────────────
-        Route::prefix('bank-accounts')->name('bank-accounts.')->group(function () {
-            Route::get('/',                          [BankAccountController::class, 'index'])->name('index');
-            Route::post('/',                         [BankAccountController::class, 'store'])->name('store');
-            Route::put('{id}',                       [BankAccountController::class, 'update'])->name('update');
-            Route::delete('{id}',                    [BankAccountController::class, 'destroy'])->name('destroy');
-            Route::post('{id}/set-primary',          [BankAccountController::class, 'setPrimary'])->name('set-primary');
-        });
-
-        // ── Saved Recipients ─────────────────────────────────────────────────
-        Route::prefix('recipients')->name('recipients.')->group(function () {
-            Route::get('/',                          [SavedRecipientController::class, 'index'])->name('index');
-            Route::post('/',                         [SavedRecipientController::class, 'store'])->name('store');
-            Route::put('{id}',                       [SavedRecipientController::class, 'update'])->name('update');
-            Route::delete('{id}',                    [SavedRecipientController::class, 'destroy'])->name('destroy');
-            Route::post('{id}/favourite',            [SavedRecipientController::class, 'toggleFavourite'])->name('favourite');
-        });
-
-        // ── Order Templates ──────────────────────────────────────────────────
-        Route::prefix('templates')->name('templates.')->group(function () {
-            Route::get('/',                          [OrderTemplateController::class, 'index'])->name('index');
-            Route::post('/',                         [OrderTemplateController::class, 'store'])->name('store');
-            Route::put('{id}',                       [OrderTemplateController::class, 'update'])->name('update');
-            Route::delete('{id}',                    [OrderTemplateController::class, 'destroy'])->name('destroy');
-            Route::post('{id}/use',                  [OrderTemplateController::class, 'use'])->name('use');
-        });
-
-        // ── Recurring Orders ─────────────────────────────────────────────────
-        Route::prefix('recurring')->name('recurring.')->group(function () {
-            Route::get('/',                          [RecurringOrderController::class, 'index'])->name('index');
-            Route::post('/',                         [RecurringOrderController::class, 'store'])->name('store');
-            Route::put('{id}',                       [RecurringOrderController::class, 'update'])->name('update');
-            Route::delete('{id}',                    [RecurringOrderController::class, 'destroy'])->name('destroy');
-            Route::post('{id}/pause',                [RecurringOrderController::class, 'pause'])->name('pause');
-            Route::post('{id}/resume',               [RecurringOrderController::class, 'resume'])->name('resume');
-        });
-
-        // ── Rate Alerts ──────────────────────────────────────────────────────
-        Route::prefix('rate-alerts')->name('rate-alerts.')->group(function () {
-            Route::get('/',                          [RateAlertController::class, 'index'])->name('index');
-            Route::post('/',                         [RateAlertController::class, 'store'])->name('store');
-            Route::delete('{id}',                    [RateAlertController::class, 'destroy'])->name('destroy');
-        });
-
-        // ── Trusted Contacts ─────────────────────────────────────────────────
-        Route::prefix('contacts')->name('contacts.')->group(function () {
-            Route::get('/',                          [TrustedContactController::class, 'index'])->name('index');
-            Route::post('/',                         [TrustedContactController::class, 'store'])->name('store');
-            Route::delete('{id}',                    [TrustedContactController::class, 'destroy'])->name('destroy');
-        });
-
-        // ── Swap Orders ──────────────────────────────────────────────────────
-        Route::prefix('orders')->name('orders.')->group(function () {
-            Route::get('/',                          [SwapOrderController::class, 'index'])->name('index');
-            Route::post('/',                         [SwapOrderController::class, 'store'])->name('store');
-            Route::get('browse',                     [SwapOrderController::class, 'browse'])->name('browse');
-            Route::get('{ulid}',                     [SwapOrderController::class, 'show'])->name('show');
-            Route::put('{ulid}/cancel',              [SwapOrderController::class, 'cancel'])->name('cancel');
-            Route::put('{ulid}/extend',              [SwapOrderController::class, 'extend'])->name('extend');
-            Route::post('{ulid}/boost',              [SwapOrderController::class, 'boost'])->name('boost');
-            Route::post('{ulid}/repeat',             [SwapOrderController::class, 'repeat'])->name('repeat');
-            Route::post('{ulid}/propose-match',      [SwapMatchController::class, 'proposeMatch'])->name('propose-match');
-        });
-
-        // ── Swap Matches ─────────────────────────────────────────────────────
-        Route::prefix('matches')->name('matches.')->group(function () {
-            Route::get('/',                          [SwapMatchController::class, 'index'])->name('index');
-            Route::get('{ulid}',                     [SwapMatchController::class, 'show'])->name('show');
-            Route::get('{ulid}/negotiations',        [SwapMatchController::class, 'negotiations'])->name('negotiations');
-            Route::post('{ulid}/negotiate',          [SwapMatchController::class, 'negotiate'])->name('negotiate');
-            Route::put('{ulid}/cancel',              [SwapMatchController::class, 'cancel'])->name('cancel');
-
-            // Delivery method selection (after rate agreed)
-            Route::post('{ulid}/delivery-method',         [SwapMatchController::class, 'selectDeliveryMethod'])->name('delivery-method');
-            Route::post('{ulid}/delivery-method/confirm', [SwapMatchController::class, 'confirmDeliveryMethod'])->name('delivery-method.confirm');
-            Route::get('{ulid}/delivery-method',          [SwapMatchController::class, 'getDeliveryMethod'])->name('delivery-method.show');
+            // Matches
+            Route::get('/matches',                  [AdminMatchController::class, 'index']);
+            Route::get('/matches/{ulid}',           [AdminMatchController::class, 'show']);
+            Route::put('/matches/{ulid}/verify-deposit', [AdminMatchController::class, 'verifyDeposit']);
+            Route::put('/matches/{ulid}/release-funds',  [AdminMatchController::class, 'releaseFunds']);
+            Route::put('/matches/{ulid}/refund',         [AdminMatchController::class, 'refund']);
+            Route::put('/matches/{ulid}/force-cancel',   [AdminMatchController::class, 'forceCancel']);
 
             // Deposits
-            Route::get('{ulid}/deposit',             [DepositController::class, 'show'])->name('deposit.show');
-            Route::post('{ulid}/deposit/upload',     [DepositController::class, 'upload'])
-                 ->middleware('throttle:uploads')
-                 ->name('deposit.upload');
-
-            // Cash Delivery
-            Route::get('{ulid}/delivery',            [DeliveryController::class, 'show'])->name('delivery.show');
-            Route::post('{ulid}/delivery/upload',    [DeliveryController::class, 'upload'])
-                 ->middleware('throttle:uploads')
-                 ->name('delivery.upload');
-            Route::post('{ulid}/delivery/confirm',   [DeliveryController::class, 'confirm'])->name('delivery.confirm');
-            Route::post('{ulid}/delivery/denominations', [DeliveryController::class, 'denominations'])->name('delivery.denominations');
-
-            // Chat Messages
-            Route::get('{ulid}/messages',            [MessageController::class, 'index'])->name('messages.index');
-            Route::post('{ulid}/messages',           [MessageController::class, 'store'])
-                 ->middleware('throttle:uploads')
-                 ->name('messages.store');
-            Route::post('{ulid}/messages/read',      [MessageController::class, 'markRead'])->name('messages.read');
-            Route::get('{ulid}/messages/unread-count', [MessageController::class, 'unreadCount'])->name('messages.unread-count');
+            Route::get('/deposits',     [AdminDepositController::class, 'index']);
+            Route::get('/deposits/{id}',[AdminDepositController::class, 'show']);
 
             // Disputes
-            Route::post('{ulid}/dispute',            [DisputeController::class, 'raise'])->name('dispute');
+            Route::get('/disputes',              [AdminDisputeController::class, 'index']);
+            Route::get('/disputes/{id}',         [AdminDisputeController::class, 'show']);
+            Route::put('/disputes/{id}/resolve', [AdminDisputeController::class, 'resolve']);
+            Route::post('/disputes/{id}/messages',[AdminDisputeController::class, 'sendMessage']);
 
-            // Reviews & Ratings
-            Route::post('{ulid}/rate',               [ReviewController::class, 'store'])->name('rate');
+            // Exchange rates
+            Route::get('/exchange-rates',               [AdminExchangeRateController::class, 'index']);
+            Route::post('/exchange-rates',              [AdminExchangeRateController::class, 'store']);
+            Route::put('/exchange-rates/{id}/deactivate',[AdminExchangeRateController::class, 'deactivate']);
+            Route::put('/exchange-rates/{id}/schedule', [AdminExchangeRateController::class, 'schedule']);
 
-            // Transaction Feedback
-            Route::post('{ulid}/feedback',           [FeedbackController::class, 'store'])->name('feedback');
+            // Countries & Locations
+            Route::get('/countries',                    [AdminCountryController::class, 'index']);
+            Route::post('/countries',                   [AdminCountryController::class, 'store']);
+            Route::put('/countries/{id}',               [AdminCountryController::class, 'update']);
+            Route::put('/countries/{id}/toggle-active', [AdminCountryController::class, 'toggleActive']);
+
+            Route::get('/locations',                      [AdminLocationController::class, 'index']);
+            Route::post('/locations',                     [AdminLocationController::class, 'store']);
+            Route::put('/locations/{id}',                 [AdminLocationController::class, 'update']);
+            Route::put('/locations/{id}/toggle-active',   [AdminLocationController::class, 'toggleActive']);
+            Route::delete('/locations/{id}',              [AdminLocationController::class, 'destroy']);
+
+            // Settings
+            Route::get('/settings',  [AdminSettingsController::class, 'index']);
+            Route::put('/settings',  [AdminSettingsController::class, 'bulkUpdate']);
+
+            // Noticeboard
+            Route::get('/noticeboard',          [AdminNoticeboardController::class, 'index']);
+            Route::post('/noticeboard',         [AdminNoticeboardController::class, 'store']);
+            Route::put('/noticeboard/{id}',     [AdminNoticeboardController::class, 'update']);
+            Route::delete('/noticeboard/{id}',  [AdminNoticeboardController::class, 'destroy']);
+            Route::put('/noticeboard/{id}/publish', [AdminNoticeboardController::class, 'publish']);
+            Route::put('/noticeboard/{id}/pin',     [AdminNoticeboardController::class, 'pin']);
+
+            // Announcements
+            Route::get('/announcements',        [AdminAnnouncementController::class, 'index']);
+            Route::post('/announcements',       [AdminAnnouncementController::class, 'store']);
+            Route::put('/announcements/{id}',   [AdminAnnouncementController::class, 'update']);
+            Route::delete('/announcements/{id}',[AdminAnnouncementController::class, 'destroy']);
+
+            // Holidays
+            Route::get('/holidays',        [AdminHolidayController::class, 'index']);
+            Route::post('/holidays',       [AdminHolidayController::class, 'store']);
+            Route::put('/holidays/{id}',   [AdminHolidayController::class, 'update']);
+            Route::delete('/holidays/{id}',[AdminHolidayController::class, 'destroy']);
+
+            // Reports, referrals, boosts
+            Route::get('/reports',              [AdminReportController::class, 'index']);
+            Route::get('/reports/{id}',         [AdminReportController::class, 'show']);
+            Route::put('/reports/{id}/resolve', [AdminReportController::class, 'resolve']);
+            Route::get('/referrals',            [AdminReferralController::class, 'index']);
+            Route::get('/boosts',               [AdminBoostController::class, 'index']);
+
+            // Audit logs
+            Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);
+
+            // Reconciliation
+            Route::post('/reconciliation/upload', [AdminReconciliationController::class, 'upload']);
         });
-
-        // ── Disputes ─────────────────────────────────────────────────────────
-        Route::prefix('disputes')->name('disputes.')->group(function () {
-            Route::get('/',                          [DisputeController::class, 'index'])->name('index');
-            Route::get('{id}',                       [DisputeController::class, 'show'])->name('show');
-            Route::post('{id}/messages',             [DisputeController::class, 'sendMessage'])->name('messages');
-        });
-
-        // ── User Reports ─────────────────────────────────────────────────────
-        Route::post('users/{ulid}/report',           [UserReportController::class, 'store'])->name('users.report');
-
-        // ── Directory (authenticated — initiate transaction) ─────────────────
-        Route::post('directory/{ulid}/initiate',     [DirectoryController::class, 'initiate'])->name('directory.initiate');
-
-        // ── Onboarding ────────────────────────────────────────────────────────
-        Route::prefix('onboarding')->name('onboarding.')->group(function () {
-            Route::get('status',                     [OnboardingController::class, 'status'])->name('status');
-            Route::post('complete-step',             [OnboardingController::class, 'completeStep'])->name('complete-step');
-            Route::post('complete',                  [OnboardingController::class, 'complete'])->name('complete');
-        });
-
-    }); // end auth:sanctum
-
-}); // end v1
-
-
-/*
-|--------------------------------------------------------------------------
-| ADMIN ROUTES — Requires Sanctum token + admin role
-|--------------------------------------------------------------------------
-*/
-
-Route::prefix('admin')->name('admin.')->group(function () {
-
-    // ── Admin Auth (public — no sanctum required) ───────────────────────────
-    Route::post('auth/login',                        [AdminAuthController::class, 'login'])
-         ->middleware('throttle:login')
-         ->name('auth.login');
-
-    // ── All other admin routes require auth + admin role ────────────────────
-    Route::middleware(['auth:sanctum', 'admin', 'update.last.seen'])->group(function () {
-
-        Route::post('auth/logout',                   [AdminAuthController::class, 'logout'])->name('auth.logout');
-
-        // ── Dashboard ───────────────────────────────────────────────────────
-        Route::get('dashboard',                      [AdminDashboardController::class, 'index'])->name('dashboard');
-
-        // ── User Management ─────────────────────────────────────────────────
-        Route::prefix('users')->name('users.')->group(function () {
-            Route::get('/',                          [AdminUserController::class, 'index'])->name('index');
-            Route::get('{id}',                       [AdminUserController::class, 'show'])->name('show');
-            Route::put('{id}/kyc/approve',           [AdminUserController::class, 'approveKyc'])->name('kyc.approve');
-            Route::put('{id}/kyc/reject',            [AdminUserController::class, 'rejectKyc'])->name('kyc.reject');
-            Route::put('{id}/suspend',               [AdminUserController::class, 'suspend'])->name('suspend');
-            Route::put('{id}/unsuspend',             [AdminUserController::class, 'unsuspend'])->name('unsuspend');
-            Route::put('{id}/ban',                   [AdminUserController::class, 'ban'])->name('ban');
-            Route::put('{id}/verify-business',       [AdminUserController::class, 'verifyBusiness'])->name('verify-business');
-            Route::put('{id}/toggle-available',      [AdminUserController::class, 'toggleAvailable'])->name('toggle-available');
-        });
-
-        // ── Orders ──────────────────────────────────────────────────────────
-        Route::prefix('orders')->name('orders.')->group(function () {
-            Route::get('/',                          [AdminOrderController::class, 'index'])->name('index');
-            Route::get('{ulid}',                     [AdminOrderController::class, 'show'])->name('show');
-        });
-
-        // ── Matches ─────────────────────────────────────────────────────────
-        Route::prefix('matches')->name('matches.')->group(function () {
-            Route::get('/',                          [AdminMatchController::class, 'index'])->name('index');
-            Route::get('{ulid}',                     [AdminMatchController::class, 'show'])->name('show');
-            Route::put('{ulid}/verify-deposit',      [AdminMatchController::class, 'verifyDeposit'])->name('verify-deposit');
-            Route::put('{ulid}/release-funds',       [AdminMatchController::class, 'releaseFunds'])->name('release-funds');
-            Route::put('{ulid}/refund',              [AdminMatchController::class, 'refund'])->name('refund');
-            Route::put('{ulid}/force-cancel',        [AdminMatchController::class, 'forceCancel'])->name('force-cancel');
-        });
-
-        // ── Deposits ─────────────────────────────────────────────────────────
-        Route::prefix('deposits')->name('deposits.')->group(function () {
-            Route::get('/',                          [AdminDepositController::class, 'index'])->name('index');
-            Route::get('{id}',                       [AdminDepositController::class, 'show'])->name('show');
-        });
-
-        // ── Disputes ─────────────────────────────────────────────────────────
-        Route::prefix('disputes')->name('disputes.')->group(function () {
-            Route::get('/',                          [AdminDisputeController::class, 'index'])->name('index');
-            Route::get('{id}',                       [AdminDisputeController::class, 'show'])->name('show');
-            Route::put('{id}/resolve',               [AdminDisputeController::class, 'resolve'])->name('resolve');
-            Route::post('{id}/messages',             [AdminDisputeController::class, 'sendMessage'])->name('messages');
-        });
-
-        // ── Exchange Rates ────────────────────────────────────────────────────
-        Route::prefix('exchange-rates')->name('exchange-rates.')->group(function () {
-            Route::get('/',                          [AdminExchangeRateController::class, 'index'])->name('index');
-            Route::post('/',                         [AdminExchangeRateController::class, 'store'])->name('store');
-            Route::put('{id}/deactivate',            [AdminExchangeRateController::class, 'deactivate'])->name('deactivate');
-            Route::put('{id}/schedule',              [AdminExchangeRateController::class, 'schedule'])->name('schedule');
-        });
-
-        // ── Countries ─────────────────────────────────────────────────────────
-        Route::prefix('countries')->name('countries.')->group(function () {
-            Route::get('/',                          [AdminCountryController::class, 'index'])->name('index');
-            Route::post('/',                         [AdminCountryController::class, 'store'])->name('store');
-            Route::put('{id}',                       [AdminCountryController::class, 'update'])->name('update');
-            Route::put('{id}/toggle-active',         [AdminCountryController::class, 'toggleActive'])->name('toggle-active');
-        });
-
-        // ── Delivery Locations ────────────────────────────────────────────────
-        Route::prefix('locations')->name('locations.')->group(function () {
-            Route::get('/',                          [AdminLocationController::class, 'index'])->name('index');
-            Route::post('/',                         [AdminLocationController::class, 'store'])->name('store');
-            Route::put('{id}',                       [AdminLocationController::class, 'update'])->name('update');
-            Route::put('{id}/toggle-active',         [AdminLocationController::class, 'toggleActive'])->name('toggle-active');
-            Route::delete('{id}',                    [AdminLocationController::class, 'destroy'])->name('destroy');
-        });
-
-        // ── System Settings ────────────────────────────────────────────────────
-        Route::prefix('settings')->name('settings.')->group(function () {
-            Route::get('/',                          [AdminSettingsController::class, 'index'])->name('index');
-            Route::put('/',                          [AdminSettingsController::class, 'bulkUpdate'])->name('update');
-        });
-
-        // ── Audit Logs ─────────────────────────────────────────────────────────
-        Route::get('audit-logs',                     [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
-
-        // ── User Reports ───────────────────────────────────────────────────────
-        Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/',                          [AdminReportController::class, 'index'])->name('index');
-            Route::get('{id}',                       [AdminReportController::class, 'show'])->name('show');
-            Route::put('{id}/resolve',               [AdminReportController::class, 'resolve'])->name('resolve');
-        });
-
-        // ── Noticeboard ────────────────────────────────────────────────────────
-        Route::prefix('noticeboard')->name('noticeboard.')->group(function () {
-            Route::get('/',                          [AdminNoticeboardController::class, 'index'])->name('index');
-            Route::post('/',                         [AdminNoticeboardController::class, 'store'])->name('store');
-            Route::put('{id}',                       [AdminNoticeboardController::class, 'update'])->name('update');
-            Route::delete('{id}',                    [AdminNoticeboardController::class, 'destroy'])->name('destroy');
-            Route::put('{id}/publish',               [AdminNoticeboardController::class, 'publish'])->name('publish');
-            Route::put('{id}/pin',                   [AdminNoticeboardController::class, 'pin'])->name('pin');
-        });
-
-        // ── Platform Announcements ──────────────────────────────────────────────
-        Route::prefix('announcements')->name('announcements.')->group(function () {
-            Route::get('/',                          [AdminAnnouncementController::class, 'index'])->name('index');
-            Route::post('/',                         [AdminAnnouncementController::class, 'store'])->name('store');
-            Route::put('{id}',                       [AdminAnnouncementController::class, 'update'])->name('update');
-            Route::delete('{id}',                    [AdminAnnouncementController::class, 'destroy'])->name('destroy');
-        });
-
-        // ── Public Holidays ────────────────────────────────────────────────────
-        Route::prefix('holidays')->name('holidays.')->group(function () {
-            Route::get('/',                          [AdminHolidayController::class, 'index'])->name('index');
-            Route::post('/',                         [AdminHolidayController::class, 'store'])->name('store');
-            Route::put('{id}',                       [AdminHolidayController::class, 'update'])->name('update');
-            Route::delete('{id}',                    [AdminHolidayController::class, 'destroy'])->name('destroy');
-        });
-
-        // ── Bank Reconciliation ────────────────────────────────────────────────
-        Route::post('reconciliation/upload',         [AdminReconciliationController::class, 'upload'])
-             ->middleware('throttle:uploads')
-             ->name('reconciliation.upload');
-
-        // ── Referrals ──────────────────────────────────────────────────────────
-        Route::get('referrals',                      [AdminReferralController::class, 'index'])->name('referrals.index');
-
-        // ── Order Boosts ───────────────────────────────────────────────────────
-        Route::get('boosts',                         [AdminBoostController::class, 'index'])->name('boosts.index');
-
-    }); // end admin middleware
-
-}); // end admin prefix
+    });
+});
