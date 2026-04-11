@@ -1,149 +1,89 @@
 export default {
     name: 'AdminAuditLogs',
-
     data() {
         return {
-            items: [],
-            meta: null,
-            stats: {},
-
-            loading: true,
-            error: null,
-
-            search: '',
-            actionFilter: ''
+            logs: [], meta: null, loading: true,
+            filters: { event: '', user_id: '', search: '' }
         }
     },
-
-    async mounted() {
-        await this.load()
-    },
-
+    async mounted() { await this.load() },
     methods: {
         async load(page = 1) {
             this.loading = true
-            this.error = null
-
-            const params = { page }
-
-            if (this.search) params.search = this.search
-            if (this.actionFilter) params.action = this.actionFilter
-
             try {
-                const { data } = await this.$http.get('/../../api/v1/admin/audit-logs', { params })
-
-                this.items = data.data || []
-                this.meta  = data.meta?.pagination || null
-                this.stats = data.stats || {}
-
-            } catch (e) {
-                this.error = e.response?.data?.message || 'Failed to load audit logs'
-            }
-
+                const params = { page, per_page: 25 }
+                if (this.filters.event)   params.event   = this.filters.event
+                if (this.filters.user_id) params.user_id = this.filters.user_id
+                if (this.filters.search)  params.search  = this.filters.search
+                const { data } = await this.$http.get('/admin/audit-logs', { params })
+                this.logs = data.data || []
+                this.meta = data.meta?.pagination
+            } catch {}
             this.loading = false
+        },
+        reset() { this.filters = { event:'', user_id:'', search:'' }; this.load() },
+        eventColor(e) {
+            if (e.startsWith('fraud'))  return 'bg-red-100 text-red-700'
+            if (e.startsWith('user'))   return 'bg-blue-100 text-blue-700'
+            if (e.startsWith('order'))  return 'bg-purple-100 text-purple-700'
+            if (e.startsWith('match'))  return 'bg-yellow-100 text-yellow-700'
+            if (e.startsWith('kyc'))    return 'bg-green-100 text-green-700'
+            if (e.startsWith('admin'))  return 'bg-orange-100 text-orange-700'
+            return 'bg-gray-100 text-gray-600'
         }
     },
-
     template: `
-<div class="min-h-screen bg-gray-100 flex">
+<div class="min-h-screen bg-gray-100">
   <admin-nav />
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">Audit Logs</h1>
+      <p class="text-sm text-gray-500 mt-0.5">Full record of all system events and admin actions.</p>
+    </div>
 
-  <div class="flex-1 min-w-0 lg:ml-60">
-    <div class="max-w-7xl mx-auto px-6 py-6">
-
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-xl font-bold text-gray-900">Audit Logs</h1>
-        <span v-if="meta" class="text-sm text-gray-500">{{ meta.total }} entries</span>
-      </div>
-
-      <!-- Filters -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-5">
-        <div class="grid sm:grid-cols-3 gap-3">
-
-          <input v-model="search" @keyup.enter="load()"
-            type="text"
-            placeholder="Search user, action, metadata..."
-            class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500">
-
-          <select v-model="actionFilter" @change="load()"
-            class="px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white">
-            <option value="">All actions</option>
-            <option value="setting.updated">Setting updated</option>
-            <option value="user.suspended">User suspended</option>
-            <option value="kyc.approved">KYC approved</option>
-            <option value="kyc.rejected">KYC rejected</option>
-          </select>
-
-          <button @click="load()"
-            class="px-4 py-2 text-sm bg-gray-100 rounded-xl hover:bg-gray-200">
-            Refresh
-          </button>
-
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-5">
+      <div class="grid sm:grid-cols-3 gap-3">
+        <input v-model="filters.search" @keyup.enter="load()" type="text"
+          class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500"
+          placeholder="Search events...">
+        <input v-model="filters.event" @keyup.enter="load()" type="text"
+          class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500"
+          placeholder="Filter by event type (e.g. order.created)">
+        <div class="flex gap-2">
+          <button @click="load()" class="flex-1 py-2.5 text-sm font-semibold text-white rounded-xl hover:opacity-90"
+            style="background:linear-gradient(135deg,#1a6b3c,#2d9460);">Search</button>
+          <button @click="reset()" class="px-4 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50">Reset</button>
         </div>
       </div>
+    </div>
 
-      <loading-spinner v-if="loading" />
+    <loading-spinner v-if="loading" />
 
-      <div v-else>
-        <p v-if="error" class="text-red-500 text-sm mb-4">{{ error }}</p>
-
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Action</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">User</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Details</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
-              </tr>
-            </thead>
-
-            <tbody class="divide-y divide-gray-50">
-              <tr v-for="log in items" :key="log.id" class="hover:bg-gray-50">
-
-                <!-- Action -->
-                <td class="px-4 py-3">
-                  <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                    {{ log.action }}
-                  </span>
-                </td>
-
-                <!-- User -->
-                <td class="px-4 py-3 text-xs text-gray-700">
-                  <div>
-                    <p class="font-medium text-gray-900">
-                      {{ log.user?.name || 'System' }}
-                    </p>
-                    <p class="text-gray-400">
-                      {{ log.user?.email }}
-                    </p>
-                  </div>
-                </td>
-
-                <!-- Details -->
-                <td class="px-4 py-3 text-xs text-gray-600">
-                  <pre class="whitespace-pre-wrap text-xs bg-gray-50 p-2 rounded-lg overflow-auto max-w-md">
-{{ JSON.stringify(log.new_values || log.old_values || {}, null, 2) }}
-                  </pre>
-                </td>
-
-                <!-- Date -->
-                <td class="px-4 py-3 text-xs text-gray-500">
-                  {{ $fmt.datetime(log.created_at) }}
-                </td>
-
-              </tr>
-            </tbody>
-          </table>
-
-          <div v-if="!items.length" class="text-center py-12 text-gray-400 text-sm">
-            No audit logs found
+    <div v-else class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div class="divide-y divide-gray-50">
+        <div v-for="log in logs" :key="log.id" class="px-5 py-3.5 hover:bg-gray-50 transition-colors">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3 min-w-0">
+              <span :class="['text-xs px-2.5 py-1 rounded-lg font-bold whitespace-nowrap flex-shrink-0 mt-0.5', eventColor(log.event)]">
+                {{ log.event }}
+              </span>
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">
+                  {{ log.actor?.first_name }} {{ log.actor?.last_name }}
+                  <span class="text-gray-400 font-normal">· {{ log.actor?.email }}</span>
+                </p>
+                <p v-if="log.description" class="text-xs text-gray-500 mt-0.5 truncate">{{ log.description }}</p>
+                <p v-if="log.ip_address" class="text-xs text-gray-400 mt-0.5">IP: {{ log.ip_address }}</p>
+              </div>
+            </div>
+            <span class="text-xs text-gray-400 flex-shrink-0 mt-1">{{ $fmt.datetime ? $fmt.datetime(log.created_at) : $fmt.date(log.created_at) }}</span>
           </div>
         </div>
-
-        <pagination-links v-if="meta" :meta="meta" @page="load($event)" />
+        <div v-if="!logs.length" class="px-5 py-8 text-center text-sm text-gray-400">No audit logs found.</div>
       </div>
-
+      <div class="px-5 py-3 border-t border-gray-100" v-if="meta">
+        <pagination-links :meta="meta" @page="load($event)" />
+      </div>
     </div>
   </div>
 </div>`

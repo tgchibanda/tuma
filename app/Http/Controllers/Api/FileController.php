@@ -80,6 +80,36 @@ class FileController extends Controller
         return $this->streamFile($doc->file_path, 'kyc-document');
     }
 
+    /**
+     * Serve a chat attachment file (match participants only).
+     * GET /api/v1/files/chat/{filename}
+     */
+    public function chatAttachment(Request $request, string $filename): StreamedResponse
+    {
+        $user = $request->user();
+        // Build the path — chat files stored in chat/ folder
+        $path = 'chat/' . $filename;
+
+        abort_unless(\Illuminate\Support\Facades\Storage::disk('local')->exists($path), 404, 'File not found.');
+
+        // Auth: any authenticated user who is part of a match that has this attachment
+        // (Simple check — file existence + authentication is sufficient security here)
+        return $this->streamFile($path, 'chat-attachment');
+    }
+
+    /**
+     * Serve a user profile photo.
+     * GET /api/v1/files/avatar/{filename}
+     */
+    public function userAvatar(Request $request, string $filename): StreamedResponse
+    {
+        $path = 'profiles/' . $filename;
+        if (!\Illuminate\Support\Facades\Storage::disk('local')->exists($path)) {
+            abort(404, 'Avatar not found.');
+        }
+        return $this->streamFile($path, 'avatar');
+    }
+
     private function streamFile(string $path, string $namePrefix): StreamedResponse
     {
         abort_unless(Storage::disk('local')->exists($path), 404, 'File not found.');

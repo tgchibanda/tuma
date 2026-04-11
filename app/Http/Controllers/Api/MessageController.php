@@ -39,7 +39,7 @@ class MessageController extends Controller
             'id'          => $m->id,
             'message'     => $m->message,
             'attachment'  => $m->attachment
-                ? route('chat.attachment', ['path' => $m->attachment])
+                ? url('/api/v1/files/chat/' . urlencode(basename($m->attachment)))
                 : null,
             'is_read'     => (bool) $m->is_read,
             'is_mine'     => $m->sender_id === $userId,
@@ -76,7 +76,8 @@ class MessageController extends Controller
         $userId = $request->user()->id;
 
         // Chat is closed for completed/cancelled/refunded matches
-        if (! $match->isChatOpen()) {
+        $terminalStatuses = ['completed', 'cancelled', 'refunded', 'expired'];
+        if (in_array($match->status, $terminalStatuses)) {
             return $this->error(
                 'This transaction is ' . $match->status . '. The chat has been closed.',
                 422
@@ -97,6 +98,7 @@ class MessageController extends Controller
             'message'       => $request->message ?? '',
             'attachment'    => $attachmentPath,
             'is_read'       => false,
+            'created_at'    => now(), // explicit — model has $timestamps = false
         ]);
 
         // Notify the other party (in-app only — email would be too noisy for chat)
@@ -114,7 +116,7 @@ class MessageController extends Controller
             'id'          => $message->id,
             'message'     => $message->message,
             'attachment'  => $message->attachment
-                ? route('chat.attachment', ['path' => $message->attachment])
+                ? url('/api/v1/files/chat/' . urlencode(basename($message->attachment)))
                 : null,
             'is_mine'     => true,
             'created_at'  => $message->created_at->toIso8601String(),
@@ -162,7 +164,7 @@ class MessageController extends Controller
             ->with(['sendOrder', 'receiveOrder'])
             ->first();
         if (! $match) abort(404, 'Match not found.');
-        if (! $match->involvesUser((object) ['id' => $userId])) abort(403, 'Access denied.');
+        if ($match->sendOrder?->user_id !== $userId && $match->receiveOrder?->user_id !== $userId) abort(403, 'Access denied.');
         return $match;
     }
 }

@@ -21,13 +21,6 @@ class RiskDeliveryProceedNotification extends Notification implements ShouldQueu
         return $this->channels ?? ['mail', 'database'];
     }
 
-    // Called by NotificationService to inject channels
-    public function via(array $channels): static
-    {
-        $this->channels = $channels;
-        return $this;
-    }
-
     public function toMail(mixed $notifiable): MailMessage
     {
         return (new MailMessage)

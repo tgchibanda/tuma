@@ -39,7 +39,7 @@ class DisputeController extends Controller
             ->first();
 
         if (! $match) return $this->notFound('Match not found.');
-        if (! $match->involvesUser((object) ['id' => $userId])) return $this->forbidden('Access denied.');
+        if ($match->sendOrder?->user_id !== $userId && $match->receiveOrder?->user_id !== $userId) return $this->forbidden('Access denied.');
 
         // Can only dispute from awaiting_delivery onwards
         $allowedStatuses = [

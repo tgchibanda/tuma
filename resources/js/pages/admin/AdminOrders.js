@@ -1,195 +1,91 @@
+// FILE: resources/js/pages/admin/AdminOrders.js
 export default {
     name: 'AdminOrders',
-
     data() {
         return {
-            items: [],
-            meta: null,
-            stats: {},
-
-            loading: true,
-            error: null,
-
-            search: '',
-            statusFilter: '',
-            typeFilter: ''
+            orders: [], meta: null, loading: true,
+            filters: { status: '', order_type: '', search: '', page: 1 }
         }
     },
-
-    async mounted() {
-        await this.load()
-    },
-
+    async mounted() { await this.load() },
     methods: {
         async load(page = 1) {
             this.loading = true
-            this.error = null
-
-            const params = { page }
-
-            if (this.search) params.search = this.search
-            if (this.statusFilter) params.status = this.statusFilter
-            if (this.typeFilter) params.type = this.typeFilter
-
             try {
-                const { data } = await this.$http.get('/../../api/v1/admin/orders', { params })
-
-                this.items = data.data || []
-                this.meta  = data.meta?.pagination || null
-                this.stats = data.stats || {}
-
-            } catch (e) {
-                this.error = e.response?.data?.message || 'Failed to load orders'
-            }
-
+                const params = { page, per_page: 20 }
+                if (this.filters.status)     params.status     = this.filters.status
+                if (this.filters.order_type) params.order_type = this.filters.order_type
+                if (this.filters.search)     params.search     = this.filters.search
+                const { data } = await this.$http.get('/admin/orders', { params })
+                this.orders = data.data || []
+                this.meta   = data.meta?.pagination
+            } catch {}
             this.loading = false
         },
-
-        statusBadge(s) {
-            return {
-                open: 'bg-blue-100 text-blue-700',
-                matched: 'bg-purple-100 text-purple-700',
-                completed: 'bg-green-100 text-green-700',
-                cancelled: 'bg-gray-100 text-gray-600',
-                expired: 'bg-red-100 text-red-700'
-            }[s] || 'bg-gray-100 text-gray-600'
-        },
-
-        typeBadge(t) {
-            return {
-                buy: 'bg-green-100 text-green-700',
-                sell: 'bg-orange-100 text-orange-700'
-            }[t] || 'bg-gray-100 text-gray-600'
-        }
+        reset() { this.filters = { status:'', order_type:'', search:'', page:1 }; this.load() },
+        typeBadge(t) { return t === 'send_to_zim' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }
     },
-
     template: `
-<div class="min-h-screen bg-gray-100 flex">
+<div class="min-h-screen bg-gray-100">
   <admin-nav />
-
-  <div class="flex-1 min-w-0 lg:ml-60">
-    <div class="max-w-7xl mx-auto px-6 py-6">
-
-      <div class="flex items-center justify-between mb-6">
-        <h1 class="text-xl font-bold text-gray-900">Orders</h1>
-        <span v-if="meta" class="text-sm text-gray-500">{{ meta.total }} total</span>
-      </div>
-
-      <!-- Filters -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-5">
-        <div class="grid sm:grid-cols-4 gap-3">
-
-          <div class="sm:col-span-2">
-            <input v-model="search" @keyup.enter="load()"
-              type="text"
-              placeholder="Search by user, ULID..."
-              class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500">
-          </div>
-
-          <select v-model="typeFilter" @change="load()"
-            class="px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white">
-            <option value="">All types</option>
-            <option value="buy">Buy</option>
-            <option value="sell">Sell</option>
-          </select>
-
-          <select v-model="statusFilter" @change="load()"
-            class="px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white">
-            <option value="">All status</option>
-            <option value="open">Open</option>
-            <option value="matched">Matched</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="expired">Expired</option>
-          </select>
-
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">All Orders</h1>
+    <!-- Filters -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 mb-5">
+      <div class="grid sm:grid-cols-4 gap-3">
+        <input v-model="filters.search" @keyup.enter="load()" type="text"
+          class="px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500"
+          placeholder="Search user or city...">
+        <select v-model="filters.status" @change="load()"
+          class="px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:border-green-500">
+          <option value="">All statuses</option>
+          <option v-for="s in ['open','negotiating','agreed','in_escrow','delivering','completed','cancelled','expired','disputed']" :key="s" :value="s">{{ s }}</option>
+        </select>
+        <select v-model="filters.order_type" @change="load()"
+          class="px-3 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:border-green-500">
+          <option value="">All types</option>
+          <option value="send_to_zim">Send to Zimbabwe</option>
+          <option value="receive_from_zim">Receive from Zimbabwe</option>
+        </select>
+        <div class="flex gap-2">
+          <button @click="load()" class="flex-1 py-2.5 text-sm font-semibold text-white rounded-xl hover:opacity-90"
+            style="background:linear-gradient(135deg,#1a6b3c,#2d9460);">Search</button>
+          <button @click="reset()" class="px-3 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50">Reset</button>
         </div>
       </div>
-
-      <loading-spinner v-if="loading" />
-
-      <div v-else>
-        <p v-if="error" class="text-red-500 text-sm mb-4">{{ error }}</p>
-
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Order</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Type</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
-                <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">AUD</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">User</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Location</th>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Created</th>
-                <th></th>
-              </tr>
-            </thead>
-
-            <tbody class="divide-y divide-gray-50">
-              <tr v-for="o in items" :key="o.ulid" class="hover:bg-gray-50">
-
-                <!-- Order -->
-                <td class="px-4 py-3">
-                  <p class="font-mono text-xs text-gray-600">
-                    {{ o.ulid?.slice(0,12) }}
-                  </p>
-                </td>
-
-                <!-- Type -->
-                <td class="px-4 py-3">
-                  <span :class="['text-xs px-2 py-0.5 rounded-full capitalize', typeBadge(o.type)]">
-                    {{ o.type }}
-                  </span>
-                </td>
-
-                <!-- Status -->
-                <td class="px-4 py-3">
-                  <span :class="['text-xs px-2 py-0.5 rounded-full capitalize', statusBadge(o.status)]">
-                    {{ o.status }}
-                  </span>
-                </td>
-
-                <!-- Amount -->
-                <td class="px-4 py-3 text-right font-semibold text-gray-900">
-                  {{ o.amount_aud ? $fmt.aud(o.amount_aud) : '—' }}
-                </td>
-
-                <!-- User -->
-                <td class="px-4 py-3 text-xs text-gray-700">
-                  {{ o.user?.name }}
-                </td>
-
-                <!-- Location -->
-                <td class="px-4 py-3 text-xs text-gray-600">
-                  {{ o.location?.name }}
-                </td>
-
-                <!-- Created -->
-                <td class="px-4 py-3 text-xs text-gray-500">
-                  {{ $fmt.date(o.created_at) }}
-                </td>
-
-                <!-- Actions -->
-                <td class="px-4 py-3">
-                  <router-link :to="'/admin/orders/' + o.ulid"
-                    class="px-2 py-1 text-xs text-green-700 border border-green-200 rounded-lg hover:bg-green-50">
-                    View
-                  </router-link>
-                </td>
-
-              </tr>
-            </tbody>
-          </table>
-
-          <div v-if="!items.length" class="text-center py-12 text-gray-400 text-sm">
-            No orders found
-          </div>
-        </div>
-
-        <pagination-links v-if="meta" :meta="meta" @page="load($event)" />
+    </div>
+    <loading-spinner v-if="loading" />
+    <div v-else class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="text-left py-3 px-4 font-semibold text-gray-600">User</th>
+            <th class="text-left py-3 px-4 font-semibold text-gray-600">Type</th>
+            <th class="text-left py-3 px-4 font-semibold text-gray-600">Amount</th>
+            <th class="text-left py-3 px-4 font-semibold text-gray-600">City</th>
+            <th class="text-left py-3 px-4 font-semibold text-gray-600">Status</th>
+            <th class="text-left py-3 px-4 font-semibold text-gray-600">Created</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr v-for="o in orders" :key="o.ulid" class="hover:bg-gray-50 transition-colors">
+            <td class="py-3 px-4 font-medium text-gray-900">{{ o.user?.display_name || o.user?.first_name || '—' }}</td>
+            <td class="py-3 px-4">
+              <span :class="['text-xs font-bold px-2 py-0.5 rounded-lg', typeBadge(o.order_type)]">
+                {{ o.order_type === 'send_to_zim' ? 'Send' : 'Receive' }}
+              </span>
+            </td>
+            <td class="py-3 px-4 font-semibold">{{ $fmt.aud(o.amount_aud) }}</td>
+            <td class="py-3 px-4 text-gray-600">{{ o.delivery_location?.name || '—' }}</td>
+            <td class="py-3 px-4"><status-badge :status="o.status" /></td>
+            <td class="py-3 px-4 text-gray-400">{{ $fmt.date(o.created_at) }}</td>
+          </tr>
+          <tr v-if="!orders.length"><td colspan="6" class="py-8 text-center text-sm text-gray-400">No orders found.</td></tr>
+        </tbody>
+      </table>
+      <div class="px-4 py-3 border-t border-gray-100" v-if="meta">
+        <pagination-links :meta="meta" @page="load($event)" />
       </div>
-
     </div>
   </div>
 </div>`

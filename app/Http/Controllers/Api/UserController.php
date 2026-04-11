@@ -71,6 +71,7 @@ class UserController extends Controller
             'referral_code'         => $user->referral_code,
             'referral_count'        => $user->referral_count,
             'referral_earnings_aud' => (float) $user->referral_earnings_aud,
+            'has_bank_account'       => $user->bankAccounts()->exists(),
             'onboarding_completed'  => (bool) $user->onboarding_completed,
             'last_seen'             => $user->last_seen_human,
             'created_at'            => $user->created_at->toIso8601String(),
