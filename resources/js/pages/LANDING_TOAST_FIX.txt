@@ -1,0 +1,29 @@
+// LANDING.JS TOAST TIMING FIX
+// ─────────────────────────────────────────────────────────────────────────────
+// In resources/js/pages/Landing.js, replace the scheduleToast() method with:
+//
+//   scheduleToast() {
+//       // Show a toast every 25–40 seconds (was 5–11 seconds — too fast)
+//       const delay = 25000 + Math.random() * 15000
+//       this.toastTimer = setTimeout(() => {
+//           const t  = this.toastPool[Math.floor(Math.random() * this.toastPool.length)]
+//           const id = Date.now()
+//           this.toasts.push({ ...t, id })
+//           setTimeout(() => { this.toasts = this.toasts.filter(x => x.id !== id) }, 7000)
+//           this.scheduleToast()
+//       }, delay)
+//   },
+//
+// Also in mounted(), change:
+//   setTimeout(() => this.scheduleToast(), 4000)
+// to:
+//   setTimeout(() => this.scheduleToast(), 8000)
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// Summary of changes:
+//   Old first delay: 4 seconds
+//   New first delay: 8 seconds
+//   Old repeat delay: 5–11 seconds (too aggressive)
+//   New repeat delay: 25–40 seconds (natural, non-intrusive)
+//   Old toast visible: 5 seconds
+//   New toast visible: 7 seconds (slightly longer so users can read it)

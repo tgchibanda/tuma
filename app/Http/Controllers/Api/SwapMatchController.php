@@ -132,29 +132,17 @@ class SwapMatchController extends Controller
     {
         $user = $request->user();
 
+        // {ulid} in the URL is the TARGET order (the one you clicked "Propose" on in Browse).
+        // The MatchingService auto-finds the proposer's matching order using $user->id + same city.
         $targetOrder = SwapOrder::where('ulid', $ulid)
             ->where('status', SwapOrder::STATUS_OPEN)
             ->where('user_id', '!=', $user->id)
             ->firstOrFail();
 
-        // Find the proposer's own open order of the opposite type for the same location
-        $myOrder = SwapOrder::where('user_id', $user->id)
-            ->where('order_type', $targetOrder->oppositeType())
-            ->where('zim_delivery_location_id', $targetOrder->zim_delivery_location_id)
-            ->where('status', SwapOrder::STATUS_OPEN)
-            ->first();
-
-        if (! $myOrder) {
-            return $this->error(
-                'You need an open order of the opposite type for the same Zimbabwe city to propose a match. ' .
-                'Create an order first.',
-                422
-            );
-        }
-
         try {
+            // Service signature: proposeMatch($targetOrder, $proposer, $aud, $usd, $message)
+            // The service finds the proposer's own open order of the opposite type internally.
             $match = $this->matchingService->proposeMatch(
-                $myOrder,
                 $targetOrder,
                 $user,
                 (float) $request->proposed_aud,
@@ -291,6 +279,7 @@ class SwapMatchController extends Controller
             'delivery_method'             => $match->delivery_method,
             'risk_payout_method'          => $match->risk_payout_method,
             'delivery_method_agreed'      => (bool) $match->delivery_method_agreed,
+            'delivery_method_proposed_by' => $match->delivery_method_proposed_by,
             'delivery_method_agreed_at'   => $match->delivery_method_agreed_at?->toIso8601String(),
             'proposed_by_me'              => $match->delivery_method_proposed_by === $userId,
             'awaiting_my_confirmation'    => $match->status === SwapMatch::STATUS_DELIVERY_METHOD_SELECTING
@@ -312,7 +301,9 @@ class SwapMatchController extends Controller
             abort(404, 'Match not found.');
         }
 
-        if (! $match->involvesUser((object) ['id' => $userId])) {
+        $sendUserId    = $match->sendOrder?->user_id;
+        $receiveUserId = $match->receiveOrder?->user_id;
+        if ($sendUserId !== $userId && $receiveUserId !== $userId) {
             abort(403, 'You are not part of this match.');
         }
 
@@ -332,12 +323,13 @@ class SwapMatchController extends Controller
             'delivery_method'             => $match->delivery_method,
             'risk_payout_method'          => $match->risk_payout_method,
             'delivery_method_agreed'      => (bool) $match->delivery_method_agreed,
+            'delivery_method_proposed_by' => $match->delivery_method_proposed_by,
             'agreed_aud'                  => $match->agreed_aud ? (float) $match->agreed_aud : null,
             'agreed_usd'                  => $match->agreed_usd ? (float) $match->agreed_usd : null,
             'platform_fee_aud'            => $match->platform_fee_aud ? (float) $match->platform_fee_aud : null,
             'proposed_aud'                => $match->proposed_aud ? (float) $match->proposed_aud : null,
             'proposed_usd'                => $match->proposed_usd ? (float) $match->proposed_usd : null,
-            'is_my_turn_to_negotiate'     => $match->isUsersTurnToNegotiate((object)['id' => $myUserId]),
+            'is_my_turn_to_negotiate'     => ($match->proposed_by && $match->proposed_by !== $myUserId),
             'negotiation_rounds'          => $match->negotiation_rounds,
             'max_negotiation_rounds'      => $match->max_negotiation_rounds,
             'deposit_reference'           => $match->getDepositReference(),

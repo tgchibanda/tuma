@@ -99,6 +99,11 @@ export default {
             this.fetchBankAccounts(),
             this.fetchRecipients()
         ])
+        // Guard: user must have a bank account to create an order
+        if (!this.bankAccounts.length) {
+            this.$toast.error('Please add an Australian bank account before creating an order.')
+            this.$router.replace('/bank-accounts')
+        }
     },
     watch: {
         'form.amount_aud': 'updateCalc',

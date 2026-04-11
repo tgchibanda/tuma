@@ -60,7 +60,7 @@ export default {
             this.stats     = stats.data.data || {}
         } catch (e) {}
         this.loading = false
-        setTimeout(() => this.scheduleToast(), 4000)
+        setTimeout(() => this.scheduleToast(), 8000)
         this.reviewTimer = setInterval(() => {
             this.reviewIndex = (this.reviewIndex + 1) % this.reviews.length
         }, 6000)
@@ -83,12 +83,12 @@ export default {
     },
     methods: {
         scheduleToast() {
-            const delay = 5000 + Math.random() * 6000
+            const delay = 25000 + Math.random() * 15000
             this.toastTimer = setTimeout(() => {
                 const t = this.toastPool[Math.floor(Math.random() * this.toastPool.length)]
                 const id = Date.now()
                 this.toasts.push({ ...t, id })
-                setTimeout(() => { this.toasts = this.toasts.filter(x => x.id !== id) }, 5000)
+                setTimeout(() => { this.toasts = this.toasts.filter(x => x.id !== id) }, 7000)
                 this.scheduleToast()
             }, delay)
         },

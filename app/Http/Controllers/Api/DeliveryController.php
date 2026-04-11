@@ -47,8 +47,6 @@ class DeliveryController extends Controller
                 'has_combined_photo'           => (bool) $delivery->combined_verification_photo,
                 'proof_uploaded_at'            => $delivery->proof_uploaded_at?->toIso8601String(),
                 'confirmed_at'                 => $delivery->confirmed_at?->toIso8601String(),
-                'estimated_delivery'           => $delivery->estimated_delivery_at?->toIso8601String(),
-                'usd_denominations'            => $delivery->usd_denominations,
                 'notes'                        => $delivery->notes,
             ] : null,
             'can_upload'           => $this->canUploadDelivery($match, $request->user()->id),
@@ -60,10 +58,8 @@ class DeliveryController extends Controller
      * Upload delivery verification photos.
      * POST /api/v1/matches/{ulid}/delivery/upload
      *
-     * Requires either:
-     *   Option A: recipient_id_photo + recipient_id_type + handover_amount_photo
-     *   Option B: combined_verification_photo
-     *
+     * Option A: recipient_id_photo + recipient_id_type + handover_amount_photo
+     * Option B: combined_verification_photo (one photo showing both)
      * Optional: verification_note
      */
     public function upload(Request $request, string $ulid): JsonResponse
@@ -71,7 +67,6 @@ class DeliveryController extends Controller
         $match  = $this->findMatchForUser($ulid, $request->user()->id);
         $userId = $request->user()->id;
 
-        // Validate who can upload
         if (! $this->canUploadDelivery($match, $userId)) {
             return $this->error(
                 "Delivery proof cannot be uploaded when match status is '{$match->status}'.",
@@ -79,7 +74,6 @@ class DeliveryController extends Controller
             );
         }
 
-        // Validate at least one complete verification set
         $hasCombined = $request->hasFile('combined_verification_photo');
         $hasIdPhoto  = $request->hasFile('recipient_id_photo');
         $hasHandover = $request->hasFile('handover_amount_photo');
@@ -93,38 +87,46 @@ class DeliveryController extends Controller
         }
 
         $request->validate([
-            'recipient_id_photo'           => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-            'recipient_id_type'            => ['required_with:recipient_id_photo', 'nullable', 'in:national_id,passport,drivers_licence'],
-            'handover_amount_photo'        => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-            'combined_verification_photo'  => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-            'verification_note'            => ['nullable', 'string', 'max:500'],
+            'recipient_id_photo'          => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'recipient_id_type'           => ['nullable', 'in:national_id,passport,drivers_licence'],
+            'handover_amount_photo'       => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'combined_verification_photo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'verification_note'           => ['nullable', 'string', 'max:500'],
         ]);
 
+        $user          = $request->user();
+        $idPhoto       = $hasIdPhoto  ? $request->file('recipient_id_photo')   : null;
+        $idType        = $request->recipient_id_type ?? 'national_id';
+        $handoverPhoto = $hasHandover ? $request->file('handover_amount_photo') : null;
+        $combinedPhoto = $hasCombined ? $request->file('combined_verification_photo') : null;
+        $note          = $request->verification_note;
+
         try {
-            $proofData = ['verification_note' => $request->verification_note];
+            if ($match->status === SwapMatch::STATUS_AWAITING_DELIVERY) {
+                // Secure flow: AUD already in escrow, now delivering cash
+                // Installed EscrowService API: uploadSecureDeliveryProof(match, deliverer, idPhoto, idType, handoverPhoto, combinedPhoto, note)
+                $this->escrowService->uploadSecureDeliveryProof(
+                    $match, $user,
+                    $idPhoto, $idType,
+                    $handoverPhoto, $combinedPhoto,
+                    $note
+                );
 
-            if ($hasCombined) {
-                $proofData['combined_verification_photo'] = $this->escrowService->storeProofFile(
-                    $request->file('combined_verification_photo'),
-                    'deliveries'
+            } elseif ($match->status === SwapMatch::STATUS_AWAITING_RISK_DELIVERY) {
+                // Risk flow: cash delivered before AUD deposit
+                // Installed EscrowService API: riskFlow_uploadDeliveryProof(match, deliverer, idPhoto, idType, handoverPhoto, combinedPhoto, note)
+                $this->escrowService->riskFlow_uploadDeliveryProof(
+                    $match, $user,
+                    $idPhoto, $idType,
+                    $handoverPhoto, $combinedPhoto,
+                    $note
                 );
-            } else {
-                $proofData['recipient_id_photo'] = $this->escrowService->storeProofFile(
-                    $request->file('recipient_id_photo'),
-                    'deliveries'
-                );
-                $proofData['recipient_id_type']  = $request->recipient_id_type;
-                $proofData['handover_amount_photo'] = $this->escrowService->storeProofFile(
-                    $request->file('handover_amount_photo'),
-                    'deliveries'
-                );
-            }
 
-            // Route to correct flow
-            if (in_array($match->status, [SwapMatch::STATUS_AWAITING_DELIVERY])) {
-                $this->escrowService->secureFlow_deliveryUploaded($match, $proofData);
             } else {
-                $this->escrowService->riskFlow_deliveryUploaded($match, $proofData);
+                return $this->error(
+                    "Delivery proof cannot be uploaded with status '{$match->status}'.",
+                    422
+                );
             }
         } catch (TumaException $e) {
             return $this->error($e->getMessage(), $e->getStatusCode());
@@ -139,7 +141,9 @@ class DeliveryController extends Controller
      * Confirm cash was received in Zimbabwe.
      * POST /api/v1/matches/{ulid}/delivery/confirm
      *
-     * Called by: sender (secure flow) or sender (risk flow, before depositing)
+     * Called by the sender after the deliverer uploads proof.
+     * Works for both secure and risk delivery flows.
+     * Installed EscrowService: confirmDelivery($match, $sender) handles both statuses.
      */
     public function confirm(Request $request, string $ulid): JsonResponse
     {
@@ -153,25 +157,21 @@ class DeliveryController extends Controller
             );
         }
 
-        // Only the sender (order owner) can confirm
         if ($match->sendOrder->user_id !== $userId) {
-            return $this->forbidden('Only the order owner can confirm cash receipt.');
+            return $this->forbidden('Only the AUD sender can confirm cash receipt.');
         }
 
         try {
-            if ($match->status === SwapMatch::STATUS_AWAITING_CONFIRMATION) {
-                $this->escrowService->confirmDelivery($match, $request->user());
-            } elseif ($match->status === SwapMatch::STATUS_AWAITING_RISK_CONFIRMATION) {
-                $this->escrowService->riskFlow_confirmDelivery($match, $request->user());
-            } else {
-                return $this->error("Cannot confirm delivery with status '{$match->status}'.", 422);
-            }
+            // Installed EscrowService::confirmDelivery handles both
+            // STATUS_AWAITING_CONFIRMATION (secure) and STATUS_AWAITING_RISK_CONFIRMATION (risk)
+            $this->escrowService->confirmDelivery($match, $request->user());
+
         } catch (TumaException $e) {
             return $this->error($e->getMessage(), $e->getStatusCode());
         }
 
         $freshMatch = $match->fresh();
-        $message = $freshMatch->status === SwapMatch::STATUS_CONFIRMED
+        $message    = $freshMatch->status === SwapMatch::STATUS_CONFIRMED
             ? 'Delivery confirmed. Admin will release funds shortly.'
             : 'Delivery confirmed. Please now deposit AUD to complete the transaction.';
 
@@ -179,33 +179,31 @@ class DeliveryController extends Controller
     }
 
     /**
-     * Log USD denomination breakdown (optional, for large amounts).
+     * Log USD denomination breakdown.
      * POST /api/v1/matches/{ulid}/delivery/denominations
      */
     public function denominations(Request $request, string $ulid): JsonResponse
     {
         $request->validate([
-            'denominations' => ['required', 'array'],
+            'denominations'   => ['required', 'array'],
             'denominations.*' => ['integer', 'min:0'],
         ]);
 
-        $match = $this->findMatchForUser($ulid, $request->user()->id);
-
+        $match    = $this->findMatchForUser($ulid, $request->user()->id);
         $delivery = $match->delivery;
+
         if (! $delivery) {
             return $this->notFound('No delivery record found for this match.');
         }
 
-        // Only deliverer can log denominations
         if ($delivery->deliverer_user_id !== $request->user()->id) {
             return $this->forbidden('Only the cash deliverer can log denominations.');
         }
 
-        // Validate total matches agreed USD amount
         $total = collect($request->denominations)->sum(fn($qty, $note) => $qty * $note);
         if (abs($total - (float) $match->agreed_usd) > 0.01) {
             return $this->error(
-                "Denomination total (USD \${$total}) does not match agreed amount (USD \${$match->agreed_usd}).",
+                "Denomination total (USD {$total}) does not match agreed amount (USD {$match->agreed_usd}).",
                 422
             );
         }
@@ -219,23 +217,22 @@ class DeliveryController extends Controller
 
     private function canUploadDelivery(SwapMatch $match, int $userId): bool
     {
-        $deliverStatuses = [
+        $statuses = [
             SwapMatch::STATUS_AWAITING_DELIVERY,
             SwapMatch::STATUS_AWAITING_RISK_DELIVERY,
         ];
-        if (! in_array($match->status, $deliverStatuses)) return false;
-
+        if (! in_array($match->status, $statuses)) return false;
         // Deliverer is the receive_order owner
         return $match->receiveOrder->user_id === $userId;
     }
 
     private function canConfirmDelivery(SwapMatch $match, int $userId): bool
     {
-        $confirmStatuses = [
+        $statuses = [
             SwapMatch::STATUS_AWAITING_CONFIRMATION,
             SwapMatch::STATUS_AWAITING_RISK_CONFIRMATION,
         ];
-        return in_array($match->status, $confirmStatuses)
+        return in_array($match->status, $statuses)
             && $match->sendOrder->user_id === $userId;
     }
 
@@ -246,8 +243,8 @@ class DeliveryController extends Controller
                 'AUD is secured in escrow. Please deliver USD $' . $match->agreed_usd .
                 ' cash to the recipient and upload verification photos.',
             SwapMatch::STATUS_AWAITING_RISK_DELIVERY =>
-                '⚠ Risk Delivery: Please deliver USD $' . $match->agreed_usd .
-                ' cash first. The sender will deposit AUD after you confirm delivery.',
+                'Risk Delivery: Please deliver USD $' . $match->agreed_usd .
+                ' cash first. The sender will deposit AUD after confirming receipt.',
             SwapMatch::STATUS_AWAITING_CONFIRMATION,
             SwapMatch::STATUS_AWAITING_RISK_CONFIRMATION =>
                 'Cash has been delivered. Please confirm the recipient received the money.',
@@ -260,8 +257,14 @@ class DeliveryController extends Controller
         $match = SwapMatch::where('ulid', $ulid)
             ->with(['sendOrder', 'receiveOrder', 'delivery.deliveryLocation', 'deposit'])
             ->first();
+
         if (! $match) abort(404, 'Match not found.');
-        if (! $match->involvesUser((object) ['id' => $userId])) abort(403, 'Access denied.');
+
+        // Inline check — avoids calling model method with wrong type
+        if ($match->sendOrder?->user_id !== $userId && $match->receiveOrder?->user_id !== $userId) {
+            abort(403, 'Access denied.');
+        }
+
         return $match;
     }
 }

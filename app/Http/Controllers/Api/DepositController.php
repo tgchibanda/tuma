@@ -25,11 +25,11 @@ class DepositController extends Controller
     {
         $match = $this->findMatchForUser($ulid, $request->user()->id);
 
-        $deposit = $match->deposit;
-        $bankName    = SystemSetting::get('tuma_bank_name', 'National Australia Bank');
-        $accountName = SystemSetting::get('tuma_account_name', 'TuMa Pty Ltd Trust Account');
-        $bsb         = SystemSetting::get('tuma_bsb', '000-000');
-        $accountNum  = SystemSetting::get('tuma_account_number', '000000000');
+        $deposit     = $match->deposit;
+        $bankName    = SystemSetting::get('tuma_bank_name',       'National Australia Bank');
+        $accountName = SystemSetting::get('tuma_account_name',    'TuMa Pty Ltd Trust Account');
+        $bsb         = SystemSetting::get('tuma_bsb',             '083-001');
+        $accountNum  = SystemSetting::get('tuma_account_number',  '000000000');
 
         return $this->success([
             'match_status'      => $match->status,
@@ -53,7 +53,7 @@ class DepositController extends Controller
             'can_upload'        => in_array($match->status, [
                 SwapMatch::STATUS_AWAITING_DEPOSIT,
                 SwapMatch::STATUS_AWAITING_RISK_DEPOSIT,
-            ]),
+            ]) && $match->sendOrder->user_id === $request->user()->id,
         ], 'Deposit details retrieved.');
     }
 
@@ -63,51 +63,51 @@ class DepositController extends Controller
      *
      * Multipart fields:
      *   - proof_file: jpg/jpeg/png/pdf, max 5MB
-     *   - depositor_reference: the reference the user used on their bank transfer
+     *   - depositor_reference: your bank transaction reference (optional but recommended)
      */
     public function upload(Request $request, string $ulid): JsonResponse
     {
         $request->validate([
-            'proof_file'           => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-            'depositor_reference'  => ['required', 'string', 'max:100'],
+            'proof_file'          => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'depositor_reference' => ['nullable', 'string', 'max:100'],
         ]);
 
         $match = $this->findMatchForUser($ulid, $request->user()->id);
+        $user  = $request->user();
 
-        // Only the sender (AUD depositor) can upload
-        if ($match->sendOrder->user_id !== $request->user()->id) {
+        // Only the AUD sender can upload deposit proof
+        if ($match->sendOrder->user_id !== $user->id) {
             return $this->forbidden('Only the AUD sender can upload deposit proof.');
         }
 
-        // Validate status allows upload
-        $allowedStatuses = [
-            SwapMatch::STATUS_AWAITING_DEPOSIT,
-            SwapMatch::STATUS_AWAITING_RISK_DEPOSIT,
-        ];
-        if (! in_array($match->status, $allowedStatuses)) {
-            return $this->error(
-                "Deposit proof cannot be uploaded when match status is '{$match->status}'.",
-                422
-            );
-        }
+        // Derive a safe reference — use user-provided ref or fall back to match reference
+        $depositorRef = $request->depositor_reference ?: $match->getDepositReference();
 
         try {
-            $proofPath = $this->escrowService->storeProofFile(
-                $request->file('proof_file'),
-                'deposits'
-            );
-
             if ($match->status === SwapMatch::STATUS_AWAITING_DEPOSIT) {
-                $this->escrowService->secureFlow_depositUploaded(
+                // Secure flow — AUD deposited before cash delivery
+                // Installed EscrowService API: secureFlow_uploadProof($match, $user, $file, $ref)
+                $this->escrowService->secureFlow_uploadProof(
                     $match,
-                    $proofPath,
-                    $request->depositor_reference
+                    $user,
+                    $request->file('proof_file'),
+                    $depositorRef
                 );
-            } else {
-                $this->escrowService->riskFlow_depositUploaded(
+
+            } elseif ($match->status === SwapMatch::STATUS_AWAITING_RISK_DEPOSIT) {
+                // Risk flow — AUD deposited AFTER cash delivered
+                // Installed EscrowService API: riskFlow_uploadDeposit($match, $user, $file, $ref)
+                $this->escrowService->riskFlow_uploadDeposit(
                     $match,
-                    $proofPath,
-                    $request->depositor_reference
+                    $user,
+                    $request->file('proof_file'),
+                    $depositorRef
+                );
+
+            } else {
+                return $this->error(
+                    "Deposit proof cannot be uploaded when match status is '{$match->status}'.",
+                    422
                 );
             }
         } catch (TumaException $e) {
@@ -119,11 +119,21 @@ class DepositController extends Controller
         ], 'Deposit proof uploaded. Our team will verify it shortly.');
     }
 
+    // ── Private helpers ───────────────────────────────────────────────────────
+
     private function findMatchForUser(string $ulid, int $userId): SwapMatch
     {
-        $match = SwapMatch::where('ulid', $ulid)->with(['sendOrder', 'receiveOrder', 'deposit'])->first();
+        $match = SwapMatch::where('ulid', $ulid)
+            ->with(['sendOrder', 'receiveOrder', 'deposit'])
+            ->first();
+
         if (! $match) abort(404, 'Match not found.');
-        if (! $match->involvesUser((object) ['id' => $userId])) abort(403, 'Access denied.');
+
+        // Inline involvement check — avoids calling model method with wrong type
+        if ($match->sendOrder?->user_id !== $userId && $match->receiveOrder?->user_id !== $userId) {
+            abort(403, 'Access denied.');
+        }
+
         return $match;
     }
 }

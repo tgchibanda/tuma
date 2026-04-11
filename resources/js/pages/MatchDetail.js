@@ -440,8 +440,8 @@ export default {
           </div>
         </div>
 
-        <!-- Deposit section -->
-        <div v-if="match.deposit" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <!-- Deposit section: show when deposit upload needed OR deposit record exists -->
+        <div v-if="canUploadDeposit || match.deposit" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <h3 class="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <i class="fas fa-university text-green-600"></i> AUD Deposit
           </h3>
@@ -475,7 +475,7 @@ export default {
                 hint="JPG, PNG or PDF, max 5MB" :required="true"
                 @change="depositFile = $event" />
               <button @click="uploadDeposit"
-                :disabled="!depositFile || !depositorRef || actionLoading"
+                :disabled="!depositFile || actionLoading"
                 class="w-full py-3 text-sm font-semibold bg-green-700 text-white rounded-xl hover:bg-green-800 disabled:opacity-50 transition">
                 <i v-if="actionLoading" class="fas fa-spinner fa-spin mr-1"></i>
                 Upload Proof

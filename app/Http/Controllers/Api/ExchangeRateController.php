@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponse;
 use App\Models\ExchangeRate;
 use App\Models\RateHistory;
-use App\Models\SystemSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,78 +14,97 @@ class ExchangeRateController extends Controller
     use ApiResponse;
 
     /**
-     * List all currently active exchange rates.
-     * GET /api/v1/exchange-rates
-     */
-    public function index(): JsonResponse
-    {
-        $rates = ExchangeRate::where('is_active', true)
-            ->orderBy('from_currency')
-            ->get()
-            ->map(fn($r) => $this->formatRate($r));
-
-        return $this->success($rates, 'Exchange rates retrieved.');
-    }
-
-    /**
-     * Get a specific active rate for a currency pair.
+     * Get the current active exchange rate between two currencies.
      * GET /api/v1/exchange-rates/{from}/{to}
+     * e.g. GET /api/v1/exchange-rates/AUD/USD
      */
-    public function show(string $from, string $to): JsonResponse
+    public function current(string $from, string $to): JsonResponse
     {
-        $rate = ExchangeRate::active()
-            ->forPair($from, $to)
+        $from = strtoupper($from);
+        $to   = strtoupper($to);
+
+        $rate = ExchangeRate::where('from_currency', $from)
+            ->where('to_currency', $to)
+            ->where('is_active', 1)
             ->latest('created_at')
             ->first();
 
         if (! $rate) {
-            return $this->notFound("No active exchange rate found for {$from}/{$to}.");
+            return $this->error("No active exchange rate found for {$from}/{$to}.", 404);
         }
 
-        // Include fee info for the calculator
-        $feePercent = (float) SystemSetting::get('platform_fee_percent', 1.5);
-
-        return $this->success(array_merge(
-            $this->formatRate($rate),
-            ['platform_fee_percent' => $feePercent]
-        ), 'Exchange rate retrieved.');
+        return $this->success([
+            'id'                   => $rate->id,
+            'from_currency'        => $rate->from_currency,
+            'to_currency'          => $rate->to_currency,
+            'rate'                 => (float) $rate->rate,
+            'platform_fee_percent' => (float) \App\Models\SystemSetting::get('platform_fee_percent', 1.5),
+            'is_active'            => (bool) $rate->is_active,
+            'set_at'               => $rate->created_at->toIso8601String(),
+        ], 'Exchange rate retrieved.');
     }
 
     /**
-     * Get historical rate data for a chart (last 7 or 30 days).
+     * Get rate history for chart display.
      * GET /api/v1/exchange-rates/history/{from}/{to}?days=7
      */
     public function history(Request $request, string $from, string $to): JsonResponse
     {
-        $days = (int) $request->input('days', 7);
-        $days = min($days, 90); // Cap at 90 days
+        $from = strtoupper($from);
+        $to   = strtoupper($to);
+        $days = min((int) $request->get('days', 7), 90);
 
-        $history = RateHistory::forPair($from, $to)
-            ->lastDays($days)
+        $history = RateHistory::where('from_currency', $from)
+            ->where('to_currency', $to)
+            ->where('recorded_at', '>=', now()->subDays($days))
             ->orderBy('recorded_at')
             ->get()
-            ->map(fn($h) => [
-                'rate'        => (float) $h->rate,
-                'recorded_at' => $h->recorded_at->toIso8601String(),
-                'date'        => $h->recorded_at->toDateString(),
+            ->map(fn($r) => [
+                'rate'        => (float) $r->rate,
+                'recorded_at' => $r->recorded_at->toIso8601String(),
             ]);
 
+        // If no history, fall back to current rate
+        if ($history->isEmpty()) {
+            $current = ExchangeRate::where('from_currency', $from)
+                ->where('to_currency', $to)
+                ->where('is_active', 1)
+                ->latest('created_at')
+                ->first();
+
+            if ($current) {
+                $history = collect([
+                    ['rate' => (float) $current->rate, 'recorded_at' => $current->created_at->toIso8601String()]
+                ]);
+            }
+        }
+
         return $this->success([
-            'pair'    => strtoupper($from) . '/' . strtoupper($to),
-            'days'    => $days,
-            'history' => $history,
+            'from_currency' => $from,
+            'to_currency'   => $to,
+            'days'          => $days,
+            'history'       => $history,
         ], 'Rate history retrieved.');
     }
 
-    private function formatRate(ExchangeRate $rate): array
+    /**
+     * List all active rates (admin facing, and for public display).
+     * GET /api/v1/exchange-rates
+     */
+    public function index(): JsonResponse
     {
-        return [
-            'id'            => $rate->id,
-            'from_currency' => $rate->from_currency,
-            'to_currency'   => $rate->to_currency,
-            'rate'          => (float) $rate->rate,
-            'source'        => $rate->source,
-            'created_at'    => $rate->created_at?->toIso8601String(),
-        ];
+        $rates = ExchangeRate::where('is_active', 1)
+            ->orderBy('from_currency')
+            ->get()
+            ->map(fn($r) => [
+                'id'            => $r->id,
+                'from_currency' => $r->from_currency,
+                'to_currency'   => $r->to_currency,
+                'rate'          => (float) $r->rate,
+                'is_active'     => (bool) $r->is_active,
+                'set_at'        => $r->created_at->toIso8601String(),
+            ]);
+
+        return $this->success($rates, 'Exchange rates retrieved.');
     }
 }
