@@ -15,7 +15,7 @@ class AdminDepositController extends Controller
 
     /**
      * List pending deposit verifications, oldest first.
-     * GET /api/admin/deposits
+     * GET /api/v1/admin/deposits
      */
     public function index(Request $request): JsonResponse
     {
@@ -57,7 +57,7 @@ class AdminDepositController extends Controller
 
     /**
      * Get single deposit detail with proof image URL.
-     * GET /api/admin/deposits/{id}
+     * GET /api/v1/admin/deposits/{id}
      */
     public function show(int $id): JsonResponse
     {

@@ -17,7 +17,7 @@ class AdminSettingsController extends Controller
 
     /**
      * Get all system settings as key-value pairs.
-     * GET /api/admin/settings
+     * GET /api/v1/admin/settings
      */
     public function index(): JsonResponse
     {
@@ -34,7 +34,7 @@ class AdminSettingsController extends Controller
 
     /**
      * Bulk update multiple settings at once.
-     * PUT /api/admin/settings
+     * PUT /api/v1/admin/settings
      * body: { key: value, key: value, ... }
      */
     public function bulkUpdate(Request $request): JsonResponse

@@ -19,7 +19,7 @@ class AdminLocationController extends Controller
 
     /**
      * List all locations grouped by country.
-     * GET /api/admin/locations
+     * GET /api/v1/admin/locations
      */
     public function index(): JsonResponse
     {
@@ -51,7 +51,7 @@ class AdminLocationController extends Controller
 
     /**
      * Create a new delivery location.
-     * POST /api/admin/locations
+     * POST /api/v1/admin/locations
      */
     public function store(Request $request): JsonResponse
     {
@@ -88,7 +88,7 @@ class AdminLocationController extends Controller
 
     /**
      * Update a location's name, province, or sort order.
-     * PUT /api/admin/locations/{id}
+     * PUT /api/v1/admin/locations/{id}
      */
     public function update(Request $request, int $id): JsonResponse
     {
@@ -118,7 +118,7 @@ class AdminLocationController extends Controller
 
     /**
      * Toggle a location active/inactive.
-     * PUT /api/admin/locations/{id}/toggle-active
+     * PUT /api/v1/admin/locations/{id}/toggle-active
      */
     public function toggleActive(Request $request, int $id): JsonResponse
     {
@@ -135,7 +135,7 @@ class AdminLocationController extends Controller
 
     /**
      * Soft-delete a location (only if no orders reference it).
-     * DELETE /api/admin/locations/{id}
+     * DELETE /api/v1/admin/locations/{id}
      */
     public function destroy(Request $request, int $id): JsonResponse
     {

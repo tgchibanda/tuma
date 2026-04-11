@@ -6,7 +6,7 @@ export default {
         async load() {
             this.loading = true
             try {
-                const { data } = await this.$http.get('/../../api/admin/matches/' + this.$route.params.ulid)
+                const { data } = await this.$http.get('/../../api/v1/admin/matches/' + this.$route.params.ulid)
                 this.match = data.data
             } catch { this.$router.push('/admin/matches') }
             this.loading = false
@@ -15,7 +15,7 @@ export default {
             if (!confirm('Confirm AUD deposit has arrived in the TuMa bank account?')) return
             this.actionLoading = true
             try {
-                await this.$http.put('/../../api/admin/matches/' + this.match.ulid + '/verify-deposit')
+                await this.$http.put('/../../api/v1/admin/matches/' + this.match.ulid + '/verify-deposit')
                 this.$toast.success('Deposit verified. Deliverer notified.')
                 await this.load()
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }
@@ -25,7 +25,7 @@ export default {
             if (!confirm('Confirm you have sent AUD to the receiver\'s bank account?')) return
             this.actionLoading = true
             try {
-                await this.$http.put('/../../api/admin/matches/' + this.match.ulid + '/release-funds')
+                await this.$http.put('/../../api/v1/admin/matches/' + this.match.ulid + '/release-funds')
                 this.$toast.success('Funds released. Transaction completed!')
                 await this.load()
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }
@@ -36,7 +36,7 @@ export default {
             if (!reason) return
             this.actionLoading = true
             try {
-                await this.$http.put('/../../api/admin/matches/' + this.match.ulid + '/refund', { reason })
+                await this.$http.put('/../../api/v1/admin/matches/' + this.match.ulid + '/refund', { reason })
                 this.$toast.success('Refund processed.')
                 await this.load()
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }
@@ -47,7 +47,7 @@ export default {
             if (!reason) return
             this.actionLoading = true
             try {
-                await this.$http.put('/../../api/admin/matches/' + this.match.ulid + '/force-cancel', { reason })
+                await this.$http.put('/../../api/v1/admin/matches/' + this.match.ulid + '/force-cancel', { reason })
                 this.$toast.success('Match force-cancelled.')
                 await this.load()
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }

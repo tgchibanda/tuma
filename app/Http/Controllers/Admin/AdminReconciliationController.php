@@ -17,7 +17,7 @@ class AdminReconciliationController extends Controller
 
     /**
      * Upload a bank statement CSV and auto-match rows to pending deposits.
-     * POST /api/admin/reconciliation/upload
+     * POST /api/v1/admin/reconciliation/upload
      *
      * Expected CSV columns (flexible — tries multiple common formats):
      *   Date, Description/Narration, Amount, Reference

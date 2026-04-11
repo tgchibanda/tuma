@@ -5,7 +5,7 @@ export default {
         async submit() {
             this.loading = true; this.error = null
             try {
-                const { data } = await this.$http.post('/../../api/admin/auth/login', {
+                const { data } = await this.$http.post('/../../api/v1/admin/auth/login', {
                     email: this.email, password: this.password
                 })
                 this.$auth.login(data.data.token, data.data.admin)

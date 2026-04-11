@@ -22,7 +22,7 @@ class AdminUserController extends Controller
 
     /**
      * List all users with search and filters.
-     * GET /api/admin/users
+     * GET /api/v1/admin/users
      * Filters: search, kyc_status, account_status, account_type, country_id, page
      */
     public function index(Request $request): JsonResponse
@@ -67,7 +67,7 @@ class AdminUserController extends Controller
 
     /**
      * Get full user detail: profile, KYC docs, trade history, ratings, login activity.
-     * GET /api/admin/users/{id}
+     * GET /api/v1/admin/users/{id}
      */
     public function show(int $id): JsonResponse
     {
@@ -145,7 +145,7 @@ class AdminUserController extends Controller
 
     /**
      * Approve user KYC.
-     * PUT /api/admin/users/{id}/kyc/approve
+     * PUT /api/v1/admin/users/{id}/kyc/approve
      */
     public function approveKyc(Request $request, int $id): JsonResponse
     {
@@ -174,7 +174,7 @@ class AdminUserController extends Controller
 
     /**
      * Reject user KYC with reason.
-     * PUT /api/admin/users/{id}/kyc/reject
+     * PUT /api/v1/admin/users/{id}/kyc/reject
      */
     public function rejectKyc(Request $request, int $id): JsonResponse
     {
@@ -210,7 +210,7 @@ class AdminUserController extends Controller
 
     /**
      * Suspend a user account.
-     * PUT /api/admin/users/{id}/suspend
+     * PUT /api/v1/admin/users/{id}/suspend
      */
     public function suspend(Request $request, int $id): JsonResponse
     {
@@ -241,7 +241,7 @@ class AdminUserController extends Controller
 
     /**
      * Unsuspend a user account.
-     * PUT /api/admin/users/{id}/unsuspend
+     * PUT /api/v1/admin/users/{id}/unsuspend
      */
     public function unsuspend(Request $request, int $id): JsonResponse
     {
@@ -260,7 +260,7 @@ class AdminUserController extends Controller
 
     /**
      * Permanently ban a user.
-     * PUT /api/admin/users/{id}/ban
+     * PUT /api/v1/admin/users/{id}/ban
      */
     public function ban(Request $request, int $id): JsonResponse
     {
@@ -287,7 +287,7 @@ class AdminUserController extends Controller
 
     /**
      * Toggle verified business status.
-     * PUT /api/admin/users/{id}/verify-business
+     * PUT /api/v1/admin/users/{id}/verify-business
      */
     public function verifyBusiness(Request $request, int $id): JsonResponse
     {
@@ -303,7 +303,7 @@ class AdminUserController extends Controller
 
     /**
      * Toggle always_available (directory listing) for a user.
-     * PUT /api/admin/users/{id}/toggle-available
+     * PUT /api/v1/admin/users/{id}/toggle-available
      */
     public function toggleAvailable(Request $request, int $id): JsonResponse
     {

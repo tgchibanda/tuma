@@ -6,7 +6,7 @@ export default {
         async load() {
             this.loading = true
             try {
-                const { data } = await this.$http.get('/../../api/admin/disputes/' + this.$route.params.id)
+                const { data } = await this.$http.get('/../../api/v1/admin/disputes/' + this.$route.params.id)
                 this.dispute = data.data
             } catch { this.$router.push('/admin/disputes') }
             this.loading = false
@@ -15,7 +15,7 @@ export default {
             if (!this.msg.trim()) return
             this.msgLoading = true
             try {
-                await this.$http.post('/../../api/admin/disputes/' + this.dispute.id + '/messages', { message: this.msg })
+                await this.$http.post('/../../api/v1/admin/disputes/' + this.dispute.id + '/messages', { message: this.msg })
                 this.msg = ''
                 this.$toast.success('Message sent.')
                 await this.load()
@@ -27,7 +27,7 @@ export default {
             if (!notes) return
             this.resolveLoading = true
             try {
-                await this.$http.put('/../../api/admin/disputes/' + this.dispute.id + '/resolve', { resolution, notes })
+                await this.$http.put('/../../api/v1/admin/disputes/' + this.dispute.id + '/resolve', { resolution, notes })
                 this.$toast.success('Dispute resolved.')
                 await this.load()
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }

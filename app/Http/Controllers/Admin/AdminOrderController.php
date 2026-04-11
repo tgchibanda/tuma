@@ -14,7 +14,7 @@ class AdminOrderController extends Controller
 
     /**
      * List all orders with filters.
-     * GET /api/admin/orders
+     * GET /api/v1/admin/orders
      */
     public function index(Request $request): JsonResponse
     {
@@ -59,7 +59,7 @@ class AdminOrderController extends Controller
 
     /**
      * Get order detail.
-     * GET /api/admin/orders/{ulid}
+     * GET /api/v1/admin/orders/{ulid}
      */
     public function show(string $ulid): JsonResponse
     {

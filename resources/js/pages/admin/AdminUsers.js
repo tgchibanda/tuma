@@ -50,7 +50,7 @@ export default {
         async approveKyc(id) {
             this.actionLoading = id + '_kyc'
             try {
-                await this.$http.put('/../../api/admin/users/' + id + '/kyc/approve')
+                await this.$http.put('/../../api/v1/admin/users/' + id + '/kyc/approve')
                 this.$toast.success('KYC approved.')
                 await this.load()
             } catch (e) {
@@ -65,7 +65,7 @@ export default {
 
             this.actionLoading = id + '_kyc'
             try {
-                await this.$http.put('/../../api/admin/users/' + id + '/kyc/reject', { reason })
+                await this.$http.put('/../../api/v1/admin/users/' + id + '/kyc/reject', { reason })
                 this.$toast.success('KYC rejected.')
                 await this.load()
             } catch (e) {
@@ -80,7 +80,7 @@ export default {
 
             this.actionLoading = id + '_suspend'
             try {
-                await this.$http.put('/../../api/admin/users/' + id + '/suspend', { reason })
+                await this.$http.put('/../../api/v1/admin/users/' + id + '/suspend', { reason })
                 this.$toast.success('User suspended.')
                 await this.load()
             } catch (e) {
