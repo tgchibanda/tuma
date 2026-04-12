@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Exceptions\TumaException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\CreateOrderRequest;
 use App\Http\Traits\ApiResponse;
 use App\Models\DeliveryLocation;
 use App\Models\ExchangeRate;
-use App\Models\FeeDiscount;
 use App\Models\OrderBoost;
 use App\Models\SavedRecipient;
 use App\Models\SwapOrder;
@@ -19,7 +19,6 @@ use App\Services\KycService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\Uid\Ulid;
 
 class SwapOrderController extends Controller
 {
@@ -34,6 +33,7 @@ class SwapOrderController extends Controller
     /**
      * List the authenticated user's own orders.
      * GET /api/v1/orders
+     * Filters: status, order_type, page
      */
     public function index(Request $request): JsonResponse
     {
@@ -42,19 +42,8 @@ class SwapOrderController extends Controller
             ->orderByDesc('created_at');
 
         if ($request->filled('status')) {
-            $statusValues = explode(',', $request->status);
-            if (count($statusValues) > 1) {
-                $query->whereIn('status', $statusValues);
-            } else {
-                $query->where('status', $request->status);
-            }
+            $query->where('status', $request->status);
         }
-
-        if ($request->filled('exclude_status')) {
-            $excluded = explode(',', $request->exclude_status);
-            $query->whereNotIn('status', $excluded);
-        }
-
         if ($request->filled('order_type')) {
             $query->where('order_type', $request->order_type);
         }
@@ -70,40 +59,32 @@ class SwapOrderController extends Controller
      * Create a new swap order.
      * POST /api/v1/orders
      */
-    public function store(Request $request): JsonResponse
+    public function store(CreateOrderRequest $request): JsonResponse
     {
-        $request->validate([
-            'order_type'               => ['required', 'in:send_to_zim,receive_from_zim'],
-            'amount_aud'               => ['required', 'numeric', 'min:1'],
-            'zim_delivery_location_id' => ['required', 'integer', 'exists:delivery_locations,id'],
-            'zim_recipient_name'       => ['required', 'string', 'max:150'],
-            'zim_recipient_phone'      => ['required', 'string', 'max:30'],
-            'aud_bank_account_id'      => ['required', 'integer'],
-            'zim_delivery_address'     => ['nullable', 'string', 'max:500'],
-            'zim_delivery_notes'       => ['nullable', 'string', 'max:300'],
-            'save_recipient'           => ['nullable', 'boolean'],
-            'recipient_nickname'       => ['nullable', 'string', 'max:100'],
-            'saved_recipient_id'       => ['nullable', 'integer'],
-        ]);
+        $user = $request->user();
 
-        $user      = $request->user();
-        $amountAud = (float) $request->amount_aud;
-
-        // Assert user can trade — only bans/suspensions and maintenance block this
+        // Assert user can trade (KYC + account status)
         $this->kycService->assertCanTrade($user);
 
-        // Validate amount limits from system settings
         $minAud = (float) SystemSetting::get('min_order_amount_aud', 50);
-        $maxAud = (float) SystemSetting::get('max_order_amount_aud', 5000);
+        $amountAud = (float) $request->amount_aud;
 
+        // Minimum amount check
         if ($amountAud < $minAud) {
-            return $this->error("Minimum order amount is AUD {$minAud}.", 422);
-        }
-        if ($amountAud > $maxAud) {
-            return $this->error("Maximum order amount is AUD {$maxAud}.", 422);
+            return $this->error("Minimum order amount is AUD \${$minAud}.", 422);
         }
 
-        // Validate delivery location is active
+        // KYC tier limit check
+        if (! $this->kycService->validateOrderAmount($user, $amountAud)) {
+            $tier = $this->kycService->getUserTier($user);
+            return $this->error(
+                "Your current trading tier allows a maximum of AUD \${$tier['max_order_aud']} per order. " .
+                "Complete more trades to increase your limit.",
+                422
+            );
+        }
+
+        // Validate delivery location belongs to an active country
         $location = DeliveryLocation::where('id', $request->zim_delivery_location_id)
             ->where('is_active', true)
             ->firstOrFail();
@@ -123,23 +104,32 @@ class SwapOrderController extends Controller
                 null,
                 'User created 3+ orders in 1 hour'
             );
-            return $this->error('You are creating orders too quickly. Please wait before creating another order.', 429);
+            return $this->error('You are creating orders too quickly. Please wait before creating another.', 429);
         }
 
-        // Get current exchange rate
+        // Calculate fee and suggested USD amount
         $rate = ExchangeRate::currentRate('AUD', 'USD');
         if (! $rate) {
-            return $this->error('Exchange rate is not currently available. Please try again shortly.', 503);
+            return $this->error('Exchange rate not available. Please try again shortly.', 503);
         }
 
-        // Calculate fee — applies any available referral discount automatically
         $feeCalc = $this->feeService->calculateUsd($amountAud, $rate, $user);
+
+        // Fraud detection: amount exactly at tier limit
+        $tier = $this->kycService->getUserTier($user);
+        if ($amountAud == $tier['max_order_aud'] && (bool) SystemSetting::get('auto_flag_tier_limit_orders', true)) {
+            $this->auditService->flag(
+                'fraud.exact_tier_limit',
+                $user,
+                null,
+                "Order amount exactly at tier limit: {$amountAud}"
+            );
+        }
 
         $expiryHours = (int) SystemSetting::get('order_expiry_hours', 48);
 
-        $order = DB::transaction(function () use ($request, $user, $feeCalc, $rate, $expiryHours) {
+        $order = DB::transaction(function () use ($request, $user, $feeCalc, $rate, $expiryHours, $bankAccount) {
             $order = SwapOrder::create([
-                'ulid'                     => (string) new Ulid(),
                 'user_id'                  => $user->id,
                 'order_type'               => $request->order_type,
                 'amount_aud'               => $request->amount_aud,
@@ -148,7 +138,7 @@ class SwapOrderController extends Controller
                 'platform_fee_aud'         => $feeCalc['fee_aud'],
                 'platform_fee_percent'     => $feeCalc['fee_percent'],
                 'fee_discount_id'          => $feeCalc['discount_id'],
-                'discounted_fee_aud'       => isset($feeCalc['discount_id']) ? $feeCalc['fee_aud'] : null,
+                'discounted_fee_aud'       => $feeCalc['discounted_fee_aud'],
                 'zim_recipient_name'       => $request->zim_recipient_name,
                 'zim_recipient_phone'      => $request->zim_recipient_phone,
                 'zim_delivery_location_id' => $request->zim_delivery_location_id,
@@ -160,56 +150,45 @@ class SwapOrderController extends Controller
                 'expires_at'               => now()->addHours($expiryHours),
             ]);
 
-            // Decrement fee discount if one was applied
-            if (! empty($feeCalc['discount_id'])) {
-                FeeDiscount::where('id', $feeCalc['discount_id'])->decrement('uses_remaining');
+            // If discount was applied, decrement the uses_remaining
+            if ($feeCalc['discount_id']) {
+                \App\Models\FeeDiscount::where('id', $feeCalc['discount_id'])->decrement('uses_remaining');
             }
 
-            // Save recipient if user requested it
-            if ($request->boolean('save_recipient') && $request->filled('zim_recipient_name')) {
-                SavedRecipient::firstOrCreate(
-                    [
-                        'user_id'         => $user->id,
-                        'recipient_phone' => $request->zim_recipient_phone,
-                    ],
-                    [
-                        'nickname'             => $request->recipient_nickname ?: $request->zim_recipient_name,
-                        'recipient_name'       => $request->zim_recipient_name,
-                        'delivery_location_id' => $request->zim_delivery_location_id,
-                        'delivery_address'     => $request->zim_delivery_address,
-                        'delivery_notes'       => $request->zim_delivery_notes,
-                    ]
-                );
+            // Save recipient if requested
+            if ($request->boolean('save_recipient')) {
+                SavedRecipient::create([
+                    'user_id'              => $user->id,
+                    'nickname'             => $request->recipient_nickname,
+                    'recipient_name'       => $request->zim_recipient_name,
+                    'recipient_phone'      => $request->zim_recipient_phone,
+                    'delivery_location_id' => $request->zim_delivery_location_id,
+                    'delivery_address'     => $request->zim_delivery_address,
+                    'delivery_notes'       => $request->zim_delivery_notes,
+                ]);
             }
 
-            // Increment use count on a pre-selected saved recipient
-            if ($request->filled('saved_recipient_id')) {
-                SavedRecipient::where('id', $request->saved_recipient_id)
+            // Update saved recipient use count if one was pre-selected
+            if ($request->saved_recipient_id) {
+                $recipient = SavedRecipient::where('id', $request->saved_recipient_id)
                     ->where('user_id', $user->id)
-                    ->increment('use_count');
+                    ->first();
+                $recipient?->incrementUseCount();
             }
 
             return $order;
         });
 
-        $this->auditService->log('order.created', $user, $order, [], ['amount_aud' => $order->amount_aud, 'order_type' => $order->order_type]);
+        $this->auditService->log('order.created', $user, $order, [], $order->toArray());
 
         return $this->created([
-            'order'       => $this->formatOrder($order->load('deliveryLocation')),
-            'fee_details' => [
-                'fee_aud'          => $feeCalc['fee_aud'],
-                'fee_percent'      => $feeCalc['fee_percent'],
-                'amount_usd'       => $feeCalc['amount_usd'],
-                'exchange_rate'    => $feeCalc['exchange_rate'],
-                'wu_estimated_fee' => $feeCalc['wu_estimated_fee'] ?? null,
-                'savings_vs_wu'    => $feeCalc['savings_vs_wu'] ?? null,
-                'discount_applied' => ! empty($feeCalc['discount_id']),
-                'discount_percent' => $feeCalc['discount_percent'] ?? null,
-            ],
+            'order'      => $this->formatOrder($order->load('deliveryLocation')),
+            'fee_details'=> $feeCalc,
         ], 'Order created successfully.');
     }
 
     /**
+     * Get a single order by ULID.
      * GET /api/v1/orders/{ulid}
      */
     public function show(Request $request, string $ulid): JsonResponse
@@ -223,6 +202,7 @@ class SwapOrderController extends Controller
     }
 
     /**
+     * Cancel an open order.
      * PUT /api/v1/orders/{ulid}/cancel
      */
     public function cancel(Request $request, string $ulid): JsonResponse
@@ -235,14 +215,9 @@ class SwapOrderController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        $cancellableStatuses = [
-            SwapOrder::STATUS_OPEN,
-            SwapOrder::STATUS_NEGOTIATING,
-        ];
-
-        if (! in_array($order->status, $cancellableStatuses)) {
+        if (! $order->isCancellable()) {
             return $this->error(
-                "This order cannot be cancelled while in '{$order->status}' status. Contact support if you need help.",
+                'This order cannot be cancelled in its current status (' . $order->status . ').',
                 422
             );
         }
@@ -259,6 +234,7 @@ class SwapOrderController extends Controller
     }
 
     /**
+     * Extend an expiring order by 48 hours.
      * PUT /api/v1/orders/{ulid}/extend
      */
     public function extend(Request $request, string $ulid): JsonResponse
@@ -271,16 +247,17 @@ class SwapOrderController extends Controller
             return $this->error('Only open orders can be extended.', 422);
         }
 
-        $expiryHours   = (int) SystemSetting::get('order_expiry_hours', 48);
+        $expiryHours = (int) SystemSetting::get('order_expiry_hours', 48);
         $order->expires_at = now()->addHours($expiryHours);
         $order->save();
 
         $this->auditService->log('order.extended', $request->user(), $order);
 
-        return $this->success($this->formatOrder($order), "Order extended by {$expiryHours} hours.");
+        return $this->success($this->formatOrder($order), 'Order extended by ' . $expiryHours . ' hours.');
     }
 
     /**
+     * Boost an order to appear at the top of browse results.
      * POST /api/v1/orders/{ulid}/boost
      */
     public function boost(Request $request, string $ulid): JsonResponse
@@ -298,12 +275,13 @@ class SwapOrderController extends Controller
         }
 
         if ($order->is_boosted && $order->boost_expires_at?->isFuture()) {
-            return $this->error('This order is already boosted until ' . $order->boost_expires_at->toFormattedDateString() . '.', 422);
+            return $this->error('This order is already boosted.', 422);
         }
 
         $boostFee   = (float) SystemSetting::get('order_boost_fee_aud', 2.00);
         $boostHours = (int) SystemSetting::get('order_boost_duration_hours', 24);
 
+        // Record the boost
         OrderBoost::create([
             'swap_order_id' => $order->id,
             'user_id'       => $request->user()->id,
@@ -320,15 +298,17 @@ class SwapOrderController extends Controller
 
         $this->auditService->log('order.boosted', $request->user(), $order);
 
-        return $this->success($this->formatOrder($order), "Order boosted for {$boostHours} hours. Fee: AUD {$boostFee}");
+        return $this->success($this->formatOrder($order), "Order boosted for {$boostHours} hours. Fee: AUD \${$boostFee}");
     }
 
     /**
+     * Clone a completed order (Repeat Order).
      * POST /api/v1/orders/{ulid}/repeat
      */
     public function repeat(Request $request, string $ulid): JsonResponse
     {
         $user = $request->user();
+
         $this->kycService->assertCanTrade($user);
 
         $original = SwapOrder::where('ulid', $ulid)
@@ -344,7 +324,6 @@ class SwapOrderController extends Controller
         $expiryHours = (int) SystemSetting::get('order_expiry_hours', 48);
 
         $newOrder = SwapOrder::create([
-            'ulid'                     => (string) new Ulid(),
             'user_id'                  => $user->id,
             'order_type'               => $original->order_type,
             'amount_aud'               => $original->amount_aud,
@@ -374,6 +353,10 @@ class SwapOrderController extends Controller
     /**
      * Browse open orders from other users.
      * GET /api/v1/orders/browse
+     *
+     * Shows the OPPOSITE order type to what the auth user would create.
+     * Primary filter: zim_location_id — only show orders for locations the user can service.
+     * Boosted orders appear first. Trusted contacts highlighted.
      */
     public function browse(Request $request): JsonResponse
     {
@@ -386,22 +369,17 @@ class SwapOrderController extends Controller
             ->orderByDesc('is_boosted')
             ->orderByDesc('created_at');
 
-        // Multi-city filter: ?zim_location_ids=1,3,7 (comma-separated)
-        if ($request->filled('zim_location_ids')) {
-            $ids = array_filter(
-                array_map('intval', explode(',', $request->zim_location_ids)),
-                fn($id) => $id > 0
-            );
-            if (count($ids)) {
-                $query->whereIn('zim_delivery_location_id', $ids);
-            }
-        } elseif ($request->filled('zim_location_id')) {
-            // Legacy single-city support
-            $query->where('zim_delivery_location_id', (int) $request->zim_location_id);
+        // Primary filter: Zimbabwe delivery location
+        if ($request->filled('zim_location_id')) {
+            $query->where('zim_delivery_location_id', $request->zim_location_id);
         }
+
+        // Order type filter — show OPPOSITE to what the browsing user would need
         if ($request->filled('order_type')) {
             $query->where('order_type', $request->order_type);
         }
+
+        // Amount range filters
         if ($request->filled('min_aud')) {
             $query->where('amount_aud', '>=', $request->min_aud);
         }
@@ -409,6 +387,18 @@ class SwapOrderController extends Controller
             $query->where('amount_aud', '<=', $request->max_aud);
         }
 
+        // Filter by specific user ("send money via" feature)
+        if ($request->filled('user_ulid')) {
+            $query->whereHas('user', fn($q) => $q->where('ulid', $request->user_ulid));
+        }
+
+        // Also support multi-location filter (comma-separated IDs)
+        if ($request->filled('zim_location_ids')) {
+            $ids = array_filter(array_map('intval', explode(',', $request->zim_location_ids)));
+            if (!empty($ids)) $query->whereIn('zim_delivery_location_id', $ids);
+        }
+
+        // Sort override
         if ($request->sort === 'amount_asc') {
             $query->reorder()->orderByDesc('is_boosted')->orderBy('amount_aud');
         } elseif ($request->sort === 'amount_desc') {
@@ -417,15 +407,15 @@ class SwapOrderController extends Controller
 
         $orders = $query->paginate(15);
 
-        // Get trusted contact IDs so we can highlight them in results
+        // Get trusted contact IDs for the current user
         $trustedIds = TrustedContact::where('user_id', $user->id)
             ->pluck('trusted_user_id')
             ->toArray();
 
         $formatted = $orders->getCollection()->map(function ($order) use ($trustedIds) {
-            $f                        = $this->formatOrderForBrowse($order);
-            $f['is_trusted_contact']  = in_array($order->user_id, $trustedIds);
-            return $f;
+            $formatted = $this->formatOrderForBrowse($order);
+            $formatted['is_trusted_contact'] = in_array($order->user_id, $trustedIds);
+            return $formatted;
         });
 
         return $this->paginated($orders, 'Orders retrieved.', $formatted);
@@ -454,8 +444,8 @@ class SwapOrderController extends Controller
             'status'                   => $order->status,
             'is_boosted'               => (bool) $order->is_boosted,
             'boost_expires_at'         => $order->boost_expires_at?->toIso8601String(),
-            'expires_at'               => $order->expires_at?->toIso8601String(),
-            'expires_in_hours'         => $order->expires_at ? max(0, round(now()->diffInHours($order->expires_at, false))) : 0,
+            'expires_at'               => $order->expires_at->toIso8601String(),
+            'expires_in_hours'         => max(0, round(now()->diffInHours($order->expires_at, false))),
             'created_at'               => $order->created_at->toIso8601String(),
             'delivery_location'        => $order->relationLoaded('deliveryLocation') ? [
                 'id'       => $order->deliveryLocation?->id,
@@ -469,9 +459,8 @@ class SwapOrderController extends Controller
                 'id'             => $order->bankAccount->id,
                 'bank_name'      => $order->bankAccount->bank_name,
                 'account_name'   => $order->bankAccount->account_name,
-                'account_number' => '····' . substr($order->bankAccount->account_number, -4),
+                'account_number' => substr($order->bankAccount->account_number, -4),
                 'bsb_code'       => $order->bankAccount->bsb_code,
-                'is_primary'     => (bool) $order->bankAccount->is_primary,
             ] : null;
         }
 
@@ -480,11 +469,8 @@ class SwapOrderController extends Controller
 
     private function formatOrderForBrowse(SwapOrder $order): array
     {
-        $owner = $order->user;
-        $isAnon = $owner?->profile_visibility === 'anonymous';
-        $displayName = $isAnon
-            ? ($owner->anonymous_name ?: $owner->display_first_name ?? 'Anonymous')
-            : ($owner->first_name ?? 'Anonymous');
+        // Show limited public info — first name only, no phone
+        $displayName = $order->user->display_first_name ?? 'Anonymous';
 
         return [
             'id'               => $order->id,
@@ -493,7 +479,7 @@ class SwapOrderController extends Controller
             'amount_aud'       => (float) $order->amount_aud,
             'amount_usd'       => (float) $order->amount_usd,
             'is_boosted'       => (bool) $order->is_boosted,
-            'expires_at'       => $order->expires_at?->toIso8601String(),
+            'expires_at'       => $order->expires_at->toIso8601String(),
             'created_at'       => $order->created_at->toIso8601String(),
             'created_human'    => $order->created_at->diffForHumans(),
             'delivery_location'=> [
@@ -502,13 +488,13 @@ class SwapOrderController extends Controller
                 'province' => $order->deliveryLocation?->province,
             ],
             'owner'            => [
-                'ulid'         => $owner?->ulid,
-                'display_name' => $displayName,
-                'rating'       => $owner?->rating ? (float) $owner->rating : null,
-                'total_trades' => $owner?->total_trades ?? 0,
-                'trust_score'  => $owner?->trust_score ?? 0,
-                'last_seen'    => $owner?->last_seen_human ?? 'Unknown',
-                'kyc_verified' => $owner?->kyc_status === 'approved',
+                'ulid'          => $order->user->ulid,
+                'display_name'  => $displayName,
+                'rating'        => $order->user->rating,
+                'total_trades'  => $order->user->total_trades,
+                'trust_score'   => $order->user->trust_score,
+                'last_seen'     => $order->user->last_seen_human,
+                'avatar_url'    => $order->user->avatar_url,
             ],
         ];
     }

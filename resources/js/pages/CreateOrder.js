@@ -90,7 +90,7 @@ export default {
                 }
             ]
         },
-        quickAmounts() { return [100, 200, 300, 500, 1000] }
+        quickAmounts() { return [100, 200, 300, 500, 1000, 2500, 5000, 7500, 10000] }
     },
     async mounted() {
         await Promise.all([
