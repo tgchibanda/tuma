@@ -5,8 +5,7 @@ export default {
   <nav class="bg-white border-b border-gray-200 sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
       <router-link to="/" class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-green-700 rounded-lg flex items-center justify-center"><span class="text-white font-bold text-sm">Tu</span></div>
-        <span class="font-bold text-gray-900 text-lg">Tu<span class="text-green-700">Ma</span></span>
+        <img src="/images/logo.svg" alt="eZimConnect" class="h-8 w-auto">
       </router-link>
       <div class="flex gap-3">
         <router-link to="/login"    class="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-green-700">Log in</router-link>
@@ -17,9 +16,9 @@ export default {
 
   <div class="max-w-4xl mx-auto px-4 py-14">
     <div class="text-center mb-12">
-      <span class="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-full">How eZimConnect Works</span>
+      <span class="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-full">How TuMa Works</span>
       <h1 class="text-4xl font-black text-gray-900 mt-4 mb-3" style="font-family:Georgia,serif;">Send money to Zimbabwe<br>without the bank fees</h1>
-      <p class="text-lg text-gray-500 max-w-xl mx-auto">eZimConnect connects Australians who want to send AUD with people in Zimbabwe who deliver USD cash — peer-to-peer, secured by escrow.</p>
+      <p class="text-lg text-gray-500 max-w-xl mx-auto">TuMa connects Australians who want to send AUD with people in Zimbabwe who deliver USD cash — peer-to-peer, secured by escrow.</p>
     </div>
 
     <!-- Steps -->
@@ -28,7 +27,7 @@ export default {
         { n:'1', icon:'fa-user-plus',     title:'Create an account',     desc:'Sign up and verify your identity. KYC takes less than 5 minutes with a photo ID.' },
         { n:'2', icon:'fa-list-alt',      title:'Create an order',       desc:'Specify how much AUD you want to swap. Our calculator shows an estimated USD amount.' },
         { n:'3', icon:'fa-handshake',     title:'Match and negotiate',   desc:'Browse open orders or get matched automatically. Negotiate the AUD/USD rate directly with your partner.' },
-        { n:'4', icon:'fa-university',    title:'Deposit AUD to escrow', desc:'Transfer AUD to eZimConnect\'s trust account. We hold it securely until delivery is confirmed.' },
+        { n:'4', icon:'fa-university',    title:'Deposit AUD to escrow', desc:'Transfer AUD to TuMa\'s trust account. We hold it securely until delivery is confirmed.' },
         { n:'5', icon:'fa-money-bill-wave',title:'Cash delivered in Zimbabwe',desc:'Your match delivers USD cash to your recipient. They upload a photo with the recipient\'s ID as proof.' },
         { n:'6', icon:'fa-check-circle',  title:'Confirm and complete',  desc:'You confirm receipt. We release your AUD to your partner. Transaction complete — usually within hours.' },
       ]" :key="step.n"
