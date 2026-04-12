@@ -153,24 +153,8 @@ export default {
   <!-- NAVBAR -->
   <nav class="sticky top-0 z-40 bg-white/96 backdrop-blur-sm border-b border-gray-100 shadow-sm">
     <div class="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
-      <router-link to="/" class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 shadow-md" style="background:linear-gradient(145deg,#1a6b3c,#2d9460);">
-          <div class="w-full h-full flex flex-col items-start justify-center px-2 gap-1">
-            <div class="flex items-center w-full gap-0.5">
-              <span class="text-[6px] font-black text-yellow-400 leading-none">AUD</span>
-              <div class="flex-1 h-px bg-yellow-400"></div>
-              <div style="width:0;height:0;border-top:2px solid transparent;border-bottom:2px solid transparent;border-left:4px solid #facc15;"></div>
-            </div>
-            <div class="flex items-center w-full gap-0.5 flex-row-reverse">
-              <span class="text-[6px] font-black text-white leading-none">USD</span>
-              <div class="flex-1 h-px bg-white opacity-70"></div>
-              <div style="width:0;height:0;border-top:2px solid transparent;border-bottom:2px solid transparent;border-right:4px solid rgba(255,255,255,0.7);"></div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <img src="/images/logo.svg" alt="eZimConnect" class="h-9 w-auto">
-        </div>
+      <router-link to="/" class="flex items-center">
+        <img src="/images/logo.svg" alt="eZimConnect" class="h-9 w-auto">
       </router-link>
       <div class="hidden md:flex items-center gap-0.5">
         <a href="#how-it-works" class="px-3.5 py-2 text-sm font-medium text-gray-600 hover:text-green-700 hover:bg-green-50 rounded-xl transition-colors">How it works</a>
@@ -551,17 +535,8 @@ export default {
     <div class="max-w-6xl mx-auto px-5">
       <div class="grid md:grid-cols-4 gap-8 mb-10">
         <div class="md:col-span-2">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 shadow-md" style="background:linear-gradient(145deg,#1a6b3c,#2d9460);">
-              <div class="w-full h-full flex flex-col items-start justify-center px-2 gap-1">
-                <div class="flex items-center w-full gap-0.5"><span class="text-[6px] font-black text-yellow-400 leading-none">AUD</span><div class="flex-1 h-px bg-yellow-400"></div></div>
-                <div class="flex items-center w-full gap-0.5 flex-row-reverse"><span class="text-[6px] font-black text-white leading-none">USD</span><div class="flex-1 h-px bg-white opacity-70"></div></div>
-              </div>
-            </div>
-            <div>
-              <img src="/images/logo-dark.svg" alt="eZimConnect" class="h-9 w-auto">
-              <p class="text-[8px] font-bold tracking-widest text-gray-500 uppercase">Swap · Send · Settle</p>
-            </div>
+          <div class="mb-4">
+            <img src="/images/logo-dark.svg" alt="eZimConnect" class="h-9 w-auto">
           </div>
           <p class="text-gray-400 text-sm leading-relaxed max-w-xs">Peer-to-peer currency exchange for Australians sending money to Zimbabwe. Zero bank fees. Secured by escrow.</p>
           <p class="text-gray-600 text-xs mt-3 flex items-center gap-1.5"><i class="fas fa-lock text-gray-600"></i>NAB Trust Account · AUSTRAC registered</p>
