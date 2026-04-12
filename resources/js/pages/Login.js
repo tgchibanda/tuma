@@ -29,10 +29,7 @@ export default {
   <div class="w-full max-w-sm">
     <div class="text-center mb-8">
       <router-link to="/" class="inline-flex items-center gap-2">
-        <div class="w-10 h-10 bg-green-700 rounded-2xl flex items-center justify-center">
-          <span class="text-white font-bold">Tu</span>
-        </div>
-        <span class="text-2xl font-bold text-gray-900">Tu<span class="text-green-700">Ma</span></span>
+        <img src="/images/logo.svg" alt="eZimConnect" class="h-9 w-auto">
       </router-link>
       <h1 class="text-xl font-semibold text-gray-900 mt-4">{{ show2fa?'Two-Factor Authentication':'Welcome back' }}</h1>
     </div>

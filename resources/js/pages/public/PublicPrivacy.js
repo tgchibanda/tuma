@@ -5,10 +5,7 @@ export default {
   <nav class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
       <router-link to="/" class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#1a6b3c,#2d9460);">
-          <span class="text-white font-black text-sm" style="font-family:Georgia,serif;">Tu</span>
-        </div>
-        <span class="font-black text-gray-900 text-lg" style="font-family:Georgia,serif;">Tu<span style="color:#1a6b3c;">Ma</span></span>
+        <img src="/images/logo.svg" alt="eZimConnect" class="h-9 w-auto">
       </router-link>
       <div class="flex gap-3">
         <router-link to="/login"    class="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-green-700">Log in</router-link>
@@ -38,7 +35,7 @@ export default {
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">2. How We Use Your Information</h2>
-          <p>We use your data to: provide and operate eZimConnect; verify your identity under AML/KYC obligations; process and secure transactions; prevent fraud; respond to support; send transaction notifications; and improve our platform. We will not sell your personal information to third parties.</p>
+          <p>We use your data to: provide and operate TuMa; verify your identity under AML/KYC obligations; process and secure transactions; prevent fraud; respond to support; send transaction notifications; and improve our platform. We will not sell your personal information to third parties.</p>
         </section>
 
         <section>
@@ -73,7 +70,7 @@ export default {
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">9. Contact</h2>
-          <p>Privacy enquiries: <a href="mailto:privacy@ezimconnect.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">privacy@ezimconnect.com.au</a></p>
+          <p>Privacy enquiries: <a href="mailto:privacy@tuma.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">privacy@tuma.com.au</a></p>
         </section>
       </div>
 
