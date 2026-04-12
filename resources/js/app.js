@@ -48,6 +48,9 @@ Vue.prototype.$auth = {
     logout() {
         localStorage.removeItem('tuma_token')
         localStorage.removeItem('tuma_user')
+    },
+    setUser(user) {
+        localStorage.setItem('tuma_user', JSON.stringify(user))
     }
 }
 
@@ -96,7 +99,6 @@ Vue.prototype.$toast = {
 
 // ── Global Components ───────────────────────────────────────────────────────
 import AppNav from './components/AppNav'
-import AdminNav from './components/AdminNav'
 import AppFooter from './components/AppFooter'
 import LoadingSpinner from './components/LoadingSpinner'
 import AlertBanner from './components/AlertBanner'
@@ -115,7 +117,6 @@ import FileUpload from './components/FileUpload'
 import PaginationLinks from './components/PaginationLinks'
 
 Vue.component('app-nav', AppNav)
-Vue.component('admin-nav', AdminNav)
 Vue.component('app-footer', AppFooter)
 Vue.component('loading-spinner', LoadingSpinner)
 Vue.component('alert-banner', AlertBanner)
