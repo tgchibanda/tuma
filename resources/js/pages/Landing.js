@@ -169,10 +169,7 @@ export default {
           </div>
         </div>
         <div>
-          <div class="leading-none flex items-baseline">
-            <img src="/images/logo.svg" alt="eZimConnect" class="h-8 w-auto brightness-0 invert">
-          </div>
-          <p class="text-[8px] font-bold tracking-widest text-gray-400 uppercase">Swap · Send · Settle</p>
+          <img src="/images/logo.svg" alt="eZimConnect" class="h-9 w-auto">
         </div>
       </router-link>
       <div class="hidden md:flex items-center gap-0.5">
@@ -390,7 +387,7 @@ export default {
               <th class="text-left py-4 px-5 font-semibold text-gray-500">Feature</th>
               <th class="py-4 px-5 text-center">
                 <div class="inline-flex items-center gap-1.5">
-                  <img src="/images/logo.svg" alt="eZimConnect" class="h-5 w-auto inline">
+                  <img src="/images/logo-icon.svg" alt="eZimConnect" class="h-5 w-auto inline">
                 </div>
               </th>
               <th class="py-4 px-5 text-center bg-gray-50 font-semibold text-gray-400">Other Providers</th>
@@ -562,7 +559,7 @@ export default {
               </div>
             </div>
             <div>
-              <img src="/images/logo.svg" alt="eZimConnect" class="h-8 w-auto brightness-0 invert">
+              <img src="/images/logo-dark.svg" alt="eZimConnect" class="h-9 w-auto">
               <p class="text-[8px] font-bold tracking-widest text-gray-500 uppercase">Swap · Send · Settle</p>
             </div>
           </div>

@@ -5,7 +5,7 @@ export default {
   <nav class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
       <router-link to="/" class="flex items-center gap-2">
-        <img src="/images/logo.svg" alt="eZimConnect" class="h-8 w-auto">
+        <img src="/images/logo.svg" alt="eZimConnect" class="h-9 w-auto">
       </router-link>
       <div class="flex gap-3">
         <router-link to="/login"    class="px-4 py-2 text-sm font-semibold text-gray-700 hover:text-green-700">Log in</router-link>
