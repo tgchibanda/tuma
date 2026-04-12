@@ -70,7 +70,7 @@ export default {
 
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">12. Contact</h2>
-          <p>For questions about these Terms, contact us at <a href="mailto:legal@ezimconnect.com.au" class="text-green-700 hover:underline">legal@ezimconnect.com.au</a>.</p>
+          <p>For questions about these Terms, contact us at <a href="mailto:adminezimconnect.com.au" class="text-green-700 hover:underline">adminezimconnect.com.au</a>.</p>
         </section>
       </div>
     </div>

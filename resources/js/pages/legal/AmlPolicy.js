@@ -33,7 +33,7 @@ export default {
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Contact</h2>
-          <p>To report suspicious activity or for compliance enquiries: <a href="mailto:compliance@ezimconnect.com.au" class="text-green-700 hover:underline">compliance@ezimconnect.com.au</a></p>
+          <p>To report suspicious activity or for compliance enquiries: <a href="mailto:adminezimconnect.com.au" class="text-green-700 hover:underline">adminezimconnect.com.au</a></p>
         </section>
       </div>
     </div>
