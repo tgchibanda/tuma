@@ -11,6 +11,9 @@
     <meta property="og:title" content="eZimConnect — Send money to Zimbabwe">
     <meta property="og:description" content="Peer-to-peer AUD to USD cash exchange. No bank fees. Secured by escrow.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script>
+        window.HCAPTCHA_SITE_KEY = "{{ config('services.hcaptcha.site_key') }}";
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 text-gray-900 antialiased">
