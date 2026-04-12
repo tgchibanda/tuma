@@ -250,7 +250,7 @@ export default {
                 <div class="flex items-center gap-2 rounded-xl px-3 py-1.5" style="background:rgba(255,255,255,0.15);"><span>🇦🇺</span><span class="text-white font-bold text-sm">AUD</span></div>
               </div>
             </div>
-            <div class="text-center text-xs text-green-300 py-2 opacity-80">Platform fee: AUD 1.50 (0.5%)</div>
+            <div class="text-center text-xs text-green-300 py-2 opacity-80">Platform fee: AUD 2.50 (0.5%)</div>
             <div class="rounded-2xl p-4 mb-4" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);">
               <p class="text-yellow-300 text-xs mb-1">Recipient gets</p>
               <div class="flex items-center justify-between">
