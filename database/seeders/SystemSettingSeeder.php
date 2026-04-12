@@ -14,7 +14,7 @@ class SystemSettingSeeder extends Seeder
             [
                 'key'         => 'platform_fee_percent',
                 'value'       => '1.5',
-                'description' => 'Platform fee percentage taken from AUD amount on agreement (e.g. 1.5 = 1.5%)',
+                'description' => 'Platform fee percentage taken from AUD amount on agreement (e.g. 1.5 = 0.5%)',
             ],
             [
                 'key'         => 'order_expiry_hours',
