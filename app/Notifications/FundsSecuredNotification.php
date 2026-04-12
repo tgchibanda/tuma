@@ -22,7 +22,7 @@ class FundsSecuredNotification extends Notification implements ShouldQueue
         $usd    = number_format((float) $this->match->agreed_usd, 2);
 
         return (new MailMessage)
-            ->subject('eZimConnect — Your AUD deposit is secured')
+            ->subject('TuMa — Your AUD deposit is secured')
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
             ->line("Your deposit of AUD \${$amount} has been verified and secured in escrow.")
             ->line("The cash deliverer has been notified to deliver USD \${$usd} to your recipient.")
@@ -44,7 +44,7 @@ class FundsSecuredNotification extends Notification implements ShouldQueue
 
     public function toSms(mixed $notifiable): string
     {
-        return 'eZimConnect: Your AUD $' . number_format((float) $this->match->agreed_aud, 2)
+        return 'TuMa: Your AUD $' . number_format((float) $this->match->agreed_aud, 2)
             . ' is secured. Cash delivery is underway. Ref: ' . $this->match->getDepositReference();
     }
 }
