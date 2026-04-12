@@ -29,7 +29,7 @@ export default {
             this.loading = true
             try {
                 const { data } = await this.$http.get('/admin/locations')
-                this.locations = data.data || []
+                this.locations = data.data?.flat || data.data || []
             } catch {}
             this.loading = false
         },

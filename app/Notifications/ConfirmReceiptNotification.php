@@ -27,11 +27,11 @@ class ConfirmReceiptNotification extends Notification implements ShouldQueue
 
     public function toDatabase(mixed $notifiable): array
     {
-        return ['message' => 'You have a new notification.', 'action_url' => '/dashboard'];
+        return ['message' => 'Cash delivery proof uploaded. Please confirm receipt in your match.', 'action_url' => '/matches'];
     }
 
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa: You have a new notification. Log in to see details.';
+        return 'TuMa: Cash was delivered. Open the app to confirm receipt.';
     }
 }

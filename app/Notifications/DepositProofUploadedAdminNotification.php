@@ -27,11 +27,11 @@ class DepositProofUploadedAdminNotification extends Notification implements Shou
 
     public function toDatabase(mixed $notifiable): array
     {
-        return ['message' => 'You have a new notification.', 'action_url' => '/dashboard'];
+        return ['message' => 'New deposit proof uploaded — please verify.', 'action_url' => '/admin/deposits'];
     }
 
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa: You have a new notification. Log in to see details.';
+        return 'TuMa Admin: New deposit proof requires verification.';
     }
 }

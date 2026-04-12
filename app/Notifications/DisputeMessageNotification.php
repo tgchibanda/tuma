@@ -27,11 +27,11 @@ class DisputeMessageNotification extends Notification implements ShouldQueue
 
     public function toDatabase(mixed $notifiable): array
     {
-        return ['message' => 'You have a new notification.', 'action_url' => '/dashboard'];
+        return ['message' => 'New message in your dispute thread.', 'action_url' => '/disputes'];
     }
 
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa: You have a new notification. Log in to see details.';
+        return 'TuMa: New dispute message received.';
     }
 }

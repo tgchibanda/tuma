@@ -3,11 +3,13 @@ export default {
     data() {
         return {
             stats: null, orders: [], matches: [], announcements: [],
+            totalTrades: 0,
             noticeboard: [], holidays: [], loading: true, user: null
         }
     },
     async mounted() {
         this.user = this.$auth.user
+        this.totalTrades = this.user?.total_trades || this.user?.successful_trades || 0
         await Promise.all([this.fetchStats(), this.fetchOrders(), this.fetchMatches(), this.fetchNoticeboard(), this.fetchHolidays()])
         this.loading = false
     },
@@ -101,7 +103,7 @@ export default {
               <match-card v-for="m in matches.slice(0,3)" :key="m.ulid" :match="m" />
             </div>
             <empty-state v-else icon="fa-handshake" title="No active matches"
-              subtitle="Browse open orders to find your first match."
+              :subtitle="user && user.total_trades > 0 ? 'Browse open orders to find your next match.' : 'Browse open orders to find your first match.'"
               action-label="Browse Orders" action-to="/browse" />
           </div>
 
