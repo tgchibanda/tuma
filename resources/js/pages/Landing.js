@@ -370,8 +370,8 @@ export default {
             <tr class="border-b-2 border-gray-100">
               <th class="text-left py-4 px-5 font-semibold text-gray-500">Feature</th>
               <th class="py-4 px-5 text-center">
-                <div class="inline-flex items-center gap-1.5">
-                  <img src="/images/logo-icon.svg" alt="eZimConnect" class="h-5 w-auto inline">
+                <div class="inline-flex flex-col items-center gap-1">
+                  <img src="/images/logo.svg" alt="eZimConnect" class="h-6 w-auto">
                 </div>
               </th>
               <th class="py-4 px-5 text-center bg-gray-50 font-semibold text-gray-400">Other Providers</th>
