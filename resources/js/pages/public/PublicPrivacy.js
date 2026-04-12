@@ -35,7 +35,7 @@ export default {
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">2. How We Use Your Information</h2>
-          <p>We use your data to: provide and operate TuMa; verify your identity under AML/KYC obligations; process and secure transactions; prevent fraud; respond to support; send transaction notifications; and improve our platform. We will not sell your personal information to third parties.</p>
+          <p>We use your data to: provide and operate eZimConnect; verify your identity under AML/KYC obligations; process and secure transactions; prevent fraud; respond to support; send transaction notifications; and improve our platform. We will not sell your personal information to third parties.</p>
         </section>
 
         <section>
@@ -70,7 +70,7 @@ export default {
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">9. Contact</h2>
-          <p>Privacy enquiries: <a href="mailto:privacy@tuma.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">privacy@tuma.com.au</a></p>
+          <p>Privacy enquiries: <a href="mailto:adminezimconnect.com" class="font-medium hover:underline" style="color:#1a6b3c;">adminezimconnect.com</a></p>
         </section>
       </div>
 
