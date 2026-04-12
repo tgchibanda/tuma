@@ -70,7 +70,7 @@ export default {
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">9. Contact</h2>
-          <p>Privacy enquiries: <a href="mailto:adminezimconnect.com" class="font-medium hover:underline" style="color:#1a6b3c;">adminezimconnect.com</a></p>
+          <p>Privacy enquiries: <a href="mailto:admin@ezimconnect.com" class="font-medium hover:underline" style="color:#1a6b3c;">admin@ezimconnect.com</a></p>
         </section>
       </div>
 

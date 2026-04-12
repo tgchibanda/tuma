@@ -61,7 +61,7 @@ export default {
 
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">9. Contact</h2>
-          <p>For privacy enquiries or to exercise your rights, contact our Privacy Officer at <a href="mailto:adminezimconnect.com.au" class="text-green-700 hover:underline">adminezimconnect.com.au</a> or via our support system.</p>
+          <p>For privacy enquiries or to exercise your rights, contact our Privacy Officer at <a href="mailto:admin@ezimconnect.com.au" class="text-green-700 hover:underline">admin@ezimconnect.com.au</a> or via our support system.</p>
         </section>
       </div>
     </div>
