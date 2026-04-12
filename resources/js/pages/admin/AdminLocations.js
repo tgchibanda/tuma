@@ -70,7 +70,7 @@ export default {
         }
     },
     template: `
-<div class="min-h-screen bg-gray-100">
+<div class="min-h-screen bg-gray-100 lg:pl-60">
   <admin-nav />
   <div class="max-w-5xl mx-auto px-4 py-8">
     <div class="flex items-center justify-between mb-6">

@@ -603,7 +603,7 @@ export default {
                 :src="match.receive_order.owner.avatar_url"
                 class="w-12 h-12 rounded-xl object-cover">
               <div v-else class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-700 font-black text-lg">
-                {{ (match.receive_order?.owner?.display_name || '?')[0] }}
+                {{ match.receive_order && match.receive_order.owner && match.receive_order.owner.display_name ? match.receive_order.owner.display_name[0] : '?' }}
               </div>
             </div>
             <div v-else>
@@ -611,19 +611,19 @@ export default {
                 :src="match.send_order.owner.avatar_url"
                 class="w-12 h-12 rounded-xl object-cover">
               <div v-else class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-700 font-black text-lg">
-                {{ (match.send_order?.owner?.display_name || '?')[0] }}
+                {{ match.send_order && match.send_order.owner && match.send_order.owner.display_name ? match.send_order.owner.display_name[0] : '?' }}
               </div>
             </div>
             <div class="flex-1">
               <p class="font-bold text-gray-900">
-                {{ isSender ? match.receive_order?.owner?.display_name : match.send_order?.owner?.display_name }}
+                {{ isSender ? (match.receive_order && match.receive_order.owner ? match.receive_order.owner.display_name : '—') : (match.send_order && match.send_order.owner ? match.send_order.owner.display_name : '—') }}
               </p>
               <p class="text-xs text-gray-500">
-                Rating: {{ isSender ? (match.receive_order?.owner?.rating || '—') : (match.send_order?.owner?.rating || '—') }}
-                · Trust: {{ isSender ? (match.receive_order?.owner?.trust_score || '—') : (match.send_order?.owner?.trust_score || '—') }}
+                Rating: {{ isSender ? (match.receive_order && match.receive_order.owner && match.receive_order.owner.rating ? match.receive_order.owner.rating : '—') : (match.send_order && match.send_order.owner && match.send_order.owner.rating ? match.send_order.owner.rating : '—') }}
+                · Trust: {{ isSender ? (match.receive_order && match.receive_order.owner ? match.receive_order.owner.trust_score : '—') : (match.send_order && match.send_order.owner ? match.send_order.owner.trust_score : '—') }}
               </p>
             </div>
-            <button @click="$router.push('/profile/' + (isSender ? match.receive_order?.owner?.ulid : match.send_order?.owner?.ulid))"
+            <button @click="$router.push('/profile/' + (isSender ? (match.receive_order && match.receive_order.owner ? match.receive_order.owner.ulid : '') : (match.send_order && match.send_order.owner ? match.send_order.owner.ulid : '')))"
               class="text-xs text-green-700 font-semibold border border-green-200 px-3 py-1.5 rounded-lg hover:bg-green-50">
               View profile
             </button>

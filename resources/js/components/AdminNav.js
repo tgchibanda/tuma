@@ -15,7 +15,7 @@ export default {
                 {
                     label: 'Transactions',
                     links: [
-                        { to: '/admin/matches',  label: 'Matches',  icon: 'fa-handshake', badge: 'deposits_to_verify' },
+                        { to: '/admin/matches',  label: 'Matches',  icon: 'fa-handshake' },
                         { to: '/admin/deposits', label: 'Deposits', icon: 'fa-dollar-sign' },
                         { to: '/admin/orders',   label: 'Orders',   icon: 'fa-list-alt' },
                         { to: '/admin/disputes', label: 'Disputes', icon: 'fa-exclamation-circle', urgent: true },
@@ -24,8 +24,9 @@ export default {
                 {
                     label: 'Users',
                     links: [
-                        { to: '/admin/users',   label: 'Users',    icon: 'fa-users' },
-                        { to: '/admin/reports', label: 'Reports',  icon: 'fa-flag' },
+                        { to: '/admin/users',   label: 'Users',   icon: 'fa-users' },
+                        { to: '/admin/reports', label: 'Reports', icon: 'fa-flag' },
+                        { to: '/admin/support', label: 'Support', icon: 'fa-headset' },
                     ]
                 },
                 {
@@ -43,14 +44,14 @@ export default {
     },
     methods: {
         async logout() {
-            try { await this.$http.post('/../../api/v1/admin/auth/logout') } catch {}
+            try { await this.$http.post('/auth/logout') } catch {}
             this.$auth.logout()
             this.$router.push('/admin/login')
         }
     },
     template: `
 <div>
-  <!-- Desktop sidebar -->
+  <!-- Desktop sidebar (fixed w-60, collapses to w-16) -->
   <aside :class="['fixed top-0 left-0 h-full bg-gray-900 text-white z-40 transition-all duration-200 hidden lg:flex flex-col',
     collapsed ? 'w-16' : 'w-60']">
 
@@ -69,7 +70,7 @@ export default {
     </div>
 
     <!-- Nav groups -->
-    <nav class="flex-1 overflow-y-auto py-3 space-y-0.5 px-2">
+    <nav class="flex-1 overflow-y-auto py-3 px-2">
       <div v-for="group in navGroups" :key="group.label" class="mb-4">
         <p v-if="!collapsed" class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-1.5">
           {{ group.label }}
@@ -81,17 +82,17 @@ export default {
               : 'text-gray-400 hover:bg-gray-800 hover:text-white']"
           :title="collapsed ? link.label : ''">
           <i :class="['fas flex-shrink-0 w-4 text-center', link.icon,
-            link.urgent ? 'text-red-400 group-hover:text-red-300' : '']"></i>
+            link.urgent ? 'text-red-400' : '']"></i>
           <span v-if="!collapsed" class="flex-1 min-w-0 truncate">{{ link.label }}</span>
         </router-link>
       </div>
     </nav>
 
-    <!-- User info + logout -->
+    <!-- User + logout -->
     <div class="border-t border-gray-800 p-3 flex-shrink-0">
       <div v-if="!collapsed" class="flex items-center gap-2 px-2 mb-2">
         <div class="w-8 h-8 rounded-lg bg-green-700 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-          {{ user ? user.first_name[0].toUpperCase() : 'A' }}
+          {{ user && user.first_name ? user.first_name[0].toUpperCase() : 'A' }}
         </div>
         <div class="min-w-0">
           <p class="text-sm font-medium text-white truncate">{{ user ? user.first_name : 'Admin' }}</p>
@@ -100,8 +101,7 @@ export default {
       </div>
       <button @click="logout"
         :class="['flex items-center gap-3 w-full px-2 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-red-400 transition-colors',
-          collapsed ? 'justify-center' : '']"
-        :title="collapsed ? 'Logout' : ''">
+          collapsed ? 'justify-center' : '']">
         <i class="fas fa-sign-out-alt flex-shrink-0 w-4 text-center"></i>
         <span v-if="!collapsed">Log out</span>
       </button>
@@ -114,10 +114,7 @@ export default {
       <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
         <span class="text-white font-bold text-xs">Tu</span>
       </div>
-      <div>
-        <span class="font-bold text-white text-sm">TuMa</span>
-        <span class="text-green-400 text-xs ml-1.5">Admin</span>
-      </div>
+      <span class="font-bold text-white text-sm">TuMa <span class="text-green-400">Admin</span></span>
     </div>
     <button @click="mobileOpen = !mobileOpen" class="p-2 text-gray-400 hover:text-white">
       <i :class="['fas', mobileOpen ? 'fa-times' : 'fa-bars']"></i>
@@ -129,22 +126,16 @@ export default {
     <div v-if="mobileOpen" class="fixed inset-0 bg-black/50 z-30 lg:hidden" @click="mobileOpen = false"></div>
   </transition>
 
-  <!-- Mobile slide-over drawer -->
+  <!-- Mobile drawer -->
   <transition name="slide-left">
-    <div v-if="mobileOpen" class="fixed top-0 left-0 h-full w-64 bg-gray-900 z-50 lg:hidden flex flex-col overflow-y-auto shadow-2xl">
+    <div v-if="mobileOpen" class="fixed top-0 left-0 h-full w-64 bg-gray-900 z-50 lg:hidden flex flex-col shadow-2xl">
       <div class="flex items-center justify-between p-4 border-b border-gray-800">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-            <span class="text-white font-bold text-xs">Tu</span>
-          </div>
-          <span class="font-bold text-white">TuMa <span class="text-green-400">Admin</span></span>
-        </div>
+        <span class="font-bold text-white">TuMa <span class="text-green-400">Admin</span></span>
         <button @click="mobileOpen = false" class="text-gray-500 hover:text-white p-1">
           <i class="fas fa-times"></i>
         </button>
       </div>
-
-      <nav class="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+      <nav class="flex-1 py-3 px-2 overflow-y-auto">
         <div v-for="group in navGroups" :key="group.label" class="mb-4">
           <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 mb-1.5">{{ group.label }}</p>
           <router-link v-for="link in group.links" :key="link.to" :to="link.to"
@@ -156,10 +147,8 @@ export default {
           </router-link>
         </div>
       </nav>
-
       <div class="border-t border-gray-800 p-3">
-        <button @click="logout"
-          class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-red-400 transition-colors">
+        <button @click="logout" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-red-400 transition-colors">
           <i class="fas fa-sign-out-alt w-4 text-center"></i> Log out
         </button>
       </div>
@@ -167,10 +156,10 @@ export default {
   </transition>
 
   <style>
-  .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
-  .fade-enter, .fade-leave-to { opacity: 0; }
-  .slide-left-enter-active, .slide-left-leave-active { transition: transform 0.25s ease; }
-  .slide-left-enter, .slide-left-leave-to { transform: translateX(-100%); }
+  .fade-enter-active,.fade-leave-active{transition:opacity .2s}
+  .fade-enter,.fade-leave-to{opacity:0}
+  .slide-left-enter-active,.slide-left-leave-active{transition:transform .25s ease}
+  .slide-left-enter,.slide-left-leave-to{transform:translateX(-100%)}
   </style>
 </div>`
 }
