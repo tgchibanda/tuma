@@ -379,7 +379,7 @@ export default {
           </thead>
           <tbody>
             <tr v-for="(r,i) in [
-              ['Platform fee',            '0.5% = AUD 2.50',     '4 to 5 pct plus fixed fee'],
+              ['Platform fee on AUD 500',            '0.5% = AUD 2.50',     '4 to 5 pct plus fixed fee'],
               ['Exchange rate',           'Peer negotiated',     'Bank retail rate'],
               ['AUD protection',          'Full escrow',         'None'],
               ['Delivery proof required', 'ID and cash photo',   'None'],
