@@ -5150,7 +5150,7 @@
             placeholder="e.g. 0.6350">
           <p class="text-xs text-gray-400 mt-1">
             <span v-if="form.rate && parseFloat(form.rate) > 0">
-              AUD 500 → USD {{ (500 * 0.985 * parseFloat(form.rate || 0)).toFixed(2) }} (after 1.5% fee)
+              AUD 500 → USD {{ (500 * 0.985 * parseFloat(form.rate || 0)).toFixed(2) }} (after 0.5% fee)
             </span>
           </p>
         </div>
@@ -6119,7 +6119,7 @@
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">12. Contact</h2>
-          <p>Questions about these Terms? Contact us at <a href="mailto:legal@ezimconnect.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">legal@ezimconnect.com.au</a></p>
+          <p>Questions about these Terms? Contact us at <a href="mailto:admin@ezimconnect.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">admin@ezimconnect.com.au</a></p>
         </section>
       </div>
 
@@ -6208,7 +6208,7 @@
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">9. Contact</h2>
-          <p>Privacy enquiries: <a href="mailto:privacy@ezimconnect.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">privacy@ezimconnect.com.au</a></p>
+          <p>Privacy enquiries: <a href="mailto:admin@ezimconnect.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">admin@ezimconnect.com.au</a></p>
         </section>
       </div>
 
@@ -6257,7 +6257,7 @@
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Contact</h2>
-          <p>To report suspicious activity or for compliance enquiries: <a href="mailto:compliance@ezimconnect.com.au" class="text-green-700 hover:underline">compliance@ezimconnect.com.au</a></p>
+          <p>To report suspicious activity or for compliance enquiries: <a href="mailto:admin@ezimconnect.com.au" class="text-green-700 hover:underline">admin@ezimconnect.com.au</a></p>
         </section>
       </div>
     </div>
@@ -6296,7 +6296,7 @@
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Reporting Violations</h2>
-          <p>To report a member who has violated this policy, use the "Report user" feature on their profile or contact <a href="mailto:safety@ezimconnect.com.au" class="text-green-700 hover:underline">safety@ezimconnect.com.au</a>.</p>
+          <p>To report a member who has violated this policy, use the "Report user" feature on their profile or contact <a href="mailto:admin@ezimconnect.com.au" class="text-green-700 hover:underline">admin@ezimconnect.com.au</a>.</p>
         </section>
       </div>
     </div>

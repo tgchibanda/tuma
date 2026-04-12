@@ -18,7 +18,7 @@
 `);return n===-1?"":a.stack.slice(n+1)})();try{if(!r.stack)r.stack=i;else if(i){const n=i.indexOf(`
 `),o=n===-1?-1:i.indexOf(`
 `,n+1),l=o===-1?"":i.slice(o+1);String(r.stack).endsWith(l)||(r.stack+=`
-`+i)}}catch{}}throw r}}_request(t,s){typeof t=="string"?(s=s||{},s.url=t):s=t||{},s=dt(this.defaults,s);const{transitional:r,paramsSerializer:a,headers:i}=s;r!==void 0&&$s.assertOptions(r,{silentJSONParsing:fe.transitional(fe.boolean),forcedJSONParsing:fe.transitional(fe.boolean),clarifyTimeoutError:fe.transitional(fe.boolean),legacyInterceptorReqResOrdering:fe.transitional(fe.boolean)},!1),a!=null&&(x.isFunction(a)?s.paramsSerializer={serialize:a}:$s.assertOptions(a,{encode:fe.function,serialize:fe.function},!0)),s.allowAbsoluteUrls!==void 0||(this.defaults.allowAbsoluteUrls!==void 0?s.allowAbsoluteUrls=this.defaults.allowAbsoluteUrls:s.allowAbsoluteUrls=!0),$s.assertOptions(s,{baseUrl:fe.spelling("baseURL"),withXsrfToken:fe.spelling("withXSRFToken")},!0),s.method=(s.method||this.defaults.method||"get").toLowerCase();let n=i&&x.merge(i.common,i[s.method]);i&&x.forEach(["delete","get","head","post","put","patch","common"],p=>{delete i[p]}),s.headers=be.concat(n,i);const o=[];let l=!0;this.interceptors.request.forEach(function(m){if(typeof m.runWhen=="function"&&m.runWhen(s)===!1)return;l=l&&m.synchronous;const f=s.transitional||Ya;f&&f.legacyInterceptorReqResOrdering?o.unshift(m.fulfilled,m.rejected):o.push(m.fulfilled,m.rejected)});const d=[];this.interceptors.response.forEach(function(m){d.push(m.fulfilled,m.rejected)});let c,u=0,v;if(!l){const p=[Gn.bind(this),void 0];for(p.unshift(...o),p.push(...d),v=p.length,c=Promise.resolve(s);u<v;)c=c.then(p[u++],p[u++]);return c}v=o.length;let y=s;for(;u<v;){const p=o[u++],m=o[u++];try{y=p(y)}catch(f){m.call(this,f);break}}try{c=Gn.call(this,y)}catch(p){return Promise.reject(p)}for(u=0,v=d.length;u<v;)c=c.then(d[u++],d[u++]);return c}getUri(t){t=dt(this.defaults,t);const s=Ql(t.baseURL,t.url,t.allowAbsoluteUrls);return Yl(s,t.params,t.paramsSerializer)}}x.forEach(["delete","get","head","options"],function(t){Ks.prototype[t]=function(s,r){return this.request(dt(r||{},{method:t,url:s,data:(r||{}).data}))}});x.forEach(["post","put","patch"],function(t){function s(r){return function(i,n,o){return this.request(dt(o||{},{method:t,headers:r?{"Content-Type":"multipart/form-data"}:{},url:i,data:n}))}}Ks.prototype[t]=s(),Ks.prototype[t+"Form"]=s(!0)});const As=Ks;class Qa{constructor(t){if(typeof t!="function")throw new TypeError("executor must be a function.");let s;this.promise=new Promise(function(i){s=i});const r=this;this.promise.then(a=>{if(!r._listeners)return;let i=r._listeners.length;for(;i-- >0;)r._listeners[i](a);r._listeners=null}),this.promise.then=a=>{let i;const n=new Promise(o=>{r.subscribe(o),i=o}).then(a);return n.cancel=function(){r.unsubscribe(i)},n},t(function(i,n,o){r.reason||(r.reason=new Vt(i,n,o),s(r.reason))})}throwIfRequested(){if(this.reason)throw this.reason}subscribe(t){if(this.reason){t(this.reason);return}this._listeners?this._listeners.push(t):this._listeners=[t]}unsubscribe(t){if(!this._listeners)return;const s=this._listeners.indexOf(t);s!==-1&&this._listeners.splice(s,1)}toAbortSignal(){const t=new AbortController,s=r=>{t.abort(r)};return this.subscribe(s),t.signal.unsubscribe=()=>this.unsubscribe(s),t.signal}static source(){let t;return{token:new Qa(function(a){t=a}),cancel:t}}}const Jh=Qa;function Vh(e){return function(s){return e.apply(null,s)}}function Xh(e){return x.isObject(e)&&e.isAxiosError===!0}const da={Continue:100,SwitchingProtocols:101,Processing:102,EarlyHints:103,Ok:200,Created:201,Accepted:202,NonAuthoritativeInformation:203,NoContent:204,ResetContent:205,PartialContent:206,MultiStatus:207,AlreadyReported:208,ImUsed:226,MultipleChoices:300,MovedPermanently:301,Found:302,SeeOther:303,NotModified:304,UseProxy:305,Unused:306,TemporaryRedirect:307,PermanentRedirect:308,BadRequest:400,Unauthorized:401,PaymentRequired:402,Forbidden:403,NotFound:404,MethodNotAllowed:405,NotAcceptable:406,ProxyAuthenticationRequired:407,RequestTimeout:408,Conflict:409,Gone:410,LengthRequired:411,PreconditionFailed:412,PayloadTooLarge:413,UriTooLong:414,UnsupportedMediaType:415,RangeNotSatisfiable:416,ExpectationFailed:417,ImATeapot:418,MisdirectedRequest:421,UnprocessableEntity:422,Locked:423,FailedDependency:424,TooEarly:425,UpgradeRequired:426,PreconditionRequired:428,TooManyRequests:429,RequestHeaderFieldsTooLarge:431,UnavailableForLegalReasons:451,InternalServerError:500,NotImplemented:501,BadGateway:502,ServiceUnavailable:503,GatewayTimeout:504,HttpVersionNotSupported:505,VariantAlsoNegotiates:506,InsufficientStorage:507,LoopDetected:508,NotExtended:510,NetworkAuthenticationRequired:511,WebServerIsDown:521,ConnectionTimedOut:522,OriginIsUnreachable:523,TimeoutOccurred:524,SslHandshakeFailed:525,InvalidSslCertificate:526};Object.entries(da).forEach(([e,t])=>{da[t]=e});const Qh=da;function ad(e){const t=new As(e),s=Ul(As.prototype.request,t);return x.extend(s,As.prototype,t,{allOwnKeys:!0}),x.extend(s,t,null,{allOwnKeys:!0}),s.create=function(a){return ad(dt(e,a))},s}const J=ad(Va);J.Axios=As;J.CanceledError=Vt;J.CancelToken=Jh;J.isCancel=Vl;J.VERSION=rd;J.toFormData=sr;J.AxiosError=I;J.Cancel=J.CanceledError;J.all=function(t){return Promise.all(t)};J.spread=Vh;J.isAxiosError=Xh;J.mergeConfig=dt;J.AxiosHeaders=be;J.formToJSON=e=>Gl(x.isHTMLForm(e)?new FormData(e):e);J.getAdapter=sd.getAdapter;J.HttpStatusCode=Qh;J.default=J;const Ve=J,ev={name:"Landing",data(){return{feedItems:[],stats:{},loading:!0,toasts:[],toastTimer:null,reviewIndex:0,reviewTimer:null,howItWorksStep:0,statsVisible:!1,animatedStats:{volume:0,count:0,rate:0,cities:0}}},computed:{reviews(){return[{name:"Tendai M.",location:"Melbourne to Harare",avatar:"T",color:"bg-green-700",stars:5,date:"2 weeks ago",text:"Absolutely life-changing. I have been sending money home for years and always lost 8 to 10 percent to fees and bad rates. eZimConnect matched me in under an hour and my mum got her cash the same afternoon. Zero stress."},{name:"Rudo C.",location:"Sydney to Bulawayo",avatar:"R",color:"bg-blue-700",stars:5,date:"1 month ago",text:"I was skeptical at first but the escrow system made me feel completely safe. Sent AUD 800 and my sister confirmed she received every cent. The whole process took 3 hours. Other providers used to charge me over AUD 60 for the same amount."},{name:"Farai N.",location:"Brisbane to Mutare",avatar:"F",color:"bg-purple-700",stars:5,date:"3 weeks ago",text:"The chat feature during the transaction gave me peace of mind. I could talk directly with the person delivering the cash. My mother confirmed receipt immediately. Will never use a remittance service again."},{name:"Tatenda K.",location:"Perth to Gweru",avatar:"T",color:"bg-orange-600",stars:5,date:"5 days ago",text:"As someone who sends money every month, the recurring orders feature is a game changer. I set it once and eZimConnect handles everything. My family in Gweru now receives reliably on time every month."},{name:"Blessing S.",location:"Adelaide to Victoria Falls",avatar:"B",color:"bg-teal-700",stars:5,date:"1 week ago",text:"I run a small business in Zimbabwe and needed AUD regularly for my Australian suppliers. eZimConnect directory listing means customers find me. This platform is exactly what our community needed."}]},toastPool(){return[{icon:"💸",msg:"T***i from Melbourne just sent AUD 450 to Harare"},{icon:"👋",msg:"New member from Sydney just joined eZimConnect"},{icon:"💸",msg:"R***o from Brisbane sent AUD 700 to Bulawayo"},{icon:"⭐",msg:"F***i just left a 5-star review — Delivered same day!"},{icon:"💸",msg:"B***g from Perth sent AUD 200 to Mutare"},{icon:"👋",msg:"New member from Adelaide just joined eZimConnect"},{icon:"💸",msg:"C***o from Sydney sent AUD 550 to Harare"},{icon:"⭐",msg:"T***a just left a 5-star review — No fees, lightning fast!"}]},steps(){return[{n:"01",icon:"fa-user-plus",title:"Create account",colorClass:"text-green-600",bgClass:"bg-green-50",iconBg:"bg-green-600",desc:"Sign up free in 2 minutes. Add your Australian bank account. No setup fees ever.",detail:"Your real details are always private. Choose to show your profile as public or anonymous."},{n:"02",icon:"fa-plus-circle",title:"Post your order",colorClass:"text-blue-600",bgClass:"bg-blue-50",iconBg:"bg-blue-600",desc:"State how much AUD to send and who receives USD cash in Zimbabwe. Any amount from AUD 50.",detail:"Our live calculator shows exactly what your recipient gets after our 1.5% flat fee."},{n:"03",icon:"fa-handshake",title:"Match and agree",colorClass:"text-purple-600",bgClass:"bg-purple-50",iconBg:"bg-purple-600",desc:"Match with someone who has the opposite need. Negotiate the rate via in-app chat.",detail:"Choose Secure delivery (AUD first) or Risk delivery (cash first). Your choice every time."},{n:"04",icon:"fa-shield-alt",title:"Escrow protects",colorClass:"text-orange-500",bgClass:"bg-orange-50",iconBg:"bg-orange-500",desc:"Your AUD is held in our Trust Account until delivery is confirmed with photo proof.",detail:"Recipient ID photo plus cash handover photo required before any funds move."},{n:"05",icon:"fa-check-circle",title:"Funds released",colorClass:"text-teal-600",bgClass:"bg-teal-50",iconBg:"bg-teal-600",desc:"Recipient confirms cash received. AUD released to deliverer. Transaction complete.",detail:"The whole process typically takes 2 to 6 hours. Faster than any bank wire."}]},currentStep(){return this.steps[this.howItWorksStep]}},async mounted(){try{const[e,t]=await Promise.all([this.$http.get("/feed?per_page=8"),this.$http.get("/feed/stats")]);this.feedItems=e.data.data||[],this.stats=t.data.data||{}}catch{}this.loading=!1,setTimeout(()=>this.scheduleToast(),8e3),this.reviewTimer=setInterval(()=>{this.reviewIndex=(this.reviewIndex+1)%this.reviews.length},6e3),this.$nextTick(()=>{const e=document.getElementById("stats-section");e&&new IntersectionObserver(s=>{s[0].isIntersecting&&!this.statsVisible&&(this.statsVisible=!0,this.animateStats())},{threshold:.3}).observe(e)})},beforeDestroy(){clearTimeout(this.toastTimer),clearInterval(this.reviewTimer)},methods:{scheduleToast(){const e=25e3+Math.random()*15e3;this.toastTimer=setTimeout(()=>{const t=this.toastPool[Math.floor(Math.random()*this.toastPool.length)],s=Date.now();this.toasts.push({...t,id:s}),setTimeout(()=>{this.toasts=this.toasts.filter(r=>r.id!==s)},7e3),this.scheduleToast()},e)},dismissToast(e){this.toasts=this.toasts.filter(t=>t.id!==e)},setReview(e){this.reviewIndex=e,clearInterval(this.reviewTimer),this.reviewTimer=setInterval(()=>{this.reviewIndex=(this.reviewIndex+1)%this.reviews.length},6e3)},prevReview(){this.setReview((this.reviewIndex-1+this.reviews.length)%this.reviews.length)},nextReview(){this.setReview((this.reviewIndex+1)%this.reviews.length)},animateStats(){const e={volume:parseInt(this.stats.total_volume_aud||847320),count:parseInt(this.stats.total_count||1243),rate:98,cities:parseInt(this.stats.cities_count||16)},t=1800,s=Date.now(),r=()=>{const a=Math.min((Date.now()-s)/t,1),i=1-Math.pow(1-a,3);this.animatedStats.volume=Math.round(e.volume*i),this.animatedStats.count=Math.round(e.count*i),this.animatedStats.rate=Math.round(e.rate*i),this.animatedStats.cities=Math.round(e.cities*i),a<1&&requestAnimationFrame(r)};requestAnimationFrame(r)},fmtVolume(){const e=this.animatedStats.volume;return e>=1e6?"AUD "+(e/1e6).toFixed(1)+"M":"AUD "+e.toLocaleString()},fmtAud(e){return"AUD "+parseFloat(e||0).toFixed(2)},fmtUsd(e){return"USD "+parseFloat(e||0).toFixed(2)},fmtDate(e){return e?new Date(e).toLocaleDateString("en-AU",{day:"numeric",month:"short"}):"Today"}},template:`
+`+i)}}catch{}}throw r}}_request(t,s){typeof t=="string"?(s=s||{},s.url=t):s=t||{},s=dt(this.defaults,s);const{transitional:r,paramsSerializer:a,headers:i}=s;r!==void 0&&$s.assertOptions(r,{silentJSONParsing:fe.transitional(fe.boolean),forcedJSONParsing:fe.transitional(fe.boolean),clarifyTimeoutError:fe.transitional(fe.boolean),legacyInterceptorReqResOrdering:fe.transitional(fe.boolean)},!1),a!=null&&(x.isFunction(a)?s.paramsSerializer={serialize:a}:$s.assertOptions(a,{encode:fe.function,serialize:fe.function},!0)),s.allowAbsoluteUrls!==void 0||(this.defaults.allowAbsoluteUrls!==void 0?s.allowAbsoluteUrls=this.defaults.allowAbsoluteUrls:s.allowAbsoluteUrls=!0),$s.assertOptions(s,{baseUrl:fe.spelling("baseURL"),withXsrfToken:fe.spelling("withXSRFToken")},!0),s.method=(s.method||this.defaults.method||"get").toLowerCase();let n=i&&x.merge(i.common,i[s.method]);i&&x.forEach(["delete","get","head","post","put","patch","common"],p=>{delete i[p]}),s.headers=be.concat(n,i);const o=[];let l=!0;this.interceptors.request.forEach(function(m){if(typeof m.runWhen=="function"&&m.runWhen(s)===!1)return;l=l&&m.synchronous;const f=s.transitional||Ya;f&&f.legacyInterceptorReqResOrdering?o.unshift(m.fulfilled,m.rejected):o.push(m.fulfilled,m.rejected)});const d=[];this.interceptors.response.forEach(function(m){d.push(m.fulfilled,m.rejected)});let c,u=0,v;if(!l){const p=[Gn.bind(this),void 0];for(p.unshift(...o),p.push(...d),v=p.length,c=Promise.resolve(s);u<v;)c=c.then(p[u++],p[u++]);return c}v=o.length;let y=s;for(;u<v;){const p=o[u++],m=o[u++];try{y=p(y)}catch(f){m.call(this,f);break}}try{c=Gn.call(this,y)}catch(p){return Promise.reject(p)}for(u=0,v=d.length;u<v;)c=c.then(d[u++],d[u++]);return c}getUri(t){t=dt(this.defaults,t);const s=Ql(t.baseURL,t.url,t.allowAbsoluteUrls);return Yl(s,t.params,t.paramsSerializer)}}x.forEach(["delete","get","head","options"],function(t){Ks.prototype[t]=function(s,r){return this.request(dt(r||{},{method:t,url:s,data:(r||{}).data}))}});x.forEach(["post","put","patch"],function(t){function s(r){return function(i,n,o){return this.request(dt(o||{},{method:t,headers:r?{"Content-Type":"multipart/form-data"}:{},url:i,data:n}))}}Ks.prototype[t]=s(),Ks.prototype[t+"Form"]=s(!0)});const As=Ks;class Qa{constructor(t){if(typeof t!="function")throw new TypeError("executor must be a function.");let s;this.promise=new Promise(function(i){s=i});const r=this;this.promise.then(a=>{if(!r._listeners)return;let i=r._listeners.length;for(;i-- >0;)r._listeners[i](a);r._listeners=null}),this.promise.then=a=>{let i;const n=new Promise(o=>{r.subscribe(o),i=o}).then(a);return n.cancel=function(){r.unsubscribe(i)},n},t(function(i,n,o){r.reason||(r.reason=new Vt(i,n,o),s(r.reason))})}throwIfRequested(){if(this.reason)throw this.reason}subscribe(t){if(this.reason){t(this.reason);return}this._listeners?this._listeners.push(t):this._listeners=[t]}unsubscribe(t){if(!this._listeners)return;const s=this._listeners.indexOf(t);s!==-1&&this._listeners.splice(s,1)}toAbortSignal(){const t=new AbortController,s=r=>{t.abort(r)};return this.subscribe(s),t.signal.unsubscribe=()=>this.unsubscribe(s),t.signal}static source(){let t;return{token:new Qa(function(a){t=a}),cancel:t}}}const Jh=Qa;function Vh(e){return function(s){return e.apply(null,s)}}function Xh(e){return x.isObject(e)&&e.isAxiosError===!0}const da={Continue:100,SwitchingProtocols:101,Processing:102,EarlyHints:103,Ok:200,Created:201,Accepted:202,NonAuthoritativeInformation:203,NoContent:204,ResetContent:205,PartialContent:206,MultiStatus:207,AlreadyReported:208,ImUsed:226,MultipleChoices:300,MovedPermanently:301,Found:302,SeeOther:303,NotModified:304,UseProxy:305,Unused:306,TemporaryRedirect:307,PermanentRedirect:308,BadRequest:400,Unauthorized:401,PaymentRequired:402,Forbidden:403,NotFound:404,MethodNotAllowed:405,NotAcceptable:406,ProxyAuthenticationRequired:407,RequestTimeout:408,Conflict:409,Gone:410,LengthRequired:411,PreconditionFailed:412,PayloadTooLarge:413,UriTooLong:414,UnsupportedMediaType:415,RangeNotSatisfiable:416,ExpectationFailed:417,ImATeapot:418,MisdirectedRequest:421,UnprocessableEntity:422,Locked:423,FailedDependency:424,TooEarly:425,UpgradeRequired:426,PreconditionRequired:428,TooManyRequests:429,RequestHeaderFieldsTooLarge:431,UnavailableForLegalReasons:451,InternalServerError:500,NotImplemented:501,BadGateway:502,ServiceUnavailable:503,GatewayTimeout:504,HttpVersionNotSupported:505,VariantAlsoNegotiates:506,InsufficientStorage:507,LoopDetected:508,NotExtended:510,NetworkAuthenticationRequired:511,WebServerIsDown:521,ConnectionTimedOut:522,OriginIsUnreachable:523,TimeoutOccurred:524,SslHandshakeFailed:525,InvalidSslCertificate:526};Object.entries(da).forEach(([e,t])=>{da[t]=e});const Qh=da;function ad(e){const t=new As(e),s=Ul(As.prototype.request,t);return x.extend(s,As.prototype,t,{allOwnKeys:!0}),x.extend(s,t,null,{allOwnKeys:!0}),s.create=function(a){return ad(dt(e,a))},s}const J=ad(Va);J.Axios=As;J.CanceledError=Vt;J.CancelToken=Jh;J.isCancel=Vl;J.VERSION=rd;J.toFormData=sr;J.AxiosError=I;J.Cancel=J.CanceledError;J.all=function(t){return Promise.all(t)};J.spread=Vh;J.isAxiosError=Xh;J.mergeConfig=dt;J.AxiosHeaders=be;J.formToJSON=e=>Gl(x.isHTMLForm(e)?new FormData(e):e);J.getAdapter=sd.getAdapter;J.HttpStatusCode=Qh;J.default=J;const Ve=J,ev={name:"Landing",data(){return{feedItems:[],stats:{},loading:!0,toasts:[],toastTimer:null,reviewIndex:0,reviewTimer:null,howItWorksStep:0,statsVisible:!1,animatedStats:{volume:0,count:0,rate:0,cities:0}}},computed:{reviews(){return[{name:"Tendai M.",location:"Melbourne to Harare",avatar:"T",color:"bg-green-700",stars:5,date:"2 weeks ago",text:"Absolutely life-changing. I have been sending money home for years and always lost 8 to 10 percent to fees and bad rates. eZimConnect matched me in under an hour and my mum got her cash the same afternoon. Zero stress."},{name:"Rudo C.",location:"Sydney to Bulawayo",avatar:"R",color:"bg-blue-700",stars:5,date:"1 month ago",text:"I was skeptical at first but the escrow system made me feel completely safe. Sent AUD 800 and my sister confirmed she received every cent. The whole process took 3 hours. Other providers used to charge me over AUD 60 for the same amount."},{name:"Farai N.",location:"Brisbane to Mutare",avatar:"F",color:"bg-purple-700",stars:5,date:"3 weeks ago",text:"The chat feature during the transaction gave me peace of mind. I could talk directly with the person delivering the cash. My mother confirmed receipt immediately. Will never use a remittance service again."},{name:"Tatenda K.",location:"Perth to Gweru",avatar:"T",color:"bg-orange-600",stars:5,date:"5 days ago",text:"As someone who sends money every month, the recurring orders feature is a game changer. I set it once and eZimConnect handles everything. My family in Gweru now receives reliably on time every month."},{name:"Blessing S.",location:"Adelaide to Victoria Falls",avatar:"B",color:"bg-teal-700",stars:5,date:"1 week ago",text:"I run a small business in Zimbabwe and needed AUD regularly for my Australian suppliers. eZimConnect directory listing means customers find me. This platform is exactly what our community needed."}]},toastPool(){return[{icon:"💸",msg:"T***i from Melbourne just sent AUD 450 to Harare"},{icon:"👋",msg:"New member from Sydney just joined eZimConnect"},{icon:"💸",msg:"R***o from Brisbane sent AUD 700 to Bulawayo"},{icon:"⭐",msg:"F***i just left a 5-star review — Delivered same day!"},{icon:"💸",msg:"B***g from Perth sent AUD 200 to Mutare"},{icon:"👋",msg:"New member from Adelaide just joined eZimConnect"},{icon:"💸",msg:"C***o from Sydney sent AUD 550 to Harare"},{icon:"⭐",msg:"T***a just left a 5-star review — No fees, lightning fast!"}]},steps(){return[{n:"01",icon:"fa-user-plus",title:"Create account",colorClass:"text-green-600",bgClass:"bg-green-50",iconBg:"bg-green-600",desc:"Sign up free in 2 minutes. Add your Australian bank account. No setup fees ever.",detail:"Your real details are always private. Choose to show your profile as public or anonymous."},{n:"02",icon:"fa-plus-circle",title:"Post your order",colorClass:"text-blue-600",bgClass:"bg-blue-50",iconBg:"bg-blue-600",desc:"State how much AUD to send and who receives USD cash in Zimbabwe. Any amount from AUD 50.",detail:"Our live calculator shows exactly what your recipient gets after our 0.5% flat fee."},{n:"03",icon:"fa-handshake",title:"Match and agree",colorClass:"text-purple-600",bgClass:"bg-purple-50",iconBg:"bg-purple-600",desc:"Match with someone who has the opposite need. Negotiate the rate via in-app chat.",detail:"Choose Secure delivery (AUD first) or Risk delivery (cash first). Your choice every time."},{n:"04",icon:"fa-shield-alt",title:"Escrow protects",colorClass:"text-orange-500",bgClass:"bg-orange-50",iconBg:"bg-orange-500",desc:"Your AUD is held in our Trust Account until delivery is confirmed with photo proof.",detail:"Recipient ID photo plus cash handover photo required before any funds move."},{n:"05",icon:"fa-check-circle",title:"Funds released",colorClass:"text-teal-600",bgClass:"bg-teal-50",iconBg:"bg-teal-600",desc:"Recipient confirms cash received. AUD released to deliverer. Transaction complete.",detail:"The whole process typically takes 2 to 6 hours. Faster than any bank wire."}]},currentStep(){return this.steps[this.howItWorksStep]}},async mounted(){try{const[e,t]=await Promise.all([this.$http.get("/feed?per_page=8"),this.$http.get("/feed/stats")]);this.feedItems=e.data.data||[],this.stats=t.data.data||{}}catch{}this.loading=!1,setTimeout(()=>this.scheduleToast(),8e3),this.reviewTimer=setInterval(()=>{this.reviewIndex=(this.reviewIndex+1)%this.reviews.length},6e3),this.$nextTick(()=>{const e=document.getElementById("stats-section");e&&new IntersectionObserver(s=>{s[0].isIntersecting&&!this.statsVisible&&(this.statsVisible=!0,this.animateStats())},{threshold:.3}).observe(e)})},beforeDestroy(){clearTimeout(this.toastTimer),clearInterval(this.reviewTimer)},methods:{scheduleToast(){const e=25e3+Math.random()*15e3;this.toastTimer=setTimeout(()=>{const t=this.toastPool[Math.floor(Math.random()*this.toastPool.length)],s=Date.now();this.toasts.push({...t,id:s}),setTimeout(()=>{this.toasts=this.toasts.filter(r=>r.id!==s)},7e3),this.scheduleToast()},e)},dismissToast(e){this.toasts=this.toasts.filter(t=>t.id!==e)},setReview(e){this.reviewIndex=e,clearInterval(this.reviewTimer),this.reviewTimer=setInterval(()=>{this.reviewIndex=(this.reviewIndex+1)%this.reviews.length},6e3)},prevReview(){this.setReview((this.reviewIndex-1+this.reviews.length)%this.reviews.length)},nextReview(){this.setReview((this.reviewIndex+1)%this.reviews.length)},animateStats(){const e={volume:parseInt(this.stats.total_volume_aud||847320),count:parseInt(this.stats.total_count||1243),rate:98,cities:parseInt(this.stats.cities_count||16)},t=1800,s=Date.now(),r=()=>{const a=Math.min((Date.now()-s)/t,1),i=1-Math.pow(1-a,3);this.animatedStats.volume=Math.round(e.volume*i),this.animatedStats.count=Math.round(e.count*i),this.animatedStats.rate=Math.round(e.rate*i),this.animatedStats.cities=Math.round(e.cities*i),a<1&&requestAnimationFrame(r)};requestAnimationFrame(r)},fmtVolume(){const e=this.animatedStats.volume;return e>=1e6?"AUD "+(e/1e6).toFixed(1)+"M":"AUD "+e.toLocaleString()},fmtAud(e){return"AUD "+parseFloat(e||0).toFixed(2)},fmtUsd(e){return"USD "+parseFloat(e||0).toFixed(2)},fmtDate(e){return e?new Date(e).toLocaleDateString("en-AU",{day:"numeric",month:"short"}):"Today"}},template:`
 <div class="min-h-screen bg-white overflow-x-hidden" style="font-family:Georgia,serif;">
 
   <!-- Toast notifications (bottom-left) -->
@@ -71,7 +71,7 @@
           </h1>
           <p class="text-green-100 text-lg mb-8 leading-relaxed max-w-md">
             eZimConnect connects Australians directly with trusted community members to swap
-            AUD for USD cash. Peer-to-peer, secured by escrow, at just 1.5%.
+            AUD for USD cash. Peer-to-peer, secured by escrow, at just 0.5%.
           </p>
           <div class="flex flex-wrap gap-3 mb-8">
             <router-link to="/register" class="flex items-center gap-2 px-7 py-3.5 text-sm font-bold rounded-xl shadow-lg hover:scale-105 transition-transform" style="background:#f59e0b;color:#1a1a1a;">
@@ -114,7 +114,7 @@
                 <div class="flex items-center gap-2 rounded-xl px-3 py-1.5" style="background:rgba(255,255,255,0.15);"><span>🇦🇺</span><span class="text-white font-bold text-sm">AUD</span></div>
               </div>
             </div>
-            <div class="text-center text-xs text-green-300 py-2 opacity-80">Platform fee: AUD 7.50 (1.5%)</div>
+            <div class="text-center text-xs text-green-300 py-2 opacity-80">Platform fee: AUD 2.50 (0.5%)</div>
             <div class="rounded-2xl p-4 mb-4" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);">
               <p class="text-yellow-300 text-xs mb-1">Recipient gets</p>
               <div class="flex items-center justify-between">
@@ -130,7 +130,7 @@
               Get started free <i class="fas fa-arrow-right text-xs"></i>
             </router-link>
           </div>
-          <div class="absolute -right-3 -bottom-4 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-2.5 flex items-center gap-3 tuma-float">
+          <div class="absolute -right-3 -bottom-4 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-2.5 flex items-center gap-3 ezimconnect-float">
             <div class="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
               <i class="fas fa-check text-green-600 text-sm"></i>
             </div>
@@ -263,7 +263,7 @@
           </thead>
           <tbody>
             <tr v-for="(r,i) in [
-              ['Platform fee',            '1.5% = AUD 7.50',     '4 to 5 pct plus fixed fee'],
+              ['Platform fee on AUD 500',            '0.5% = AUD 2.50',     '4 to 5 pct plus fixed fee'],
               ['Exchange rate',           'Peer negotiated',     'Bank retail rate'],
               ['AUD protection',          'Full escrow',         'None'],
               ['Delivery proof required', 'ID and cash photo',   'None'],
@@ -460,8 +460,8 @@
   .review-slide-enter-active, .review-slide-leave-active { transition: all 0.4s ease; }
   .review-slide-enter { opacity: 0; transform: translateX(24px); }
   .review-slide-leave-to { opacity: 0; transform: translateX(-24px); }
-  @keyframes tuma-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
-  .tuma-float { animation: tuma-float 3s ease-in-out infinite; }
+  @keyframes ezimconnect-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+  .ezimconnect-float { animation: ezimconnect-float 3s ease-in-out infinite; }
   </style>
 </div>`},tv={name:"Login",data(){return{email:"",password:"",loading:!1,error:null,show2fa:!1,tempToken:"",twoFaCode:""}},methods:{async submit(){var e,t;this.loading=!0,this.error=null;try{const{data:s}=await this.$http.post("/auth/login",{email:this.email,password:this.password});s.data.requires_2fa?(this.tempToken=s.data.temp_token,this.show2fa=!0):(this.$auth.login(s.data.token,s.data.user),this.$router.push(this.$route.query.redirect||"/dashboard"))}catch(s){this.error=((t=(e=s.response)==null?void 0:e.data)==null?void 0:t.message)||"Invalid credentials."}this.loading=!1},async verify2fa(){var e,t;this.loading=!0;try{const{data:s}=await this.$http.post("/auth/2fa/verify",{temp_token:this.tempToken,code:this.twoFaCode});this.$auth.login(s.data.token,s.data.user),this.$router.push("/dashboard")}catch(s){this.error=((t=(e=s.response)==null?void 0:e.data)==null?void 0:t.message)||"Invalid code."}this.loading=!1}},template:`<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
   <div class="w-full max-w-sm">
@@ -5138,7 +5138,7 @@
             placeholder="e.g. 0.6350">
           <p class="text-xs text-gray-400 mt-1">
             <span v-if="form.rate && parseFloat(form.rate) > 0">
-              AUD 500 → USD {{ (500 * 0.985 * parseFloat(form.rate || 0)).toFixed(2) }} (after 1.5% fee)
+              AUD 500 → USD {{ (500 * 0.985 * parseFloat(form.rate || 0)).toFixed(2) }} (after 0.5% fee)
             </span>
           </p>
         </div>
@@ -5922,9 +5922,9 @@
 
   <div class="max-w-4xl mx-auto px-4 py-14">
     <div class="text-center mb-12">
-      <span class="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-full">How TuMa Works</span>
+      <span class="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-full">How eZimConnect Works</span>
       <h1 class="text-4xl font-black text-gray-900 mt-4 mb-3" style="font-family:Georgia,serif;">Send money to Zimbabwe<br>without the bank fees</h1>
-      <p class="text-lg text-gray-500 max-w-xl mx-auto">TuMa connects Australians who want to send AUD with people in Zimbabwe who deliver USD cash — peer-to-peer, secured by escrow.</p>
+      <p class="text-lg text-gray-500 max-w-xl mx-auto">eZimConnect connects Australians who want to send AUD with people in Zimbabwe who deliver USD cash — peer-to-peer, secured by escrow.</p>
     </div>
 
     <!-- Steps -->
@@ -5933,7 +5933,7 @@
         { n:'1', icon:'fa-user-plus',     title:'Create an account',     desc:'Sign up and verify your identity. KYC takes less than 5 minutes with a photo ID.' },
         { n:'2', icon:'fa-list-alt',      title:'Create an order',       desc:'Specify how much AUD you want to swap. Our calculator shows an estimated USD amount.' },
         { n:'3', icon:'fa-handshake',     title:'Match and negotiate',   desc:'Browse open orders or get matched automatically. Negotiate the AUD/USD rate directly with your partner.' },
-        { n:'4', icon:'fa-university',    title:'Deposit AUD to escrow', desc:'Transfer AUD to TuMa's trust account. We hold it securely until delivery is confirmed.' },
+        { n:'4', icon:'fa-university',    title:'Deposit AUD to escrow', desc:'Transfer AUD to eZimConnect's trust account. We hold it securely until delivery is confirmed.' },
         { n:'5', icon:'fa-money-bill-wave',title:'Cash delivered in Zimbabwe',desc:'Your match delivers USD cash to your recipient. They upload a photo with the recipient's ID as proof.' },
         { n:'6', icon:'fa-check-circle',  title:'Confirm and complete',  desc:'You confirm receipt. We release your AUD to your partner. Transaction complete — usually within hours.' },
       ]" :key="step.n"
@@ -5974,15 +5974,15 @@
     <div class="text-center mb-12">
       <span class="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-full">Safety & Escrow</span>
       <h1 class="text-4xl font-black text-gray-900 mt-4 mb-3" style="font-family:Georgia,serif;">Your money is protected<br>every step of the way</h1>
-      <p class="text-lg text-gray-500 max-w-xl mx-auto">TuMa's escrow system ensures neither party can lose funds in a legitimate transaction.</p>
+      <p class="text-lg text-gray-500 max-w-xl mx-auto">eZimConnect's escrow system ensures neither party can lose funds in a legitimate transaction.</p>
     </div>
 
     <div class="space-y-6 mb-12">
       <div v-for="f in [
-        { icon:'fa-lock', color:'green', title:'AUD held in escrow', desc:'When you deposit AUD, it goes into TuMa's regulated trust account — not to the other person. It stays there until you confirm the cash was received in Zimbabwe.' },
+        { icon:'fa-lock', color:'green', title:'AUD held in escrow', desc:'When you deposit AUD, it goes into eZimConnect's regulated trust account — not to the other person. It stays there until you confirm the cash was received in Zimbabwe.' },
         { icon:'fa-id-card', color:'blue', title:'Identity verified', desc:'Every member must verify their identity with a government-issued ID before trading. Anonymous users cannot participate in transactions.' },
         { icon:'fa-camera', color:'purple', title:'Proof of delivery required', desc:'The cash deliverer must upload a photo of the recipient's ID plus a handover photo showing the cash and amount. This creates an undeniable record.' },
-        { icon:'fa-gavel', color:'orange', title:'Dispute resolution', desc:'If something goes wrong, raise a dispute. TuMa staff review all evidence and make a binding decision. Funds are never released without proper confirmation.' },
+        { icon:'fa-gavel', color:'orange', title:'Dispute resolution', desc:'If something goes wrong, raise a dispute. eZimConnect staff review all evidence and make a binding decision. Funds are never released without proper confirmation.' },
         { icon:'fa-shield-alt', color:'red', title:'Fraud prevention', desc:'Our system monitors transactions for suspicious patterns. Accounts with repeated disputes or fraud indicators are suspended immediately.' },
         { icon:'fa-star', color:'yellow', title:'Community trust scores', desc:'Every member has a trust score based on completed trades, ratings, and on-time delivery. Choose partners with high trust scores for extra peace of mind.' },
       ]" :key="f.title"
@@ -6040,19 +6040,19 @@
         <h1 class="text-3xl font-black text-gray-900 mt-4 mb-2" style="font-family:Georgia,serif;">Terms of Service</h1>
         <p class="text-sm text-gray-400">Last updated: 1 January 2025 · Effective: 1 January 2025</p>
         <div class="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700">
-          By using TuMa you agree to these terms. Please read them carefully before creating an account.
+          By using eZimConnect you agree to these terms. Please read them carefully before creating an account.
         </div>
       </div>
 
       <div class="space-y-7 text-gray-700 text-sm leading-relaxed">
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">1. Acceptance of Terms</h2>
-          <p>By accessing or using TuMa ("Platform", "we", "us"), you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree, please do not use this platform. TuMa is operated by TuMa Pty Ltd, registered in Australia (ABN pending).</p>
+          <p>By accessing or using eZimConnect ("Platform", "we", "us"), you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree, please do not use this platform. eZimConnect is operated by eZimConnect Pty Ltd, registered in Australia (ABN pending).</p>
         </section>
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">2. Platform Description</h2>
-          <p>TuMa is a peer-to-peer currency exchange platform facilitating AUD-to-USD cash transactions between members in Australia and Zimbabwe. TuMa acts as an escrow intermediary — we hold AUD deposits while cash delivery is arranged between members. TuMa is not a bank, money remitter, or financial institution.</p>
+          <p>eZimConnect is a peer-to-peer currency exchange platform facilitating AUD-to-USD cash transactions between members in Australia and Zimbabwe. eZimConnect acts as an escrow intermediary — we hold AUD deposits while cash delivery is arranged between members. eZimConnect is not a bank, money remitter, or financial institution.</p>
         </section>
 
         <section>
@@ -6062,37 +6062,37 @@
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">4. Identity Verification (KYC)</h2>
-          <p>TuMa is committed to Anti-Money Laundering (AML) compliance. You may be required to submit identity documents for verification. We reserve the right to suspend or terminate accounts that do not meet verification requirements or where verification documents are found to be fraudulent.</p>
+          <p>eZimConnect is committed to Anti-Money Laundering (AML) compliance. You may be required to submit identity documents for verification. We reserve the right to suspend or terminate accounts that do not meet verification requirements or where verification documents are found to be fraudulent.</p>
         </section>
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">5. Transaction Process and Escrow</h2>
-          <p>When using the Secure Delivery option, AUD funds deposited into TuMa's trust account are held in escrow until delivery of cash is confirmed. Funds are released only after both parties confirm the transaction. For Risk Delivery, parties transact at their own risk without full escrow protection. TuMa takes no responsibility for losses arising from Risk Delivery transactions.</p>
+          <p>When using the Secure Delivery option, AUD funds deposited into eZimConnect's trust account are held in escrow until delivery of cash is confirmed. Funds are released only after both parties confirm the transaction. For Risk Delivery, parties transact at their own risk without full escrow protection. eZimConnect takes no responsibility for losses arising from Risk Delivery transactions.</p>
         </section>
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">6. Exchange Rate</h2>
-          <p>TuMa provides an indicative AUD/USD exchange rate for reference only. The actual exchange rate for each transaction is negotiated directly between the two parties. TuMa does not guarantee any particular rate.</p>
+          <p>eZimConnect provides an indicative AUD/USD exchange rate for reference only. The actual exchange rate for each transaction is negotiated directly between the two parties. eZimConnect does not guarantee any particular rate.</p>
         </section>
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">7. Platform Fees</h2>
-          <p>TuMa charges a platform fee on each completed transaction, displayed during order creation. Fees are deducted from the AUD amount before release to the receiver. TuMa reserves the right to modify fees with 30 days' notice.</p>
+          <p>eZimConnect charges a platform fee on each completed transaction, displayed during order creation. Fees are deducted from the AUD amount before release to the receiver. eZimConnect reserves the right to modify fees with 30 days' notice.</p>
         </section>
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">8. Prohibited Conduct</h2>
-          <p>You must not use TuMa for: money laundering or terrorism financing; sanctions evasion; fraudulent transactions; harassing or threatening other members; creating multiple accounts; or any activity that violates Australian or Zimbabwe law.</p>
+          <p>You must not use eZimConnect for: money laundering or terrorism financing; sanctions evasion; fraudulent transactions; harassing or threatening other members; creating multiple accounts; or any activity that violates Australian or Zimbabwe law.</p>
         </section>
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">9. Disputes</h2>
-          <p>If a dispute arises, both parties should attempt to resolve it via the in-platform dispute system. TuMa staff may investigate and make a final determination on disputed transactions. TuMa's decision is binding and final regarding fund release from escrow.</p>
+          <p>If a dispute arises, both parties should attempt to resolve it via the in-platform dispute system. eZimConnect staff may investigate and make a final determination on disputed transactions. eZimConnect's decision is binding and final regarding fund release from escrow.</p>
         </section>
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">10. Limitation of Liability</h2>
-          <p>TuMa's total liability shall not exceed the transaction fees paid by you in the 6 months preceding the relevant event. We are not liable for delays, losses, or failures caused by events outside our control, including banking delays, network outages, or third-party failures.</p>
+          <p>eZimConnect's total liability shall not exceed the transaction fees paid by you in the 6 months preceding the relevant event. We are not liable for delays, losses, or failures caused by events outside our control, including banking delays, network outages, or third-party failures.</p>
         </section>
 
         <section>
@@ -6102,7 +6102,7 @@
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">12. Contact</h2>
-          <p>Questions about these Terms? Contact us at <a href="mailto:legal@tuma.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">legal@tuma.com.au</a></p>
+          <p>Questions about these Terms? Contact us at <a href="mailto:admin@ezimconnect.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">admin@ezimconnect.com.au</a></p>
         </section>
       </div>
 
@@ -6153,7 +6153,7 @@
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">2. How We Use Your Information</h2>
-          <p>We use your data to: provide and operate TuMa; verify your identity under AML/KYC obligations; process and secure transactions; prevent fraud; respond to support; send transaction notifications; and improve our platform. We will not sell your personal information to third parties.</p>
+          <p>We use your data to: provide and operate eZimConnect; verify your identity under AML/KYC obligations; process and secure transactions; prevent fraud; respond to support; send transaction notifications; and improve our platform. We will not sell your personal information to third parties.</p>
         </section>
 
         <section>
@@ -6188,7 +6188,7 @@
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">9. Contact</h2>
-          <p>Privacy enquiries: <a href="mailto:privacy@tuma.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">privacy@tuma.com.au</a></p>
+          <p>Privacy enquiries: <a href="mailto:admin@ezimconnect.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">admin@ezimconnect.com.au</a></p>
         </section>
       </div>
 
@@ -6237,7 +6237,7 @@
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Contact</h2>
-          <p>To report suspicious activity or for compliance enquiries: <a href="mailto:compliance@ezimconnect.com.au" class="text-green-700 hover:underline">compliance@ezimconnect.com.au</a></p>
+          <p>To report suspicious activity or for compliance enquiries: <a href="mailto:admin@ezimconnect.com.au" class="text-green-700 hover:underline">admin@ezimconnect.com.au</a></p>
         </section>
       </div>
     </div>
@@ -6276,7 +6276,7 @@
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Reporting Violations</h2>
-          <p>To report a member who has violated this policy, use the "Report user" feature on their profile or contact <a href="mailto:safety@ezimconnect.com.au" class="text-green-700 hover:underline">safety@ezimconnect.com.au</a>.</p>
+          <p>To report a member who has violated this policy, use the "Report user" feature on their profile or contact <a href="mailto:admin@ezimconnect.com.au" class="text-green-700 hover:underline">admin@ezimconnect.com.au</a>.</p>
         </section>
       </div>
     </div>

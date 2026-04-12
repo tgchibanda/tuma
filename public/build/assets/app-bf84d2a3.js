@@ -130,7 +130,7 @@
               Get started free <i class="fas fa-arrow-right text-xs"></i>
             </router-link>
           </div>
-          <div class="absolute -right-3 -bottom-4 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-2.5 flex items-center gap-3 tuma-float">
+          <div class="absolute -right-3 -bottom-4 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-2.5 flex items-center gap-3 ezimconnect-float">
             <div class="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
               <i class="fas fa-check text-green-600 text-sm"></i>
             </div>
@@ -460,8 +460,8 @@
   .review-slide-enter-active, .review-slide-leave-active { transition: all 0.4s ease; }
   .review-slide-enter { opacity: 0; transform: translateX(24px); }
   .review-slide-leave-to { opacity: 0; transform: translateX(-24px); }
-  @keyframes tuma-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
-  .tuma-float { animation: tuma-float 3s ease-in-out infinite; }
+  @keyframes ezimconnect-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+  .ezimconnect-float { animation: ezimconnect-float 3s ease-in-out infinite; }
   </style>
 </div>`},tv={name:"Login",data(){return{email:"",password:"",loading:!1,error:null,show2fa:!1,tempToken:"",twoFaCode:""}},methods:{async submit(){var e,t;this.loading=!0,this.error=null;try{const{data:r}=await this.$http.post("/auth/login",{email:this.email,password:this.password});r.data.requires_2fa?(this.tempToken=r.data.temp_token,this.show2fa=!0):(this.$auth.login(r.data.token,r.data.user),this.$router.push(this.$route.query.redirect||"/dashboard"))}catch(r){this.error=((t=(e=r.response)==null?void 0:e.data)==null?void 0:t.message)||"Invalid credentials."}this.loading=!1},async verify2fa(){var e,t;this.loading=!0;try{const{data:r}=await this.$http.post("/auth/2fa/verify",{temp_token:this.tempToken,code:this.twoFaCode});this.$auth.login(r.data.token,r.data.user),this.$router.push("/dashboard")}catch(r){this.error=((t=(e=r.response)==null?void 0:e.data)==null?void 0:t.message)||"Invalid code."}this.loading=!1}},template:`<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
   <div class="w-full max-w-sm">
@@ -3844,7 +3844,7 @@
           <label class="text-sm font-medium text-gray-700 block mb-1.5">Email</label>
           <input v-model="email" type="email" @keyup.enter="submit"
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-green-500"
-            placeholder="admin@tuma.com">
+            placeholder="admin@ezimconnect.com">
         </div>
         <div>
           <label class="text-sm font-medium text-gray-700 block mb-1.5">Password</label>

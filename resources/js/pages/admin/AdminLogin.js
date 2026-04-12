@@ -32,7 +32,7 @@ export default {
           <label class="text-sm font-medium text-gray-700 block mb-1.5">Email</label>
           <input v-model="email" type="email" @keyup.enter="submit"
             class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-green-500"
-            placeholder="admin@tuma.com">
+            placeholder="admin@ezimconnect.com">
         </div>
         <div>
           <label class="text-sm font-medium text-gray-700 block mb-1.5">Password</label>
