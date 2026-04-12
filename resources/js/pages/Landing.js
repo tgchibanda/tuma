@@ -20,21 +20,21 @@ export default {
     computed: {
         reviews() {
             return [
-                { name: 'Tendai M.', location: 'Melbourne to Harare',         avatar: 'T', color: 'bg-green-700',  stars: 5, date: '2 weeks ago',  text: 'Absolutely life-changing. I have been sending money home for years and always lost 8 to 10 percent to fees and bad rates. TuMa matched me in under an hour and my mum got her cash the same afternoon. Zero stress.' },
+                { name: 'Tendai M.', location: 'Melbourne to Harare',         avatar: 'T', color: 'bg-green-700',  stars: 5, date: '2 weeks ago',  text: 'Absolutely life-changing. I have been sending money home for years and always lost 8 to 10 percent to fees and bad rates. eZimConnect matched me in under an hour and my mum got her cash the same afternoon. Zero stress.' },
                 { name: 'Rudo C.',   location: 'Sydney to Bulawayo',          avatar: 'R', color: 'bg-blue-700',   stars: 5, date: '1 month ago',  text: 'I was skeptical at first but the escrow system made me feel completely safe. Sent AUD 800 and my sister confirmed she received every cent. The whole process took 3 hours. Other Providers used to charge me over AUD 60 for the same amount.' },
                 { name: 'Farai N.',  location: 'Brisbane to Mutare',          avatar: 'F', color: 'bg-purple-700', stars: 5, date: '3 weeks ago',  text: 'The chat feature during the transaction gave me peace of mind. I could talk directly with the person delivering the cash. My mother confirmed receipt immediately. Will never use a remittance service again.' },
-                { name: 'Tatenda K.',location: 'Perth to Gweru',              avatar: 'T', color: 'bg-orange-600', stars: 5, date: '5 days ago',   text: 'As someone who sends money every month, the recurring orders feature is a game changer. I set it once and TuMa handles everything. My family in Gweru now receives reliably on time every month.' },
-                { name: 'Blessing S.',location: 'Adelaide to Victoria Falls', avatar: 'B', color: 'bg-teal-700',   stars: 5, date: '1 week ago',   text: 'I run a small business in Zimbabwe and needed AUD regularly for my Australian suppliers. TuMa directory listing means customers find me. This platform is exactly what our community needed.' },
+                { name: 'Tatenda K.',location: 'Perth to Gweru',              avatar: 'T', color: 'bg-orange-600', stars: 5, date: '5 days ago',   text: 'As someone who sends money every month, the recurring orders feature is a game changer. I set it once and eZimConnect handles everything. My family in Gweru now receives reliably on time every month.' },
+                { name: 'Blessing S.',location: 'Adelaide to Victoria Falls', avatar: 'B', color: 'bg-teal-700',   stars: 5, date: '1 week ago',   text: 'I run a small business in Zimbabwe and needed AUD regularly for my Australian suppliers. eZimConnect directory listing means customers find me. This platform is exactly what our community needed.' },
             ]
         },
         toastPool() {
             return [
                 { icon: '💸', msg: 'T***i from Melbourne just sent AUD 450 to Harare' },
-                { icon: '👋', msg: 'New member from Sydney just joined TuMa' },
+                { icon: '👋', msg: 'New member from Sydney just joined eZimConnect' },
                 { icon: '💸', msg: 'R***o from Brisbane sent AUD 700 to Bulawayo' },
                 { icon: '⭐', msg: 'F***i just left a 5-star review — Delivered same day!' },
                 { icon: '💸', msg: 'B***g from Perth sent AUD 200 to Mutare' },
-                { icon: '👋', msg: 'New member from Adelaide just joined TuMa' },
+                { icon: '👋', msg: 'New member from Adelaide just joined eZimConnect' },
                 { icon: '💸', msg: 'C***o from Sydney sent AUD 550 to Harare' },
                 { icon: '⭐', msg: 'T***a just left a 5-star review — No fees, lightning fast!' },
             ]
@@ -206,7 +206,7 @@ export default {
             Send money to Zimbabwe<br><span style="color:#f59e0b;">without the fees</span>
           </h1>
           <p class="text-green-100 text-lg mb-8 leading-relaxed max-w-md">
-            TuMa connects Australians directly with trusted community members to swap
+            eZimConnect connects Australians directly with trusted community members to swap
             AUD for USD cash. Peer-to-peer, secured by escrow, at just 0.5%.
           </p>
           <div class="flex flex-wrap gap-3 mb-8">
@@ -266,7 +266,7 @@ export default {
               Get started free <i class="fas fa-arrow-right text-xs"></i>
             </router-link>
           </div>
-          <div class="absolute -right-3 -bottom-4 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-2.5 flex items-center gap-3 tuma-float">
+          <div class="absolute -right-3 -bottom-4 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-2.5 flex items-center gap-3 ezimconnect-float">
             <div class="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
               <i class="fas fa-check text-green-600 text-sm"></i>
             </div>
@@ -302,7 +302,7 @@ export default {
     <div class="max-w-5xl mx-auto px-5">
       <div class="text-center mb-12">
         <span class="inline-block text-xs font-bold tracking-widest uppercase text-green-700 bg-green-50 px-4 py-1.5 rounded-full mb-3">Simple process</span>
-        <h2 class="text-4xl font-black text-gray-900 mb-3" style="font-family:Georgia,serif;">How TuMa works</h2>
+        <h2 class="text-4xl font-black text-gray-900 mb-3" style="font-family:Georgia,serif;">How eZimConnect works</h2>
         <p class="text-gray-500 max-w-md mx-auto">Five steps from signup to your recipient receiving cash in Zimbabwe.</p>
       </div>
       <div class="flex flex-wrap gap-2 justify-center mb-10">
@@ -381,7 +381,7 @@ export default {
   <section class="py-20 bg-white">
     <div class="max-w-3xl mx-auto px-5">
       <div class="text-center mb-10">
-        <h2 class="text-3xl font-black text-gray-900 mb-2" style="font-family:Georgia,serif;">TuMa vs Traditional remittance</h2>
+        <h2 class="text-3xl font-black text-gray-900 mb-2" style="font-family:Georgia,serif;">eZimConnect vs Traditional remittance</h2>
         <p class="text-gray-500 text-sm">For AUD 500 sent to Zimbabwe</p>
       </div>
       <div class="rounded-3xl border-2 border-gray-100 overflow-hidden shadow-xl">
@@ -392,7 +392,7 @@ export default {
               <th class="py-4 px-5 text-center">
                 <div class="inline-flex items-center gap-1.5">
                   <div class="w-5 h-5 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#1a6b3c,#2d9460);"><span class="text-white font-black text-xs">T</span></div>
-                  <span class="font-bold text-gray-900">TuMa</span>
+                  <span class="font-bold text-gray-900">eZimConnect</span>
                 </div>
               </th>
               <th class="py-4 px-5 text-center bg-gray-50 font-semibold text-gray-400">Other Providers</th>
@@ -588,7 +588,7 @@ export default {
         </div>
       </div>
       <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
-        <p class="text-gray-600 text-xs">Copyright 2025 TuMa Pty Ltd. All rights reserved.</p>
+        <p class="text-gray-600 text-xs">Copyright 2025 eZimConnect Pty Ltd. All rights reserved.</p>
         <div class="flex items-center gap-4 text-gray-600 text-xs">
           <router-link to="/privacy" class="hover:text-gray-400 transition-colors">Privacy</router-link>
           <router-link to="/terms"   class="hover:text-gray-400 transition-colors">Terms</router-link>
@@ -606,8 +606,8 @@ export default {
   .review-slide-enter-active, .review-slide-leave-active { transition: all 0.4s ease; }
   .review-slide-enter { opacity: 0; transform: translateX(24px); }
   .review-slide-leave-to { opacity: 0; transform: translateX(-24px); }
-  @keyframes tuma-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
-  .tuma-float { animation: tuma-float 3s ease-in-out infinite; }
+  @keyframes ezimconnect-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+  .ezimconnect-float { animation: ezimconnect-float 3s ease-in-out infinite; }
   </style>
 </div>`
 }

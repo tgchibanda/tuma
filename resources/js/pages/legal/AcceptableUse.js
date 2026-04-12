@@ -13,15 +13,15 @@ export default {
       <div class="prose max-w-none text-gray-700 space-y-6 text-sm leading-relaxed">
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Purpose</h2>
-          <p>This policy defines acceptable conduct on TuMa to protect members and maintain a safe, trustworthy community.</p>
+          <p>This policy defines acceptable conduct on eZimConnect to protect members and maintain a safe, trustworthy community.</p>
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Permitted Use</h2>
-          <p>TuMa is designed exclusively for legitimate peer-to-peer AUD/USD currency exchange between Australian-based senders and Zimbabwe-based cash deliverers. You may use TuMa to create orders, propose and negotiate matches, arrange cash deliveries, and manage your account.</p>
+          <p>eZimConnect is designed exclusively for legitimate peer-to-peer AUD/USD currency exchange between Australian-based senders and Zimbabwe-based cash deliverers. You may use eZimConnect to create orders, propose and negotiate matches, arrange cash deliveries, and manage your account.</p>
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Prohibited Use</h2>
-          <p>You must not: create fake or duplicate accounts; misrepresent your identity or the nature of funds; threaten, harass, or abuse other members; manipulate the rating system; use automated scripts or bots; attempt to circumvent our security measures; or use TuMa to process unlawfully obtained funds.</p>
+          <p>You must not: create fake or duplicate accounts; misrepresent your identity or the nature of funds; threaten, harass, or abuse other members; manipulate the rating system; use automated scripts or bots; attempt to circumvent our security measures; or use eZimConnect to process unlawfully obtained funds.</p>
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Community Standards</h2>
@@ -33,7 +33,7 @@ export default {
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Reporting Violations</h2>
-          <p>To report a member who has violated this policy, use the "Report user" feature on their profile or contact <a href="mailto:safety@tuma.com.au" class="text-green-700 hover:underline">safety@tuma.com.au</a>.</p>
+          <p>To report a member who has violated this policy, use the "Report user" feature on their profile or contact <a href="mailto:safety@ezimconnect.com.au" class="text-green-700 hover:underline">safety@ezimconnect.com.au</a>.</p>
         </section>
       </div>
     </div>

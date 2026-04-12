@@ -13,11 +13,11 @@ class OrderExpiredNotification extends Notification implements ShouldQueue
     public function toMail(mixed $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('TuMa — Order Update')
+            ->subject('eZimConnect — Order Update')
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
             ->line('Your order status has changed.')
             ->action('View Orders', url('/orders'))
-            ->line('Thank you for using TuMa.');
+            ->line('Thank you for using eZimConnect.');
     }
     public function toDatabase(mixed $notifiable): array
     {

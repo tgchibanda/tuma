@@ -1,4 +1,4 @@
-# TuMa — Project Handover Document
+# eZimConnect — Project Handover Document
 
 > **Last updated:** April 2026 (fixes1–fixes14)
 > **Purpose:** Complete handover for continuing development in a new session
@@ -7,7 +7,7 @@
 
 ## 1. Project Overview
 
-**TuMa** (Swap · Send · Settle) is a peer-to-peer AUD↔USD cash exchange platform connecting Australians who need to send money to Zimbabwe with people in Zimbabwe who hold USD cash and need AUD. No banks, no wire transfers — community-to-community, secured by escrow.
+**eZimConnect** (Swap · Send · Settle) is a peer-to-peer AUD↔USD cash exchange platform connecting Australians who need to send money to Zimbabwe with people in Zimbabwe who hold USD cash and need AUD. No banks, no wire transfers — community-to-community, secured by escrow.
 
 | Detail | Value |
 |--------|-------|
@@ -24,20 +24,20 @@
 
 | Batch | Key contents |
 |-------|-------------|
-| tuma-fixes1 | Kernel ValidatePostSize namespace, KycService, login_activities migration |
-| tuma-fixes2 | jobs migration, KycController, ReviewController indexForMe, ExchangeRateController current() |
-| tuma-fixes3 | Browse route 404, LocationController grouped/flat, multi-city filter, Landing.js, router.js |
-| tuma-fixes4 | 13 missing controllers (SavedRecipient, TrustedContact, OrderTemplate, RecurringOrder, etc.) |
-| tuma-fixes5 | Browse.js propose URL (TARGET ulid), MatchingService 5-arg call |
-| tuma-fixes6 | SwapMatchController involvesUser/isUsersTurnToNegotiate stdClass fix |
-| tuma-fixes7 | MessageController + 5 controllers involvesUser fix, NegotiateRequest counter_aud mapping, 9 notifications duplicate via() removed |
-| tuma-fixes8 | UserController has_bank_account, BankAccounts.js, CreateOrder.js bank guard, Directory.js, 7 admin pages, router.js with AdminReports |
-| tuma-fixes9 | MessageController isChatOpen + involvesUser, DepositInstructionsNotification optional ref, DepositController correct EscrowService API, DeliveryController correct EscrowService API, SwapMatchController delivery_method_proposed_by, MatchDetail.js deposit v-if fix |
-| tuma-fixes10 | MessageController created_at now() + url() for chat attachment, routes/api.php named routes, FileController chatAttachment+userAvatar, User.php avatar Storage::url() |
-| tuma-fixes11 | Authenticate middleware (Route [login] not defined), User.php updateLastSeen(), MessageController refresh() fix, 4 missing notification classes (FundsSecured, DeliveryProofUploaded, RiskDeliveryGoFirst, RiskDeliveryPartnerGoingFirst) |
-| tuma-fixes12 | PublicProfile.js full implementation, Browse.js send-money-via, UserController reviewer object, SwapOrderController user_ulid filter |
-| tuma-fixes13 | AdminLocations/AuditLogs data mapping fix, 8 notification messages fixed, FundsReleasedNotification fee breakdown, ReviewController upsert+delete+comment fix, SupportController+models+migration, MatchDetail partner info+review edit/delete, Support.js, Dashboard first→next order, Browse/Directory avatars (window crash), SmartCalculator guide rate, AppFooter legal links, legal pages (4), DirectoryController anonymous filter |
-| tuma-fixes14 | Browse.js window.location crash fix, Directory.js same fix, AppNav help icon, AdminNav component created+registered, AdminSupportController, AdminSupport.js, Landing.js footer links fixed, HowItWorks page, SafetyAndEscrow page, router.js all new routes, api.php admin support routes |
+| ezimconnect-fixes1 | Kernel ValidatePostSize namespace, KycService, login_activities migration |
+| ezimconnect-fixes2 | jobs migration, KycController, ReviewController indexForMe, ExchangeRateController current() |
+| ezimconnect-fixes3 | Browse route 404, LocationController grouped/flat, multi-city filter, Landing.js, router.js |
+| ezimconnect-fixes4 | 13 missing controllers (SavedRecipient, TrustedContact, OrderTemplate, RecurringOrder, etc.) |
+| ezimconnect-fixes5 | Browse.js propose URL (TARGET ulid), MatchingService 5-arg call |
+| ezimconnect-fixes6 | SwapMatchController involvesUser/isUsersTurnToNegotiate stdClass fix |
+| ezimconnect-fixes7 | MessageController + 5 controllers involvesUser fix, NegotiateRequest counter_aud mapping, 9 notifications duplicate via() removed |
+| ezimconnect-fixes8 | UserController has_bank_account, BankAccounts.js, CreateOrder.js bank guard, Directory.js, 7 admin pages, router.js with AdminReports |
+| ezimconnect-fixes9 | MessageController isChatOpen + involvesUser, DepositInstructionsNotification optional ref, DepositController correct EscrowService API, DeliveryController correct EscrowService API, SwapMatchController delivery_method_proposed_by, MatchDetail.js deposit v-if fix |
+| ezimconnect-fixes10 | MessageController created_at now() + url() for chat attachment, routes/api.php named routes, FileController chatAttachment+userAvatar, User.php avatar Storage::url() |
+| ezimconnect-fixes11 | Authenticate middleware (Route [login] not defined), User.php updateLastSeen(), MessageController refresh() fix, 4 missing notification classes (FundsSecured, DeliveryProofUploaded, RiskDeliveryGoFirst, RiskDeliveryPartnerGoingFirst) |
+| ezimconnect-fixes12 | PublicProfile.js full implementation, Browse.js send-money-via, UserController reviewer object, SwapOrderController user_ulid filter |
+| ezimconnect-fixes13 | AdminLocations/AuditLogs data mapping fix, 8 notification messages fixed, FundsReleasedNotification fee breakdown, ReviewController upsert+delete+comment fix, SupportController+models+migration, MatchDetail partner info+review edit/delete, Support.js, Dashboard first→next order, Browse/Directory avatars (window crash), SmartCalculator guide rate, AppFooter legal links, legal pages (4), DirectoryController anonymous filter |
+| ezimconnect-fixes14 | Browse.js window.location crash fix, Directory.js same fix, AppNav help icon, AdminNav component created+registered, AdminSupportController, AdminSupport.js, Landing.js footer links fixed, HowItWorks page, SafetyAndEscrow page, router.js all new routes, api.php admin support routes |
 
 ---
 
@@ -164,7 +164,7 @@ Terminal: cancelled | expired | refunded | disputed
 ```
 Public (no auth):
   /                     Landing page
-  /how-it-works         How TuMa works
+  /how-it-works         How eZimConnect works
   /safety-and-escrow    Security and escrow explanation
   /terms                Terms of Service
   /privacy              Privacy Policy
@@ -234,7 +234,7 @@ user.avatar             GET /api/v1/files/avatar/{filename}
 | Field | Value |
 |-------|-------|
 | URL | `/admin/login` |
-| Email | `admin@tuma.com` |
+| Email | `admin@ezimconnect.com` |
 | Password | `changeme` |
 
 ---

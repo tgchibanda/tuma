@@ -20,12 +20,12 @@ class AdminUserSeeder extends Seeder
         } while (DB::table('users')->where('referral_code', $referralCode)->exists());
 
         $adminId = DB::table('users')->updateOrInsert(
-            ['email' => 'admin@tuma.com'],
+            ['email' => 'admin@ezimconnect.com'],
             [
                 'ulid'              => (string) new Ulid(),
-                'first_name'        => 'TuMa',
+                'first_name'        => 'eZimConnect',
                 'last_name'         => 'Admin',
-                'email'             => 'admin@tuma.com',
+                'email'             => 'admin@ezimconnect.com',
                 'email_verified_at' => now(),
                 'phone'             => '+61400000000',
                 'phone_verified_at' => now(),
@@ -42,7 +42,7 @@ class AdminUserSeeder extends Seeder
         );
 
         // Get the admin user ID for the notification preferences
-        $admin = DB::table('users')->where('email', 'admin@tuma.com')->first();
+        $admin = DB::table('users')->where('email', 'admin@ezimconnect.com')->first();
 
         if ($admin) {
             // Create notification preferences for admin
@@ -66,7 +66,7 @@ class AdminUserSeeder extends Seeder
             );
         }
 
-        $this->command->info('  ✓ Admin user seeded (admin@tuma.com / changeme)');
+        $this->command->info('  ✓ Admin user seeded (admin@ezimconnect.com / changeme)');
         $this->command->warn('  ⚠ IMPORTANT: Change the admin password immediately after first login!');
     }
 }

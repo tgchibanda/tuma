@@ -37,8 +37,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->command->info('');
-        $this->command->info('✓ TuMa database seeded successfully.');
-        $this->command->info('  Admin login: admin@tuma.com / changeme');
+        $this->command->info('✓ eZimConnect database seeded successfully.');
+        $this->command->info('  Admin login: admin@ezimconnect.com / changeme');
         $this->command->info('');
     }
 }

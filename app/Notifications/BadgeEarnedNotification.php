@@ -18,11 +18,11 @@ class BadgeEarnedNotification extends Notification implements ShouldQueue
     public function toMail(mixed $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('TuMa — Transaction Update')
+            ->subject('eZimConnect — Transaction Update')
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
-            ->line('You have a new update on your TuMa account.')
-            ->action('View on TuMa', url('/dashboard'))
-            ->line('Thank you for using TuMa.');
+            ->line('You have a new update on your eZimConnect account.')
+            ->action('View on eZimConnect', url('/dashboard'))
+            ->line('Thank you for using eZimConnect.');
     }
 
     public function toDatabase(mixed $notifiable): array
@@ -32,6 +32,6 @@ class BadgeEarnedNotification extends Notification implements ShouldQueue
 
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa: You earned a new badge! Check your profile.';
+        return 'eZimConnect: You earned a new badge! Check your profile.';
     }
 }

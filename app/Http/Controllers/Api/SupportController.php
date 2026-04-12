@@ -81,7 +81,7 @@ class SupportController extends Controller
                 'id'          => $m->id,
                 'message'     => $m->message,
                 'sender_role' => $m->sender_role,
-                'sender_name' => $m->sender_role === 'support' ? 'TuMa Support' : $m->sender?->display_first_name,
+                'sender_name' => $m->sender_role === 'support' ? 'eZimConnect Support' : $m->sender?->display_first_name,
                 'created_at'  => $m->created_at->toIso8601String(),
             ]),
             'created_at' => $ticket->created_at->toIso8601String(),

@@ -14,7 +14,7 @@ class AchievementSeeder extends Seeder
             [
                 'badge_key'         => 'first_trade',
                 'badge_name'        => 'First Trade',
-                'badge_description' => 'Completed your very first TuMa transaction.',
+                'badge_description' => 'Completed your very first eZimConnect transaction.',
                 'badge_icon'        => '🎉',
                 'trigger_type'      => 'trade_count',
                 'trigger_value'     => 1,
@@ -23,7 +23,7 @@ class AchievementSeeder extends Seeder
             [
                 'badge_key'         => 'trades_5',
                 'badge_name'        => '5 Trades',
-                'badge_description' => 'Completed 5 successful transactions on TuMa.',
+                'badge_description' => 'Completed 5 successful transactions on eZimConnect.',
                 'badge_icon'        => '⭐',
                 'trigger_type'      => 'trade_count',
                 'trigger_value'     => 5,
@@ -50,7 +50,7 @@ class AchievementSeeder extends Seeder
             [
                 'badge_key'         => 'trades_50',
                 'badge_name'        => '50 Trades',
-                'badge_description' => 'Halfway to 100 — a true TuMa power user.',
+                'badge_description' => 'Halfway to 100 — a true eZimConnect power user.',
                 'badge_icon'        => '🥇',
                 'trigger_type'      => 'trade_count',
                 'trigger_value'     => 50,
@@ -123,7 +123,7 @@ class AchievementSeeder extends Seeder
             [
                 'badge_key'         => 'referral_1',
                 'badge_name'        => 'First Referral',
-                'badge_description' => 'Successfully referred your first friend to TuMa.',
+                'badge_description' => 'Successfully referred your first friend to eZimConnect.',
                 'badge_icon'        => '🤝',
                 'trigger_type'      => 'referral_count',
                 'trigger_value'     => 1,
@@ -132,7 +132,7 @@ class AchievementSeeder extends Seeder
             [
                 'badge_key'         => 'referral_5',
                 'badge_name'        => 'Community Builder',
-                'badge_description' => 'Referred 5 or more friends to TuMa.',
+                'badge_description' => 'Referred 5 or more friends to eZimConnect.',
                 'badge_icon'        => '👥',
                 'trigger_type'      => 'referral_count',
                 'trigger_value'     => 5,
@@ -143,7 +143,7 @@ class AchievementSeeder extends Seeder
             [
                 'badge_key'         => 'member_90_days',
                 'badge_name'        => 'Loyal Member',
-                'badge_description' => 'Been a TuMa member for 90 days.',
+                'badge_description' => 'Been a eZimConnect member for 90 days.',
                 'badge_icon'        => '📅',
                 'trigger_type'      => 'account_age',
                 'trigger_value'     => 90,
@@ -152,7 +152,7 @@ class AchievementSeeder extends Seeder
             [
                 'badge_key'         => 'member_1_year',
                 'badge_name'        => 'One Year Strong',
-                'badge_description' => 'Been a TuMa member for a full year.',
+                'badge_description' => 'Been a eZimConnect member for a full year.',
                 'badge_icon'        => '🎂',
                 'trigger_type'      => 'account_age',
                 'trigger_value'     => 365,
@@ -163,7 +163,7 @@ class AchievementSeeder extends Seeder
             [
                 'badge_key'         => 'verified_business',
                 'badge_name'        => 'Verified Business',
-                'badge_description' => 'Identity and business verified by the TuMa team.',
+                'badge_description' => 'Identity and business verified by the eZimConnect team.',
                 'badge_icon'        => '✅',
                 'trigger_type'      => 'manual',
                 'trigger_value'     => null,
@@ -172,7 +172,7 @@ class AchievementSeeder extends Seeder
             [
                 'badge_key'         => 'early_adopter',
                 'badge_name'        => 'Early Adopter',
-                'badge_description' => 'One of the first users to join TuMa.',
+                'badge_description' => 'One of the first users to join eZimConnect.',
                 'badge_icon'        => '🚀',
                 'trigger_type'      => 'manual',
                 'trigger_value'     => null,

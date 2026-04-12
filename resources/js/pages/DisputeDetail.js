@@ -56,7 +56,7 @@ export default {
           <div v-for="m in messages" :key="m.id" :class="['px-5 py-4', m.is_admin_message ? 'bg-blue-50' : '']">
             <div class="flex items-center gap-2 mb-1">
               <span :class="['text-xs font-semibold', m.is_admin_message ? 'text-blue-700' : 'text-gray-700']">
-                {{ m.is_admin_message ? 'TuMa Admin' : (m.sender?.first_name || 'You') }}
+                {{ m.is_admin_message ? 'eZimConnect Admin' : (m.sender?.first_name || 'You') }}
               </span>
               <span class="text-xs text-gray-400">{{ $fmt.datetime(m.created_at) }}</span>
             </div>

@@ -33,13 +33,13 @@ class DepositInstructionsNotification extends Notification implements ShouldQueu
     public function toMail(mixed $notifiable): MailMessage
     {
         $bankName    = SystemSetting::get('tuma_bank_name', 'National Australia Bank');
-        $accountName = SystemSetting::get('tuma_account_name', 'TuMa Pty Ltd Trust Account');
+        $accountName = SystemSetting::get('tuma_account_name', 'eZimConnect Pty Ltd Trust Account');
         $bsb         = SystemSetting::get('tuma_bsb', '000-000');
         $accountNum  = SystemSetting::get('tuma_account_number', '000000000');
         $amount      = number_format((float) $this->match->agreed_aud, 2);
 
         return (new MailMessage)
-            ->subject("TuMa — Please deposit AUD \${$amount}")
+            ->subject("eZimConnect — Please deposit AUD \${$amount}")
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
             ->line('Both parties have agreed. Please make your AUD deposit to secure the transaction.')
             ->line('Bank: ' . $bankName)
@@ -51,7 +51,7 @@ class DepositInstructionsNotification extends Notification implements ShouldQueu
             ->line('You MUST use the exact reference above so we can identify your deposit.')
             ->action('Upload Proof of Payment', url('/matches/' . $this->match->ulid))
             ->line('Once transferred, upload a screenshot of your bank receipt in the app.')
-            ->line('Thank you for using TuMa.');
+            ->line('Thank you for using eZimConnect.');
     }
 
     public function toDatabase(mixed $notifiable): array
@@ -68,6 +68,6 @@ class DepositInstructionsNotification extends Notification implements ShouldQueu
 
     public function toSms(mixed $notifiable): string
     {
-        return "TuMa: Please deposit AUD \${$this->match->agreed_aud} using ref {$this->reference}. Open the app for bank details.";
+        return "eZimConnect: Please deposit AUD \${$this->match->agreed_aud} using ref {$this->reference}. Open the app for bank details.";
     }
 }

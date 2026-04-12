@@ -1,4 +1,4 @@
-# TuMa — Test Case Document (v2)
+# eZimConnect — Test Case Document (v2)
 
 > **Updated:** April 2026 · Covers fixes1–fixes14
 > **Requires:** 3 test accounts (Sender, Receiver, Admin) + `php artisan queue:work` running
@@ -11,7 +11,7 @@
 |------|-------|----------|-------|
 | Sender | tendai@test.com | Test1234! | Australian — sends AUD |
 | Receiver | rudo@test.com | Test1234! | Delivers USD in Zimbabwe |
-| Admin | admin@tuma.com | changeme | Pre-seeded |
+| Admin | admin@ezimconnect.com | changeme | Pre-seeded |
 
 ---
 
@@ -252,7 +252,7 @@ Type reply. Send. Expect: message appears in thread, ticket status → "awaiting
 Log in as admin, navigate to `/admin/support`. Expect: all user tickets listed in table.
 
 ### TC-125: Admin replies to ticket
-Admin opens ticket, types reply, clicks Send. Expect: message appears as "TuMa Support", user's ticket shows admin reply.
+Admin opens ticket, types reply, clicks Send. Expect: message appears as "eZimConnect Support", user's ticket shows admin reply.
 
 ### TC-126: Admin updates ticket status
 Admin clicks "Resolved". Expect: ticket status updates, visible in both admin and user views.

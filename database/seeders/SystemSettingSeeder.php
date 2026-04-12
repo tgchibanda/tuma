@@ -58,22 +58,22 @@ class SystemSettingSeeder extends Seeder
             [
                 'key'         => 'tuma_bank_name',
                 'value'       => 'National Australia Bank',
-                'description' => 'Name of the bank holding TuMa escrow account — shown in deposit instructions',
+                'description' => 'Name of the bank holding eZimConnect escrow account — shown in deposit instructions',
             ],
             [
                 'key'         => 'tuma_account_name',
-                'value'       => 'TuMa Pty Ltd Trust Account',
-                'description' => 'Account name for TuMa escrow — shown in deposit instructions',
+                'value'       => 'eZimConnect Pty Ltd Trust Account',
+                'description' => 'Account name for eZimConnect escrow — shown in deposit instructions',
             ],
             [
                 'key'         => 'tuma_bsb',
                 'value'       => '000-000',
-                'description' => 'BSB code for TuMa escrow account — shown in deposit instructions',
+                'description' => 'BSB code for eZimConnect escrow account — shown in deposit instructions',
             ],
             [
                 'key'         => 'tuma_account_number',
                 'value'       => '000000000',
-                'description' => 'Account number for TuMa escrow — shown in deposit instructions',
+                'description' => 'Account number for eZimConnect escrow — shown in deposit instructions',
             ],
 
             // ── Risk / delivery method settings ───────────────────────────
@@ -228,7 +228,7 @@ class SystemSettingSeeder extends Seeder
             ],
             [
                 'key'         => 'maintenance_message',
-                'value'       => 'TuMa is undergoing scheduled maintenance. We will be back shortly.',
+                'value'       => 'eZimConnect is undergoing scheduled maintenance. We will be back shortly.',
                 'description' => 'Message shown to users when maintenance_mode is true',
             ],
         ];

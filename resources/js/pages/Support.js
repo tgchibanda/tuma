@@ -63,7 +63,7 @@ export default {
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Support</h1>
-        <p class="text-sm text-gray-500 mt-0.5">Get help from the TuMa team.</p>
+        <p class="text-sm text-gray-500 mt-0.5">Get help from the eZimConnect team.</p>
       </div>
       <button v-if="view === 'list'" @click="view = 'new'"
         class="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-white rounded-xl hover:opacity-90"

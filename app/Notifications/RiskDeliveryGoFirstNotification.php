@@ -21,7 +21,7 @@ class RiskDeliveryGoFirstNotification extends Notification implements ShouldQueu
         $usd = number_format((float) $this->match->agreed_usd, 2);
 
         return (new MailMessage)
-            ->subject('TuMa — Please deliver cash first (Risk Delivery)')
+            ->subject('eZimConnect — Please deliver cash first (Risk Delivery)')
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
             ->line('Both parties have agreed to Risk Delivery — you go first.')
             ->line("Please deliver USD \${$usd} cash to the recipient.")
@@ -44,7 +44,7 @@ class RiskDeliveryGoFirstNotification extends Notification implements ShouldQueu
 
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa Risk Delivery: Please deliver USD $'
+        return 'eZimConnect Risk Delivery: Please deliver USD $'
             . number_format((float) $this->match->agreed_usd, 2)
             . ' cash first. Ref: ' . $this->match->getDepositReference();
     }

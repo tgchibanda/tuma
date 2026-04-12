@@ -22,7 +22,7 @@ class RiskDeliveryPartnerGoingFirstNotification extends Notification implements 
         $aud = number_format((float) $this->match->agreed_aud, 2);
 
         return (new MailMessage)
-            ->subject('TuMa — Your partner is delivering cash first (Risk Delivery)')
+            ->subject('eZimConnect — Your partner is delivering cash first (Risk Delivery)')
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
             ->line('Both parties have agreed to Risk Delivery.')
             ->line("Your partner will deliver USD \${$usd} cash to your recipient first.")
@@ -46,7 +46,7 @@ class RiskDeliveryPartnerGoingFirstNotification extends Notification implements 
 
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa: Your partner is delivering USD $'
+        return 'eZimConnect: Your partner is delivering USD $'
             . number_format((float) $this->match->agreed_usd, 2)
             . ' first. Confirm receipt then deposit AUD. Ref: '
             . $this->match->getDepositReference();
