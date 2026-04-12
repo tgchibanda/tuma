@@ -43,7 +43,7 @@ export default {
 
       <!-- Logo -->
       <router-link to="/dashboard" class="flex items-center gap-2 flex-shrink-0">
-        <img src="/images/logo.svg" alt="eZimConnect" class="h-8 w-auto">
+        <img src="/images/logo.svg" alt="eZimConnect" class="h-9 w-auto">
       </router-link>
 
       <!-- Desktop nav links -->

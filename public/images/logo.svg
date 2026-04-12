@@ -1,24 +1,24 @@
-<svg width="380" height="80" viewBox="0 0 380 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="400" height="80" viewBox="0 0 400 80" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="shadow">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#0d2e3a" flood-opacity="0.28"/>
-    </filter>
-    <clipPath id="tri">
+    <clipPath id="c1">
       <path d="M4 6 L74 40 L4 74 Z"/>
     </clipPath>
   </defs>
-  <!-- Icon -->
-  <path d="M4 6 L74 40 L4 74 Z" fill="#1B4D5E" filter="url(#shadow)"/>
-  <g clip-path="url(#tri)">
-    <circle cx="32" cy="40" r="19" fill="#FDC040"/>
-    <circle cx="32" cy="40" r="10.5" fill="#1B4D5E"/>
-    <rect x="13" y="35.5" width="28" height="9" fill="#FDC040"/>
-    <path d="M32 21 L56 30 L56 21 Z" fill="#1B4D5E"/>
-    <path d="M32 59 L56 50 L56 59 Z" fill="#1B4D5E"/>
-    <rect x="44" y="30" width="20" height="20" fill="#1B4D5E"/>
+  <!-- Soft shadow -->
+  <path d="M5 8 L73 40 L5 72 Z" fill="#0d2e3a" opacity="0.10" transform="translate(1.5,2.5)"/>
+  <!-- Triangle -->
+  <path d="M4 6 L74 40 L4 74 Z" fill="#1B4D5E"/>
+  <!-- e clipped to triangle -->
+  <g clip-path="url(#c1)">
+    <circle cx="31" cy="40" r="19" fill="#FDC040"/>
+    <circle cx="31" cy="40" r="10.5" fill="#1B4D5E"/>
+    <rect x="12" y="34.5" width="27" height="11" fill="#FDC040"/>
+    <path d="M31 21 L53 29 L53 21 Z" fill="#1B4D5E"/>
+    <path d="M31 59 L53 51 L53 59 Z" fill="#1B4D5E"/>
+    <rect x="42" y="29" width="20" height="22" fill="#1B4D5E"/>
   </g>
-  <path d="M14 2 L18.5 13 L13 13 L17.5 24 L9 11 L15 11 Z" fill="#FDC040"/>
-  <!-- Wordmark: eZim in teal, Connect in yellow-gold -->
-  <text x="90" y="53" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="700" fill="#1B4D5E">eZim</text>
-  <text x="187" y="53" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="700" fill="#FDC040">Connect</text>
+  <!-- Single text element with tspan to avoid inter-element artifacts -->
+  <text font-family="Georgia, serif" font-size="34" font-weight="700">
+    <tspan x="92" y="53" fill="#1B4D5E">eZim</tspan><tspan fill="#E6A800">Connect</tspan>
+  </text>
 </svg>
