@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Landing        from './pages/Landing'
 import Login          from './pages/Login'
 import Register       from './pages/Register'
+import VerifyEmail    from './pages/VerifyEmail'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword  from './pages/ResetPassword'
 import Onboarding     from './pages/Onboarding'
@@ -67,6 +68,7 @@ const router = new VueRouter({
         { path: '/login',           component: Login,          name: 'login',         meta: { guest: true } },
         { path: '/register',        component: Register,       name: 'register',      meta: { guest: true } },
         { path: '/forgot-password', component: ForgotPassword, name: 'forgot'         },
+        { path: '/verify-email/:id/:hash', component: VerifyEmail, name: 'verify-email' },
         { path: '/reset-password',  component: ResetPassword,  name: 'reset'          },
         { path: '/directory',       component: Directory,      name: 'directory'      },
         // Public info pages
