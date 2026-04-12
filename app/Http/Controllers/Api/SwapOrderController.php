@@ -135,7 +135,7 @@ class SwapOrderController extends Controller
                 'platform_fee_aud'         => $feeCalc['fee_aud'],
                 'platform_fee_percent'     => $feeCalc['fee_percent'],
                 'fee_discount_id'          => $feeCalc['discount_id'],
-                'discounted_fee_aud'       => $feeCalc['discounted_fee_aud'],
+                'discounted_fee_aud'       => $feeCalc['discount_id'] ? $feeCalc['fee_aud'] : null,
                 'zim_recipient_name'       => $request->zim_recipient_name,
                 'zim_recipient_phone'      => $request->zim_recipient_phone,
                 'zim_delivery_location_id' => $request->zim_delivery_location_id,
@@ -146,11 +146,6 @@ class SwapOrderController extends Controller
                 'status'                   => SwapOrder::STATUS_OPEN,
                 'expires_at'               => now()->addHours($expiryHours),
             ]);
-
-            // If discount was applied, decrement the uses_remaining
-            if ($feeCalc['discount_id']) {
-                \App\Models\FeeDiscount::where('id', $feeCalc['discount_id'])->decrement('uses_remaining');
-            }
 
             // Save recipient if requested
             if ($request->boolean('save_recipient')) {
@@ -170,7 +165,7 @@ class SwapOrderController extends Controller
                 $recipient = SavedRecipient::where('id', $request->saved_recipient_id)
                     ->where('user_id', $user->id)
                     ->first();
-                $recipient?->incrementUseCount();
+                if ($recipient) { $recipient->increment('use_count'); $recipient->update(['last_used_at' => now()]); }
             }
 
             return $order;
