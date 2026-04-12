@@ -112,15 +112,20 @@ class MessageController extends Controller
             ['inapp']
         );
 
+        // TransactionMessage has $timestamps=false — created_at is set by DB default.
+        // Call refresh() to pull the DB-populated value back into the model instance.
+        $message->refresh();
+        $ts = $message->created_at ?? now();
+
         return $this->created([
-            'id'          => $message->id,
-            'message'     => $message->message,
-            'attachment'  => $message->attachment
+            'id'           => $message->id,
+            'message'      => $message->message,
+            'attachment'   => $message->attachment
                 ? url('/api/v1/files/chat/' . urlencode(basename($message->attachment)))
                 : null,
-            'is_mine'     => true,
-            'created_at'  => $message->created_at->toIso8601String(),
-            'created_human'=> $message->created_at->diffForHumans(),
+            'is_mine'      => true,
+            'created_at'   => $ts->toIso8601String(),
+            'created_human'=> $ts->diffForHumans(),
         ], 'Message sent.');
     }
 

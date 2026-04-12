@@ -53,7 +53,7 @@ class FeeCalculationService
         $netAud     = round($amountAud - $feeAud, 2);
         $amountUsd  = round($netAud * $rate->rate, 2);
 
-        // Estimate what Western Union would charge (approx 4–5% + fixed fee)
+        // Estimate what Other Services would charge (approx 4–5% + fixed fee)
         $wuFeeAud  = round(($amountAud * 0.05) + 5, 2);
         $savingsVsWu = round($wuFeeAud - $feeAud, 2);
 

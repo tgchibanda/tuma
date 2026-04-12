@@ -422,4 +422,16 @@ class User extends Authenticatable implements MustVerifyEmail
             ->where('trusted_user_id', $this->id)
             ->exists();
     }
+    /**
+     * Stamp last_seen_at without dirtying updated_at.
+     * Called by EscrowService::releaseFunds() after transaction completion.
+     */
+    public function updateLastSeen(): void
+    {
+        $this->timestamps   = false;
+        $this->last_seen_at = now();
+        $this->save();
+        $this->timestamps   = true;
+    }
+
 }

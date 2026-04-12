@@ -21,7 +21,7 @@ export default {
         reviews() {
             return [
                 { name: 'Tendai M.', location: 'Melbourne to Harare',         avatar: 'T', color: 'bg-green-700',  stars: 5, date: '2 weeks ago',  text: 'Absolutely life-changing. I have been sending money home for years and always lost 8 to 10 percent to fees and bad rates. TuMa matched me in under an hour and my mum got her cash the same afternoon. Zero stress.' },
-                { name: 'Rudo C.',   location: 'Sydney to Bulawayo',          avatar: 'R', color: 'bg-blue-700',   stars: 5, date: '1 month ago',  text: 'I was skeptical at first but the escrow system made me feel completely safe. Sent AUD 800 and my sister confirmed she received every cent. The whole process took 3 hours. Western Union used to charge me over AUD 60 for the same amount.' },
+                { name: 'Rudo C.',   location: 'Sydney to Bulawayo',          avatar: 'R', color: 'bg-blue-700',   stars: 5, date: '1 month ago',  text: 'I was skeptical at first but the escrow system made me feel completely safe. Sent AUD 800 and my sister confirmed she received every cent. The whole process took 3 hours. Other Services used to charge me over AUD 60 for the same amount.' },
                 { name: 'Farai N.',  location: 'Brisbane to Mutare',          avatar: 'F', color: 'bg-purple-700', stars: 5, date: '3 weeks ago',  text: 'The chat feature during the transaction gave me peace of mind. I could talk directly with the person delivering the cash. My mother confirmed receipt immediately. Will never use a remittance service again.' },
                 { name: 'Tatenda K.',location: 'Perth to Gweru',              avatar: 'T', color: 'bg-orange-600', stars: 5, date: '5 days ago',   text: 'As someone who sends money every month, the recurring orders feature is a game changer. I set it once and TuMa handles everything. My family in Gweru now receives reliably on time every month.' },
                 { name: 'Blessing S.',location: 'Adelaide to Victoria Falls', avatar: 'B', color: 'bg-teal-700',   stars: 5, date: '1 week ago',   text: 'I run a small business in Zimbabwe and needed AUD regularly for my Australian suppliers. TuMa directory listing means customers find me. This platform is exactly what our community needed.' },
@@ -42,7 +42,7 @@ export default {
         steps() {
             return [
                 { n: '01', icon: 'fa-user-plus',    title: 'Create account',  colorClass: 'text-green-600',  bgClass: 'bg-green-50',  iconBg: 'bg-green-600',  desc: 'Sign up free in 2 minutes. Add your Australian bank account. No setup fees ever.',              detail: 'Your real details are always private. Choose to show your profile as public or anonymous.' },
-                { n: '02', icon: 'fa-plus-circle',  title: 'Post your order', colorClass: 'text-blue-600',   bgClass: 'bg-blue-50',   iconBg: 'bg-blue-600',   desc: 'State how much AUD to send and who receives USD cash in Zimbabwe. Any amount from AUD 50.',   detail: 'Our live calculator shows exactly what your recipient gets after our 1.5% flat fee.' },
+                { n: '02', icon: 'fa-plus-circle',  title: 'Post your order', colorClass: 'text-blue-600',   bgClass: 'bg-blue-50',   iconBg: 'bg-blue-600',   desc: 'State how much AUD to send and who receives USD cash in Zimbabwe. Any amount from AUD 50.',   detail: 'Our live calculator shows exactly what your recipient gets after our 0.5% flat fee.' },
                 { n: '03', icon: 'fa-handshake',    title: 'Match and agree', colorClass: 'text-purple-600', bgClass: 'bg-purple-50', iconBg: 'bg-purple-600', desc: 'Match with someone who has the opposite need. Negotiate the rate via in-app chat.',           detail: 'Choose Secure delivery (AUD first) or Risk delivery (cash first). Your choice every time.' },
                 { n: '04', icon: 'fa-shield-alt',   title: 'Escrow protects', colorClass: 'text-orange-500', bgClass: 'bg-orange-50', iconBg: 'bg-orange-500', desc: 'Your AUD is held in our Trust Account until delivery is confirmed with photo proof.',        detail: 'Recipient ID photo plus cash handover photo required before any funds move.' },
                 { n: '05', icon: 'fa-check-circle', title: 'Funds released',  colorClass: 'text-teal-600',   bgClass: 'bg-teal-50',   iconBg: 'bg-teal-600',   desc: 'Recipient confirms cash received. AUD released to deliverer. Transaction complete.',         detail: 'The whole process typically takes 2 to 6 hours. Faster than any bank wire.' },
@@ -207,7 +207,7 @@ export default {
           </h1>
           <p class="text-green-100 text-lg mb-8 leading-relaxed max-w-md">
             TuMa connects Australians directly with trusted community members to swap
-            AUD for USD cash. Peer-to-peer, secured by escrow, at just 1.5%.
+            AUD for USD cash. Peer-to-peer, secured by escrow, at just 0.5%.
           </p>
           <div class="flex flex-wrap gap-3 mb-8">
             <router-link to="/register" class="flex items-center gap-2 px-7 py-3.5 text-sm font-bold rounded-xl shadow-lg hover:scale-105 transition-transform" style="background:#f59e0b;color:#1a1a1a;">
@@ -250,7 +250,7 @@ export default {
                 <div class="flex items-center gap-2 rounded-xl px-3 py-1.5" style="background:rgba(255,255,255,0.15);"><span>🇦🇺</span><span class="text-white font-bold text-sm">AUD</span></div>
               </div>
             </div>
-            <div class="text-center text-xs text-green-300 py-2 opacity-80">Platform fee: AUD 7.50 (1.5%)</div>
+            <div class="text-center text-xs text-green-300 py-2 opacity-80">Platform fee: AUD 1.50 (0.5%)</div>
             <div class="rounded-2xl p-4 mb-4" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);">
               <p class="text-yellow-300 text-xs mb-1">Recipient gets</p>
               <div class="flex items-center justify-between">
@@ -260,7 +260,7 @@ export default {
             </div>
             <div class="flex items-center gap-2 rounded-xl px-3 py-2.5 mb-4 text-xs text-green-300" style="background:rgba(34,197,94,0.1);">
               <i class="fas fa-piggy-bank text-green-400"></i>
-              Save approx. AUD 17.50 vs Western Union
+              Save approx. AUD 17.50 vs Other Services
             </div>
             <router-link to="/register" class="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold hover:opacity-90 transition-all" style="background:#f59e0b;color:#1a1a1a;">
               Get started free <i class="fas fa-arrow-right text-xs"></i>
@@ -395,12 +395,12 @@ export default {
                   <span class="font-bold text-gray-900">TuMa</span>
                 </div>
               </th>
-              <th class="py-4 px-5 text-center bg-gray-50 font-semibold text-gray-400">Western Union</th>
+              <th class="py-4 px-5 text-center bg-gray-50 font-semibold text-gray-400">Other Services</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(r,i) in [
-              ['Platform fee',            '1.5% = AUD 7.50',     '4 to 5 pct plus fixed fee'],
+              ['Platform fee',            '0.5% = AUD 1.50',     '4 to 5 pct plus fixed fee'],
               ['Exchange rate',           'Peer negotiated',     'Bank retail rate'],
               ['AUD protection',          'Full escrow',         'None'],
               ['Delivery proof required', 'ID and cash photo',   'None'],

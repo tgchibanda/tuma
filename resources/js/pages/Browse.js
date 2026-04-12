@@ -10,8 +10,10 @@ export default {
                 order_type: '',
                 min_aud: '',
                 max_aud: '',
-                sort: 'newest'
+                sort: 'newest',
+                user_ulid: '',    // 'send money via' filter
             },
+            sendMoneyViaName: '',
             proposing: null,
             proposeForm: { my_order_ulid: '', proposed_aud: '', proposed_usd: '', message: '' },
             myOpenOrders: [],
@@ -34,6 +36,14 @@ export default {
             const id = parseInt(this.$route.query.location)
             if (id) this.filters.location_ids = [id]
         }
+        if (this.$route.query.user) {
+            this.filters.user_ulid = this.$route.query.user
+            // Fetch the user's name for the banner
+            try {
+                const { data } = await this.$http.get('/users/' + this.$route.query.user)
+                this.sendMoneyViaName = data.data?.display_name?.split(' ')[0] || ''
+            } catch {}
+        }
         await this.load()
     },
     methods: {
@@ -47,6 +57,7 @@ export default {
                 if (this.filters.min_aud)             params.min_aud    = this.filters.min_aud
                 if (this.filters.max_aud)             params.max_aud    = this.filters.max_aud
                 if (this.filters.sort !== 'newest')   params.sort       = this.filters.sort
+                if (this.filters.user_ulid)            params.user_ulid  = this.filters.user_ulid
                 const { data } = await this.$http.get('/orders/browse', { params })
                 this.orders = data.data || []
                 this.meta   = data.meta?.pagination
@@ -132,15 +143,13 @@ export default {
             this.proposing_loading = true
             this.propose_error     = null
             try {
-                // URL uses TARGET order's ULID — controller reads it as {ulid} and looks up the target order.
-                // My order ULID is sent in the body so the controller can auto-find my compatible order.
                 const { data } = await this.$http.post(
-                    '/orders/' + this.proposing.ulid + '/propose-match',
+                    '/orders/' + this.proposeForm.my_order_ulid + '/propose-match',
                     {
-                        my_order_ulid: this.proposeForm.my_order_ulid,
-                        proposed_aud:  parseFloat(this.proposeForm.proposed_aud),
-                        proposed_usd:  parseFloat(this.proposeForm.proposed_usd),
-                        message:       this.proposeForm.message || null
+                        target_order_ulid: this.proposing.ulid,
+                        proposed_aud:      parseFloat(this.proposeForm.proposed_aud),
+                        proposed_usd:      parseFloat(this.proposeForm.proposed_usd),
+                        message:           this.proposeForm.message || null
                     }
                 )
                 this.$toast.success('Match proposed! You will be redirected to the match.')
@@ -277,6 +286,15 @@ export default {
     <div class="flex items-start justify-between gap-4 mb-6 flex-wrap">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Browse Open Orders</h1>
+        <div v-if="sendMoneyViaName"
+          class="mt-3 flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3">
+          <i class="fas fa-filter text-green-600"></i>
+          <p class="text-sm text-green-800 font-medium flex-1">
+            Showing orders by <strong>{{ sendMoneyViaName }}</strong>
+          </p>
+          <button @click="filters.user_ulid=\'\'; sendMoneyViaName=\'\'; load()"
+            class="text-xs text-green-700 font-semibold hover:underline">Clear filter</button>
+        </div>
         <p class="text-sm text-gray-500 mt-0.5">Find a match and start a transaction.</p>
       </div>
       <router-link to="/orders/create"

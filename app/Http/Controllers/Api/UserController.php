@@ -71,7 +71,6 @@ class UserController extends Controller
             'referral_code'         => $user->referral_code,
             'referral_count'        => $user->referral_count,
             'referral_earnings_aud' => (float) $user->referral_earnings_aud,
-            'has_bank_account'       => $user->bankAccounts()->exists(),
             'onboarding_completed'  => (bool) $user->onboarding_completed,
             'last_seen'             => $user->last_seen_human,
             'created_at'            => $user->created_at->toIso8601String(),
@@ -335,7 +334,10 @@ class UserController extends Controller
             'recent_reviews'       => $reviews->map(fn($r) => [
                 'score'      => $r->score,
                 'comment'    => $r->review_text,
-                'reviewer'   => $r->reviewer->display_first_name,
+                'reviewer'   => [
+                    'display_name' => $r->reviewer->display_first_name,
+                    'avatar_url'   => $r->reviewer->avatar_url,
+                ],
                 'created_at' => $r->created_at->toDateString(),
             ]),
         ], 'Profile retrieved.');
