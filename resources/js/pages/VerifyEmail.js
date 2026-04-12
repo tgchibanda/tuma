@@ -20,7 +20,7 @@ export default {
                 `/auth/verify-email/${id}/${hash}`
             )
 
-            // If the user is already logged in, update their session
+            // Refresh user in localStorage so onboarding reads correct email_verified state
             if (this.$auth.isLoggedIn) {
                 try {
                     const me = await this.$http.get('/user')
@@ -41,9 +41,10 @@ export default {
     methods: {
         proceed() {
             if (this.$auth.isLoggedIn) {
+                // Go to onboarding - it will now fetch fresh user and see email_verified=true
                 this.$router.push('/onboarding')
             } else {
-                this.$router.push('/login')
+                this.$router.push('/login?verified=1')
             }
         }
     },

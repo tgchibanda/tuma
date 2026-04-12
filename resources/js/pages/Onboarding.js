@@ -16,10 +16,18 @@ export default {
             return this.user && this.user.email_verified
         }
     },
-    mounted() {
-        this.user = this.$auth.user
+    async mounted() {
+        // Always fetch fresh user from API — localStorage may be stale after email verification
+        try {
+            const { data } = await this.$http.get('/user')
+            this.$auth.setUser(data.data)
+            this.user = data.data
+        } catch {
+            this.user = this.$auth.user
+        }
+
         if (this.isVerified) {
-            this.step = this.user.onboarding_completed ? 'complete' : 'profile'
+            this.step = this.user && this.user.onboarding_completed ? 'complete' : 'profile'
         } else {
             this.startPolling()
         }
