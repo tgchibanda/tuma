@@ -3,7 +3,7 @@ export default {
     data() { return { stats: null, recentMatches: [], loading: true } },
     async mounted() {
         try {
-            const { data } = await this.$http.get('/../../api/v1/admin/dashboard')
+            const { data } = await this.$http.get('/../../api/admin/dashboard')
             this.stats = data.data
             this.recentMatches = data.data.recent_matches || []
         } catch {}
@@ -81,10 +81,28 @@ export default {
         }
     },
     template: `
-<div class="min-h-screen bg-gray-100 flex">
-  <admin-nav />
-  <div class="flex-1 min-w-0 lg:ml-60">
-  
+<div class="min-h-screen bg-gray-100">
+  <div class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+    <div class="flex items-center gap-3">
+      <img src="/images/logo-icon.svg" alt="eZimConnect" class="h-8 w-auto">
+      <span class="font-bold text-gray-900 text-sm">Admin</span>
+    </div>
+    <nav class="flex items-center gap-1 text-sm">
+      <router-link v-for="link in [
+        {to:'/admin/dashboard', label:'Dashboard'},
+        {to:'/admin/users',     label:'Users'},
+        {to:'/admin/matches',   label:'Matches'},
+        {to:'/admin/deposits',  label:'Deposits'},
+        {to:'/admin/disputes',  label:'Disputes'},
+        {to:'/admin/rates',     label:'Rates'},
+        {to:'/admin/settings',  label:'Settings'}
+      ]" :key="link.to" :to="link.to"
+        class="px-3 py-1.5 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition">
+        {{ link.label }}
+      </router-link>
+    </nav>
+  </div>
+
   <div class="max-w-7xl mx-auto px-6 py-6">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-bold text-gray-900">Dashboard</h1>
@@ -218,7 +236,6 @@ export default {
         </div>
       </div>
     </div>
-  </div>
   </div>
 </div>`
 }

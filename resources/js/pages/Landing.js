@@ -21,7 +21,7 @@ export default {
         reviews() {
             return [
                 { name: 'Tendai M.', location: 'Melbourne to Harare',         avatar: 'T', color: 'bg-green-700',  stars: 5, date: '2 weeks ago',  text: 'Absolutely life-changing. I have been sending money home for years and always lost 8 to 10 percent to fees and bad rates. eZimConnect matched me in under an hour and my mum got her cash the same afternoon. Zero stress.' },
-                { name: 'Rudo C.',   location: 'Sydney to Bulawayo',          avatar: 'R', color: 'bg-blue-700',   stars: 5, date: '1 month ago',  text: 'I was skeptical at first but the escrow system made me feel completely safe. Sent AUD 800 and my sister confirmed she received every cent. The whole process took 3 hours. Other Providers used to charge me over AUD 60 for the same amount.' },
+                { name: 'Rudo C.',   location: 'Sydney to Bulawayo',          avatar: 'R', color: 'bg-blue-700',   stars: 5, date: '1 month ago',  text: 'I was skeptical at first but the escrow system made me feel completely safe. Sent AUD 800 and my sister confirmed she received every cent. The whole process took 3 hours. Other providers used to charge me over AUD 60 for the same amount.' },
                 { name: 'Farai N.',  location: 'Brisbane to Mutare',          avatar: 'F', color: 'bg-purple-700', stars: 5, date: '3 weeks ago',  text: 'The chat feature during the transaction gave me peace of mind. I could talk directly with the person delivering the cash. My mother confirmed receipt immediately. Will never use a remittance service again.' },
                 { name: 'Tatenda K.',location: 'Perth to Gweru',              avatar: 'T', color: 'bg-orange-600', stars: 5, date: '5 days ago',   text: 'As someone who sends money every month, the recurring orders feature is a game changer. I set it once and eZimConnect handles everything. My family in Gweru now receives reliably on time every month.' },
                 { name: 'Blessing S.',location: 'Adelaide to Victoria Falls', avatar: 'B', color: 'bg-teal-700',   stars: 5, date: '1 week ago',   text: 'I run a small business in Zimbabwe and needed AUD regularly for my Australian suppliers. eZimConnect directory listing means customers find me. This platform is exactly what our community needed.' },
@@ -42,7 +42,7 @@ export default {
         steps() {
             return [
                 { n: '01', icon: 'fa-user-plus',    title: 'Create account',  colorClass: 'text-green-600',  bgClass: 'bg-green-50',  iconBg: 'bg-green-600',  desc: 'Sign up free in 2 minutes. Add your Australian bank account. No setup fees ever.',              detail: 'Your real details are always private. Choose to show your profile as public or anonymous.' },
-                { n: '02', icon: 'fa-plus-circle',  title: 'Post your order', colorClass: 'text-blue-600',   bgClass: 'bg-blue-50',   iconBg: 'bg-blue-600',   desc: 'State how much AUD to send and who receives USD cash in Zimbabwe. Any amount from AUD 50.',   detail: 'Our live calculator shows exactly what your recipient gets after our 0.5% flat fee.' },
+                { n: '02', icon: 'fa-plus-circle',  title: 'Post your order', colorClass: 'text-blue-600',   bgClass: 'bg-blue-50',   iconBg: 'bg-blue-600',   desc: 'State how much AUD to send and who receives USD cash in Zimbabwe. Any amount from AUD 50.',   detail: 'Our live calculator shows exactly what your recipient gets after our 1.5% flat fee.' },
                 { n: '03', icon: 'fa-handshake',    title: 'Match and agree', colorClass: 'text-purple-600', bgClass: 'bg-purple-50', iconBg: 'bg-purple-600', desc: 'Match with someone who has the opposite need. Negotiate the rate via in-app chat.',           detail: 'Choose Secure delivery (AUD first) or Risk delivery (cash first). Your choice every time.' },
                 { n: '04', icon: 'fa-shield-alt',   title: 'Escrow protects', colorClass: 'text-orange-500', bgClass: 'bg-orange-50', iconBg: 'bg-orange-500', desc: 'Your AUD is held in our Trust Account until delivery is confirmed with photo proof.',        detail: 'Recipient ID photo plus cash handover photo required before any funds move.' },
                 { n: '05', icon: 'fa-check-circle', title: 'Funds released',  colorClass: 'text-teal-600',   bgClass: 'bg-teal-50',   iconBg: 'bg-teal-600',   desc: 'Recipient confirms cash received. AUD released to deliverer. Transaction complete.',         detail: 'The whole process typically takes 2 to 6 hours. Faster than any bank wire.' },
@@ -153,28 +153,8 @@ export default {
   <!-- NAVBAR -->
   <nav class="sticky top-0 z-40 bg-white/96 backdrop-blur-sm border-b border-gray-100 shadow-sm">
     <div class="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
-      <router-link to="/" class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 shadow-md" style="background:linear-gradient(145deg,#1a6b3c,#2d9460);">
-          <div class="w-full h-full flex flex-col items-start justify-center px-2 gap-1">
-            <div class="flex items-center w-full gap-0.5">
-              <span class="text-[6px] font-black text-yellow-400 leading-none">AUD</span>
-              <div class="flex-1 h-px bg-yellow-400"></div>
-              <div style="width:0;height:0;border-top:2px solid transparent;border-bottom:2px solid transparent;border-left:4px solid #facc15;"></div>
-            </div>
-            <div class="flex items-center w-full gap-0.5 flex-row-reverse">
-              <span class="text-[6px] font-black text-white leading-none">USD</span>
-              <div class="flex-1 h-px bg-white opacity-70"></div>
-              <div style="width:0;height:0;border-top:2px solid transparent;border-bottom:2px solid transparent;border-right:4px solid rgba(255,255,255,0.7);"></div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <div class="leading-none flex items-baseline">
-            <span class="text-xl font-black" style="color:#1a6b3c;font-family:Georgia,serif;">Tu</span>
-            <span class="text-xl font-black" style="color:#f59e0b;font-family:Georgia,serif;">Ma</span>
-          </div>
-          <p class="text-[8px] font-bold tracking-widest text-gray-400 uppercase">Swap · Send · Settle</p>
-        </div>
+      <router-link to="/" class="flex items-center">
+        <img src="/images/logo.svg" alt="eZimConnect" class="h-9 w-auto">
       </router-link>
       <div class="hidden md:flex items-center gap-0.5">
         <a href="#how-it-works" class="px-3.5 py-2 text-sm font-medium text-gray-600 hover:text-green-700 hover:bg-green-50 rounded-xl transition-colors">How it works</a>
@@ -207,7 +187,7 @@ export default {
           </h1>
           <p class="text-green-100 text-lg mb-8 leading-relaxed max-w-md">
             eZimConnect connects Australians directly with trusted community members to swap
-            AUD for USD cash. Peer-to-peer, secured by escrow, at just 0.5%.
+            AUD for USD cash. Peer-to-peer, secured by escrow, at just 1.5%.
           </p>
           <div class="flex flex-wrap gap-3 mb-8">
             <router-link to="/register" class="flex items-center gap-2 px-7 py-3.5 text-sm font-bold rounded-xl shadow-lg hover:scale-105 transition-transform" style="background:#f59e0b;color:#1a1a1a;">
@@ -250,7 +230,7 @@ export default {
                 <div class="flex items-center gap-2 rounded-xl px-3 py-1.5" style="background:rgba(255,255,255,0.15);"><span>🇦🇺</span><span class="text-white font-bold text-sm">AUD</span></div>
               </div>
             </div>
-            <div class="text-center text-xs text-green-300 py-2 opacity-80">Platform fee: AUD 2.50 (0.5%)</div>
+            <div class="text-center text-xs text-green-300 py-2 opacity-80">Platform fee: AUD 7.50 (1.5%)</div>
             <div class="rounded-2xl p-4 mb-4" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);">
               <p class="text-yellow-300 text-xs mb-1">Recipient gets</p>
               <div class="flex items-center justify-between">
@@ -260,13 +240,13 @@ export default {
             </div>
             <div class="flex items-center gap-2 rounded-xl px-3 py-2.5 mb-4 text-xs text-green-300" style="background:rgba(34,197,94,0.1);">
               <i class="fas fa-piggy-bank text-green-400"></i>
-              Save approx. AUD 17.50 vs Other Providers
+              Save approx. AUD 17.50 vs other providers
             </div>
             <router-link to="/register" class="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold hover:opacity-90 transition-all" style="background:#f59e0b;color:#1a1a1a;">
               Get started free <i class="fas fa-arrow-right text-xs"></i>
             </router-link>
           </div>
-          <div class="absolute -right-3 -bottom-4 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-2.5 flex items-center gap-3 ezimconnect-float">
+          <div class="absolute -right-3 -bottom-4 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-2.5 flex items-center gap-3 tuma-float">
             <div class="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
               <i class="fas fa-check text-green-600 text-sm"></i>
             </div>
@@ -391,8 +371,7 @@ export default {
               <th class="text-left py-4 px-5 font-semibold text-gray-500">Feature</th>
               <th class="py-4 px-5 text-center">
                 <div class="inline-flex items-center gap-1.5">
-                  <div class="w-5 h-5 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#1a6b3c,#2d9460);"><span class="text-white font-black text-xs">T</span></div>
-                  <span class="font-bold text-gray-900">eZimConnect</span>
+                  <img src="/images/logo-icon.svg" alt="eZimConnect" class="h-5 w-auto inline">
                 </div>
               </th>
               <th class="py-4 px-5 text-center bg-gray-50 font-semibold text-gray-400">Other Providers</th>
@@ -400,7 +379,7 @@ export default {
           </thead>
           <tbody>
             <tr v-for="(r,i) in [
-              ['Platform fee',            '0.5% = AUD 1.50',     '4 to 5 pct plus fixed fee'],
+              ['Platform fee',            '1.5% = AUD 7.50',     '4 to 5 pct plus fixed fee'],
               ['Exchange rate',           'Peer negotiated',     'Bank retail rate'],
               ['AUD protection',          'Full escrow',         'None'],
               ['Delivery proof required', 'ID and cash photo',   'None'],
@@ -556,17 +535,8 @@ export default {
     <div class="max-w-6xl mx-auto px-5">
       <div class="grid md:grid-cols-4 gap-8 mb-10">
         <div class="md:col-span-2">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 shadow-md" style="background:linear-gradient(145deg,#1a6b3c,#2d9460);">
-              <div class="w-full h-full flex flex-col items-start justify-center px-2 gap-1">
-                <div class="flex items-center w-full gap-0.5"><span class="text-[6px] font-black text-yellow-400 leading-none">AUD</span><div class="flex-1 h-px bg-yellow-400"></div></div>
-                <div class="flex items-center w-full gap-0.5 flex-row-reverse"><span class="text-[6px] font-black text-white leading-none">USD</span><div class="flex-1 h-px bg-white opacity-70"></div></div>
-              </div>
-            </div>
-            <div>
-              <div class="flex items-baseline"><span class="text-xl font-black text-white" style="font-family:Georgia,serif;">Tu</span><span class="text-xl font-black" style="color:#f59e0b;font-family:Georgia,serif;">Ma</span></div>
-              <p class="text-[8px] font-bold tracking-widest text-gray-500 uppercase">Swap · Send · Settle</p>
-            </div>
+          <div class="mb-4">
+            <img src="/images/logo-dark.svg" alt="eZimConnect" class="h-9 w-auto">
           </div>
           <p class="text-gray-400 text-sm leading-relaxed max-w-xs">Peer-to-peer currency exchange for Australians sending money to Zimbabwe. Zero bank fees. Secured by escrow.</p>
           <p class="text-gray-600 text-xs mt-3 flex items-center gap-1.5"><i class="fas fa-lock text-gray-600"></i>NAB Trust Account · AUSTRAC registered</p>
@@ -606,8 +576,8 @@ export default {
   .review-slide-enter-active, .review-slide-leave-active { transition: all 0.4s ease; }
   .review-slide-enter { opacity: 0; transform: translateX(24px); }
   .review-slide-leave-to { opacity: 0; transform: translateX(-24px); }
-  @keyframes ezimconnect-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
-  .ezimconnect-float { animation: ezimconnect-float 3s ease-in-out infinite; }
+  @keyframes tuma-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+  .tuma-float { animation: tuma-float 3s ease-in-out infinite; }
   </style>
 </div>`
 }

@@ -57,13 +57,8 @@ export default {
 
     <!-- Logo -->
     <div class="flex items-center gap-3 px-4 py-4 border-b border-gray-800 flex-shrink-0">
-      <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-        <span class="text-white font-bold text-xs">Tu</span>
-      </div>
-      <div v-if="!collapsed" class="overflow-hidden">
-        <p class="font-bold text-white text-sm leading-none">eZimConnect</p>
-        <p class="text-xs text-green-400 mt-0.5 font-medium">Admin Panel</p>
-      </div>
+      <img src="/images/logo.svg" alt="eZimConnect" class="h-7 w-auto flex-shrink-0 brightness-0 invert">
+      <p v-if="!collapsed" class="text-xs text-green-400 font-medium whitespace-nowrap">Admin Panel</p>
       <button @click="collapsed = !collapsed" class="ml-auto text-gray-500 hover:text-white flex-shrink-0">
         <i :class="['fas text-xs', collapsed ? 'fa-chevron-right' : 'fa-chevron-left']"></i>
       </button>
@@ -111,10 +106,8 @@ export default {
   <!-- Mobile top bar -->
   <div class="lg:hidden bg-gray-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-40 shadow-lg">
     <div class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
-        <span class="text-white font-bold text-xs">Tu</span>
-      </div>
-      <span class="font-bold text-white text-sm">eZimConnect <span class="text-green-400">Admin</span></span>
+      <img src="/images/logo.svg" alt="eZimConnect" class="h-7 w-auto brightness-0 invert">
+      <span class="text-xs text-green-400 font-medium ml-1">Admin</span>
     </div>
     <button @click="mobileOpen = !mobileOpen" class="p-2 text-gray-400 hover:text-white">
       <i :class="['fas', mobileOpen ? 'fa-times' : 'fa-bars']"></i>
@@ -130,7 +123,7 @@ export default {
   <transition name="slide-left">
     <div v-if="mobileOpen" class="fixed top-0 left-0 h-full w-64 bg-gray-900 z-50 lg:hidden flex flex-col shadow-2xl">
       <div class="flex items-center justify-between p-4 border-b border-gray-800">
-        <span class="font-bold text-white">eZimConnect <span class="text-green-400">Admin</span></span>
+        <img src="/images/logo.svg" alt="eZimConnect" class="h-7 w-auto brightness-0 invert">
         <button @click="mobileOpen = false" class="text-gray-500 hover:text-white p-1">
           <i class="fas fa-times"></i>
         </button>

@@ -6,7 +6,7 @@ export default {
         async load() {
             this.loading = true
             try {
-                const { data } = await this.$http.get('/../../api/v1/admin/matches/' + this.$route.params.ulid)
+                const { data } = await this.$http.get('/../../api/admin/matches/' + this.$route.params.ulid)
                 this.match = data.data
             } catch { this.$router.push('/admin/matches') }
             this.loading = false
@@ -15,7 +15,7 @@ export default {
             if (!confirm('Confirm AUD deposit has arrived in the eZimConnect bank account?')) return
             this.actionLoading = true
             try {
-                await this.$http.put('/../../api/v1/admin/matches/' + this.match.ulid + '/verify-deposit')
+                await this.$http.put('/../../api/admin/matches/' + this.match.ulid + '/verify-deposit')
                 this.$toast.success('Deposit verified. Deliverer notified.')
                 await this.load()
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }
@@ -25,7 +25,7 @@ export default {
             if (!confirm('Confirm you have sent AUD to the receiver\'s bank account?')) return
             this.actionLoading = true
             try {
-                await this.$http.put('/../../api/v1/admin/matches/' + this.match.ulid + '/release-funds')
+                await this.$http.put('/../../api/admin/matches/' + this.match.ulid + '/release-funds')
                 this.$toast.success('Funds released. Transaction completed!')
                 await this.load()
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }
@@ -36,7 +36,7 @@ export default {
             if (!reason) return
             this.actionLoading = true
             try {
-                await this.$http.put('/../../api/v1/admin/matches/' + this.match.ulid + '/refund', { reason })
+                await this.$http.put('/../../api/admin/matches/' + this.match.ulid + '/refund', { reason })
                 this.$toast.success('Refund processed.')
                 await this.load()
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }
@@ -47,22 +47,18 @@ export default {
             if (!reason) return
             this.actionLoading = true
             try {
-                await this.$http.put('/../../api/v1/admin/matches/' + this.match.ulid + '/force-cancel', { reason })
+                await this.$http.put('/../../api/admin/matches/' + this.match.ulid + '/force-cancel', { reason })
                 this.$toast.success('Match force-cancelled.')
                 await this.load()
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }
             this.actionLoading = false
         }
     },
-    template: `<div class="min-h-screen bg-gray-100 flex">
-  <admin-nav />
-  <div class="flex-1 min-w-0 lg:ml-60">
+    template: `<div class="min-h-screen bg-gray-100">
   <div class="bg-white border-b px-6 py-3 flex items-center gap-3 sticky top-0 z-40 shadow-sm">
     <router-link to="/admin/matches" class="text-gray-400 hover:text-gray-700"><i class="fas fa-arrow-left"></i></router-link>
-    <div class="w-7 h-7 bg-green-700 rounded-lg flex items-center justify-center">
-      <span class="text-white font-bold text-xs">Tu</span>
-    </div>
-    <span class="font-bold text-gray-900">eZimConnect <span class="text-green-600 text-sm">Admin</span></span>
+    <img src="/images/logo-icon.svg" alt="eZimConnect" class="h-7 w-auto">
+    <span class="font-bold text-gray-900 text-sm">Admin</span>
     <span class="text-gray-400 mx-1">›</span>
     <span class="text-sm text-gray-600">Match Detail</span>
   </div>
@@ -247,7 +243,6 @@ export default {
         </div>
       </div>
     </div>
-  </div>
   </div>
 </div>`
 }

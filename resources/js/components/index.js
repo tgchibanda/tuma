@@ -159,10 +159,7 @@ export const AppFooter = {
     template: `<footer class="bg-white border-t border-gray-100 mt-16 py-8">
   <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
     <div class="flex items-center gap-2">
-      <div class="w-7 h-7 bg-green-700 rounded-lg flex items-center justify-center">
-        <span class="text-white font-bold text-xs">Tu</span>
-      </div>
-      <span class="font-bold text-gray-900">Tu<span class="text-green-700">Ma</span></span>
+      <img src="/images/logo.svg" alt="eZimConnect" class="h-7 w-auto">
       <span class="text-gray-400 text-sm ml-2">© {{ new Date().getFullYear() }}</span>
     </div>
     <div class="flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm text-gray-500">

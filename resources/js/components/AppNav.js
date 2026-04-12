@@ -43,12 +43,7 @@ export default {
 
       <!-- Logo -->
       <router-link to="/dashboard" class="flex items-center gap-2 flex-shrink-0">
-        <div class="w-8 h-8 flex-shrink-0 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#1a6b3c,#2d9460);">
-          <span class="text-white font-black text-sm" style="font-family:Georgia,serif;">Tu</span>
-        </div>
-        <span class="font-black text-gray-900 text-base tracking-tight hidden sm:block" style="font-family:Georgia,serif;">
-          Tu<span style="color:#1a6b3c;">Ma</span>
-        </span>
+        <img src="/images/logo.svg" alt="eZimConnect" class="h-9 w-auto">
       </router-link>
 
       <!-- Desktop nav links -->

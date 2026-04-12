@@ -6,6 +6,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>eZimConnect — Peer-to-Peer Remittance</title>
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="apple-touch-icon" href="/images/logo-apple.svg">
+    <meta property="og:image" content="/images/logo.png">
+    <meta property="og:title" content="eZimConnect — Send money to Zimbabwe">
+    <meta property="og:description" content="Peer-to-peer AUD to USD cash exchange. No bank fees. Secured by escrow.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
