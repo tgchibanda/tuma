@@ -149,7 +149,7 @@ export default {
             this.propose_error     = null
             try {
                 const { data } = await this.$http.post(
-                    '/orders/' + this.proposeForm.my_order_ulid + '/propose-match',
+                    '/orders/' + this.proposing.ulid + '/propose-match',
                     {
                         target_order_ulid: this.proposing.ulid,
                         proposed_aud:      parseFloat(this.proposeForm.proposed_aud),
