@@ -11,7 +11,9 @@ export default {
             combinedPhoto: null, verificationNote: '',
             useOption: 'two',
             ratingScore: 0, ratingComment: '',
-            ratingSubmitted: false
+            ratingSubmitted: false,
+            myReview: null,     // existing review for this match
+            editingReview: false
         }
     },
     computed: {
@@ -35,8 +37,12 @@ export default {
             return this.match?.status === 'delivery_method_selecting'
                 && this.match?.delivery_method_proposed_by !== this.myId
         },
-        canRate() { return this.match?.status === 'completed' && !this.ratingSubmitted },
+        canRate() { return this.match?.status === 'completed' },
         showNegotiation() { return ['proposed', 'negotiating'].includes(this.match?.status) },
+        negotiationHint() {
+            return 'The AUD and USD amounts are negotiated between you and your partner. ' +
+                   'The rate shown is a guide — agree on a rate that works for both of you.'
+        },
         isMyTurn() { return this.match?.is_my_turn_to_negotiate },
         deliveryInstruction() {
             if (!this.match) return ''
@@ -81,6 +87,17 @@ export default {
                 const { data } = await this.$http.get('/matches/' + this.$route.params.ulid)
                 this.match = data.data
                 if (this.showNegotiation) await this.loadNegotiations()
+                // Load existing review if match is complete
+                if (this.match?.status === 'completed') {
+                    try {
+                        const rv = await this.$http.get('/matches/' + this.$route.params.ulid + '/my-review')
+                        this.myReview = rv.data.data
+                        if (this.myReview) {
+                            this.ratingScore   = this.myReview.score
+                            this.ratingComment = this.myReview.review_text || ''
+                        }
+                    } catch {}
+                }
             } catch { this.$router.push('/matches') }
             this.loading = false
         },
@@ -207,12 +224,26 @@ export default {
             if (!this.ratingScore) return
             this.actionLoading = true
             try {
-                await this.$http.post('/matches/' + this.match.ulid + '/rate', {
+                const { data } = await this.$http.post('/matches/' + this.match.ulid + '/rate', {
                     score: this.ratingScore,
-                    comment: this.ratingComment
+                    review_text: this.ratingComment,
                 })
-                this.$toast.success('Rating submitted!')
-                this.ratingSubmitted = true
+                this.myReview = data.data
+                this.$toast.success(this.myReview ? 'Review updated!' : 'Review submitted!')
+                this.editingReview = false
+                await this.load()
+            } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }
+            this.actionLoading = false
+        },
+        async deleteReview() {
+            if (!confirm('Delete your review?')) return
+            this.actionLoading = true
+            try {
+                await this.$http.delete('/matches/' + this.match.ulid + '/my-review')
+                this.myReview = null
+                this.ratingScore = 0
+                this.ratingComment = ''
+                this.$toast.success('Review deleted.')
             } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed') }
             this.actionLoading = false
         },
@@ -440,8 +471,8 @@ export default {
           </div>
         </div>
 
-        <!-- Deposit section: show when deposit upload needed OR deposit record exists -->
-        <div v-if="canUploadDeposit || match.deposit" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <!-- Deposit section -->
+        <div v-if="match.deposit" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <h3 class="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <i class="fas fa-university text-green-600"></i> AUD Deposit
           </h3>
@@ -475,7 +506,7 @@ export default {
                 hint="JPG, PNG or PDF, max 5MB" :required="true"
                 @change="depositFile = $event" />
               <button @click="uploadDeposit"
-                :disabled="!depositFile || actionLoading"
+                :disabled="!depositFile || !depositorRef || actionLoading"
                 class="w-full py-3 text-sm font-semibold bg-green-700 text-white rounded-xl hover:bg-green-800 disabled:opacity-50 transition">
                 <i v-if="actionLoading" class="fas fa-spinner fa-spin mr-1"></i>
                 Upload Proof
@@ -559,23 +590,93 @@ export default {
           </button>
         </div>
 
-        <!-- Rating -->
-        <div v-if="canRate" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <h3 class="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <i class="fas fa-star text-yellow-400"></i> Rate Your Partner
+        <!-- Partner info + rating (shown when completed) -->
+        <div v-if="match.status === 'completed'" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+          <h3 class="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <i class="fas fa-user-friends text-green-600"></i>
+            Transaction Partner
           </h3>
-          <p class="text-sm text-gray-600 mb-3">How was your experience?</p>
-          <div class="mb-3">
-            <rating-stars :value="ratingScore" :interactive="true" size="lg"
-              @input="ratingScore = $event" />
+          <!-- Partner card -->
+          <div class="flex items-center gap-3 mb-5 p-3 bg-gray-50 rounded-xl">
+            <div v-if="isSender">
+              <img v-if="match.receive_order && match.receive_order.owner && match.receive_order.owner.avatar_url"
+                :src="match.receive_order.owner.avatar_url"
+                class="w-12 h-12 rounded-xl object-cover">
+              <div v-else class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-700 font-black text-lg">
+                {{ (match.receive_order?.owner?.display_name || '?')[0] }}
+              </div>
+            </div>
+            <div v-else>
+              <img v-if="match.send_order && match.send_order.owner && match.send_order.owner.avatar_url"
+                :src="match.send_order.owner.avatar_url"
+                class="w-12 h-12 rounded-xl object-cover">
+              <div v-else class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-700 font-black text-lg">
+                {{ (match.send_order?.owner?.display_name || '?')[0] }}
+              </div>
+            </div>
+            <div class="flex-1">
+              <p class="font-bold text-gray-900">
+                {{ isSender ? match.receive_order?.owner?.display_name : match.send_order?.owner?.display_name }}
+              </p>
+              <p class="text-xs text-gray-500">
+                Rating: {{ isSender ? (match.receive_order?.owner?.rating || '—') : (match.send_order?.owner?.rating || '—') }}
+                · Trust: {{ isSender ? (match.receive_order?.owner?.trust_score || '—') : (match.send_order?.owner?.trust_score || '—') }}
+              </p>
+            </div>
+            <button @click="$router.push('/profile/' + (isSender ? match.receive_order?.owner?.ulid : match.send_order?.owner?.ulid))"
+              class="text-xs text-green-700 font-semibold border border-green-200 px-3 py-1.5 rounded-lg hover:bg-green-50">
+              View profile
+            </button>
           </div>
-          <textarea v-model="ratingComment" rows="3"
-            class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500 resize-none"
-            placeholder="Optional comment..."></textarea>
-          <button @click="submitRating" :disabled="!ratingScore || actionLoading"
-            class="mt-3 w-full py-2.5 text-sm font-semibold bg-green-700 text-white rounded-xl hover:bg-green-800 disabled:opacity-50 transition">
-            Submit Rating
-          </button>
+
+          <!-- Existing review display -->
+          <div v-if="myReview && !editingReview" class="mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-sm font-bold text-gray-900">Your Review</p>
+              <div class="flex gap-2">
+                <button @click="editingReview = true"
+                  class="text-xs text-blue-600 font-semibold hover:underline">Edit</button>
+                <button @click="deleteReview"
+                  class="text-xs text-red-500 font-semibold hover:underline">Delete</button>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 mb-1">
+              <i v-for="s in 5" :key="s"
+                :class="['fas fa-star text-sm', s <= myReview.score ? 'text-yellow-400' : 'text-gray-200']"></i>
+              <span class="text-sm font-semibold text-gray-700 ml-1">{{ myReview.score }}.0</span>
+            </div>
+            <p class="text-sm text-gray-600 italic">{{ myReview.review_text || 'No comment.' }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ $fmt.date(myReview.created_at) }}</p>
+          </div>
+
+          <!-- Review form (new or editing) -->
+          <div v-if="!myReview || editingReview">
+            <p class="text-sm font-bold text-gray-900 mb-3">
+              {{ myReview ? 'Edit your review' : 'Rate your partner' }}
+            </p>
+            <div class="flex items-center gap-2 mb-3">
+              <button v-for="s in 5" :key="s" @click="ratingScore = s"
+                :class="['text-2xl transition-transform hover:scale-110', s <= ratingScore ? 'text-yellow-400' : 'text-gray-200']">
+                ★
+              </button>
+              <span v-if="ratingScore" class="text-sm text-gray-600 ml-1">{{ ratingScore }}/5</span>
+            </div>
+            <textarea v-model="ratingComment" rows="3"
+              class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-green-500 resize-none mb-3"
+              placeholder="Share your experience with this partner..."></textarea>
+            <div class="flex gap-2">
+              <button @click="submitRating" :disabled="!ratingScore || actionLoading"
+                class="flex-1 py-2.5 text-sm font-bold text-white rounded-xl disabled:opacity-50 hover:opacity-90"
+                style="background:linear-gradient(135deg,#1a6b3c,#2d9460);">
+                <i v-if="actionLoading" class="fas fa-spinner fa-spin mr-1"></i>
+                {{ myReview ? 'Update review' : 'Submit review' }}
+              </button>
+              <button v-if="editingReview" @click="editingReview = false"
+                class="px-4 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm hover:bg-gray-50">
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Chat -->

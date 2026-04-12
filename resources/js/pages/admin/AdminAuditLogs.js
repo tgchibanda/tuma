@@ -23,12 +23,12 @@ export default {
         },
         reset() { this.filters = { event:'', user_id:'', search:'' }; this.load() },
         eventColor(e) {
-            if (e.startsWith('fraud'))  return 'bg-red-100 text-red-700'
-            if (e.startsWith('user'))   return 'bg-blue-100 text-blue-700'
-            if (e.startsWith('order'))  return 'bg-purple-100 text-purple-700'
-            if (e.startsWith('match'))  return 'bg-yellow-100 text-yellow-700'
-            if (e.startsWith('kyc'))    return 'bg-green-100 text-green-700'
-            if (e.startsWith('admin'))  return 'bg-orange-100 text-orange-700'
+            if (e && e.startsWith('fraud'))  return 'bg-red-100 text-red-700'
+            if (e && e.startsWith('user'))   return 'bg-blue-100 text-blue-700'
+            if (e && e.startsWith('order'))  return 'bg-purple-100 text-purple-700'
+            if (e && e.startsWith('match'))  return 'bg-yellow-100 text-yellow-700'
+            if (e && e.startsWith('kyc'))    return 'bg-green-100 text-green-700'
+            if (e && e.startsWith('admin'))  return 'bg-orange-100 text-orange-700'
             return 'bg-gray-100 text-gray-600'
         }
     },
@@ -64,15 +64,15 @@ export default {
         <div v-for="log in logs" :key="log.id" class="px-5 py-3.5 hover:bg-gray-50 transition-colors">
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-start gap-3 min-w-0">
-              <span :class="['text-xs px-2.5 py-1 rounded-lg font-bold whitespace-nowrap flex-shrink-0 mt-0.5', eventColor(log.event)]">
-                {{ log.event }}
+              <span :class="['text-xs px-2.5 py-1 rounded-lg font-bold whitespace-nowrap flex-shrink-0 mt-0.5', eventColor(log.action)]">
+                {{ log.action }}
               </span>
               <div class="min-w-0">
                 <p class="text-sm font-medium text-gray-900 truncate">
-                  {{ log.actor?.first_name }} {{ log.actor?.last_name }}
-                  <span class="text-gray-400 font-normal">· {{ log.actor?.email }}</span>
+                  {{ log.user?.name }} {{  }}
+                  <span class="text-gray-400 font-normal">· {{ log.user?.email }}</span>
                 </p>
-                <p v-if="log.description" class="text-xs text-gray-500 mt-0.5 truncate">{{ log.description }}</p>
+                <p v-if="log.new_values ? JSON.stringify(log.new_values).slice(0,80) : log.action" class="text-xs text-gray-500 mt-0.5 truncate">{{ log.new_values ? JSON.stringify(log.new_values).slice(0,80) : log.action }}</p>
                 <p v-if="log.ip_address" class="text-xs text-gray-400 mt-0.5">IP: {{ log.ip_address }}</p>
               </div>
             </div>

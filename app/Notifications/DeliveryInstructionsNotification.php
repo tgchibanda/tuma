@@ -27,11 +27,11 @@ class DeliveryInstructionsNotification extends Notification implements ShouldQue
 
     public function toDatabase(mixed $notifiable): array
     {
-        return ['message' => 'You have a new notification.', 'action_url' => '/dashboard'];
+        return ['message' => 'Delivery instructions sent. Please deliver the cash to the recipient.', 'action_url' => '/matches'];
     }
 
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa: You have a new notification. Log in to see details.';
+        return 'TuMa: Delivery instructions sent. Open app for details.';
     }
 }

@@ -165,11 +165,13 @@ export const AppFooter = {
       <span class="font-bold text-gray-900">Tu<span class="text-green-700">Ma</span></span>
       <span class="text-gray-400 text-sm ml-2">© {{ new Date().getFullYear() }}</span>
     </div>
-    <div class="flex gap-6 text-sm text-gray-500">
-      <a href="#" class="hover:text-gray-900">Privacy</a>
-      <a href="#" class="hover:text-gray-900">Terms</a>
-      <a href="#" class="hover:text-gray-900">Support</a>
-      <router-link to="/directory" class="hover:text-gray-900">Directory</router-link>
+    <div class="flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm text-gray-500">
+      <router-link to="/privacy"        class="hover:text-gray-900 transition-colors">Privacy Policy</router-link>
+      <router-link to="/terms"          class="hover:text-gray-900 transition-colors">Terms of Service</router-link>
+      <router-link to="/aml-policy"     class="hover:text-gray-900 transition-colors">AML &amp; Compliance</router-link>
+      <router-link to="/acceptable-use" class="hover:text-gray-900 transition-colors">Acceptable Use</router-link>
+      <router-link to="/support"        class="hover:text-gray-900 transition-colors">Support</router-link>
+      <router-link to="/directory"      class="hover:text-gray-900 transition-colors">Directory</router-link>
     </div>
   </div>
 </footer>`

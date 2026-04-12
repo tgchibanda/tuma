@@ -26,16 +26,20 @@ export default {
     <span class="font-medium">{{ $fmt.aud(netAud) }}</span>
   </div>
   <div class="flex justify-between text-gray-500">
-    <span>Exchange rate</span>
-    <span>1 AUD = {{ rate ? parseFloat(rate.rate).toFixed(4) : '—' }} USD</span>
+    <span>Guide rate <span class="text-xs text-orange-500 font-medium">(indicative)</span></span>
+    <span>1 AUD ≈ {{ rate ? parseFloat(rate.rate).toFixed(4) : '—' }} USD</span>
   </div>
   <div class="flex justify-between bg-green-50 -mx-5 px-5 py-3 rounded-b-2xl border-t border-green-100">
-    <span class="font-semibold text-green-800">Recipient receives</span>
-    <span class="font-bold text-green-700 text-base">{{ $fmt.usd(amountUsd) }}</span>
+    <span class="font-semibold text-green-800">Estimated receive <span class="text-xs font-normal text-green-600">(guide only)</span></span>
+    <span class="font-bold text-green-700 text-base">≈ {{ $fmt.usd(amountUsd) }}</span>
   </div>
+  <p class="text-xs text-orange-600 flex items-start gap-1.5 pt-1">
+    <i class="fas fa-info-circle mt-0.5 flex-shrink-0"></i>
+    The actual USD amount is negotiated between you and the other party when you match.
+  </p>
   <div v-if="savings > 0" class="flex items-center gap-2 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2">
     <i class="fas fa-piggy-bank"></i>
-    <span>You save approx. <strong>{{ $fmt.aud(savings) }}</strong> vs Other Services</span>
+    <span>You save approx. <strong>{{ $fmt.aud(savings) }}</strong> vs Western Union</span>
   </div>
 </div>`
 }

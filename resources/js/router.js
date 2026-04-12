@@ -47,6 +47,12 @@ import AdminAuditLogs     from './pages/admin/AdminAuditLogs'
 import AdminNoticeboard   from './pages/admin/AdminNoticeboard'
 import AdminReports       from './pages/admin/AdminReports'
 
+import Support         from './pages/Support'
+import TermsOfService  from './pages/legal/TermsOfService'
+import PrivacyPolicy   from './pages/legal/PrivacyPolicy'
+import AmlPolicy       from './pages/legal/AmlPolicy'
+import AcceptableUse   from './pages/legal/AcceptableUse'
+
 const router = new VueRouter({
     mode: 'history',
     scrollBehavior: () => ({ y: 0 }),
@@ -58,6 +64,11 @@ const router = new VueRouter({
         { path: '/forgot-password', component: ForgotPassword, name: 'forgot'         },
         { path: '/reset-password',  component: ResetPassword,  name: 'reset'          },
         { path: '/directory',       component: Directory,      name: 'directory'      },
+        // Legal pages — public, no auth required
+        { path: '/terms',           component: TermsOfService, name: 'terms'           },
+        { path: '/privacy',         component: PrivacyPolicy,  name: 'privacy'         },
+        { path: '/aml-policy',      component: AmlPolicy,      name: 'aml'             },
+        { path: '/acceptable-use',  component: AcceptableUse,  name: 'acceptable-use'  },
         // Public profile — /profile/:ulid used by Directory and Browse "View profile" buttons
         { path: '/profile/:ulid',   component: PublicProfile,  name: 'public-profile' },
 
@@ -90,6 +101,7 @@ const router = new VueRouter({
         { path: '/referral',        component: Referral,      meta: { auth: true } },
         { path: '/disputes',        component: Disputes,      meta: { auth: true } },
         { path: '/disputes/:id',    component: DisputeDetail, meta: { auth: true } },
+        { path: '/support',         component: Support,        meta: { auth: true } },
 
         // ── Admin ────────────────────────────────────────────────────────
         { path: '/admin/login',           component: AdminLogin,        meta: { guest: true } },

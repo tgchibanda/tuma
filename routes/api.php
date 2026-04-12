@@ -184,7 +184,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/disputes/{id}/messages',  [DisputeController::class, 'sendMessage']);
 
         // Reviews & feedback
-        Route::post('/matches/{ulid}/rate',      [ReviewController::class, 'store']);
+        Route::post('/matches/{ulid}/rate',          [ReviewController::class, 'store']);
+        Route::get('/matches/{ulid}/my-review',      [ReviewController::class, 'myReview']);
+        Route::delete('/matches/{ulid}/my-review',   [ReviewController::class, 'destroyMyReview']);
         Route::post('/matches/{ulid}/feedback',  [FeedbackController::class, 'store']);
 
         // Trusted contacts
@@ -194,6 +196,12 @@ Route::prefix('v1')->group(function () {
 
         // Report a user
         Route::post('/users/{ulid}/report', [\App\Http\Controllers\Api\UserController::class, 'report']);
+
+        // Support tickets
+        Route::get('/support',                  [\App\Http\Controllers\Api\SupportController::class, 'index']);
+        Route::post('/support',                 [\App\Http\Controllers\Api\SupportController::class, 'store']);
+        Route::get('/support/{id}',             [\App\Http\Controllers\Api\SupportController::class, 'show']);
+        Route::post('/support/{id}/reply',      [\App\Http\Controllers\Api\SupportController::class, 'reply']);
 
         // Directory (public but also useful with auth context)
         Route::post('/directory/{ulid}/initiate', [\App\Http\Controllers\Api\DirectoryController::class, 'initiate']);

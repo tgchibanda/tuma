@@ -18,29 +18,64 @@ class FundsReleasedNotification extends Notification implements ShouldQueue
 
     public function toMail(mixed $notifiable): MailMessage
     {
-        $amount = number_format((float) $this->match->agreed_aud, 2);
+        $grossAud   = number_format((float) $this->match->agreed_aud, 2);
+        $feeAud     = number_format((float) ($this->match->platform_fee_aud ?? 0), 2);
+        $netAud     = number_format((float) $this->match->agreed_aud - (float) ($this->match->platform_fee_aud ?? 0), 2);
+        $isReceiver = $this->match->receiveOrder?->user_id === $notifiable->id;
+
+        if ($isReceiver) {
+            return (new MailMessage)
+                ->subject("TuMa — AUD \${$netAud} has been released to your account")
+                ->greeting('Hi ' . $notifiable->display_first_name . ',')
+                ->line('Great news! Your transaction is complete and funds have been released.')
+                ->line("Gross amount agreed: AUD \${$grossAud}")
+                ->line("TuMa platform fee: AUD \${$feeAud}")
+                ->line("**Net amount transferred to your bank: AUD \${$netAud}**")
+                ->line('Reference: ' . $this->match->getDepositReference())
+                ->line('Please allow 1–3 business days for the transfer to appear in your account.')
+                ->action('View Transaction', url('/matches/' . $this->match->ulid))
+                ->line('Thank you for using TuMa!');
+        }
+
         return (new MailMessage)
-            ->subject("TuMa — AUD \${$amount} released to your account")
+            ->subject("TuMa — Transaction complete (Ref: " . $this->match->getDepositReference() . ")")
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
-            ->line("AUD \${$amount} has been released to your bank account.")
+            ->line('Your transaction is complete. AUD funds have been released to your partner.')
+            ->line("Amount: AUD \${$grossAud}")
             ->line('Reference: ' . $this->match->getDepositReference())
-            ->line('Please allow 1-3 business days for the transfer to appear.')
             ->action('View Transaction', url('/matches/' . $this->match->ulid))
             ->line('Thank you for using TuMa!');
     }
 
     public function toDatabase(mixed $notifiable): array
     {
+        $gross  = (float) $this->match->agreed_aud;
+        $fee    = (float) ($this->match->platform_fee_aud ?? 0);
+        $net    = round($gross - $fee, 2);
+        $isReceiver = $this->match->receiveOrder?->user_id === $notifiable->id;
+
+        $message = $isReceiver
+            ? "AUD \${$net} released to your bank (after AUD \${$fee} platform fee from AUD \${$gross})."
+            : "Transaction complete. AUD \$" . number_format($gross, 2) . " released to your partner.";
+
         return [
             'match_ulid' => $this->match->ulid,
-            'message'    => 'AUD $' . number_format((float) $this->match->agreed_aud, 2) . ' released to your bank.',
+            'message'    => $message,
             'action_url' => '/matches/' . $this->match->ulid,
-            'amount_aud' => (float) $this->match->agreed_aud,
+            'amount_aud' => $gross,
+            'net_aud'    => $net,
+            'fee_aud'    => $fee,
         ];
     }
 
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa: AUD $' . number_format((float) $this->match->agreed_aud, 2) . ' sent to your bank. Ref: ' . $this->match->getDepositReference();
+        $gross = number_format((float) $this->match->agreed_aud, 2);
+        $fee   = number_format((float) ($this->match->platform_fee_aud ?? 0), 2);
+        $net   = number_format((float) $this->match->agreed_aud - (float) ($this->match->platform_fee_aud ?? 0), 2);
+        $isReceiver = $this->match->receiveOrder?->user_id === $notifiable->id;
+        return $isReceiver
+            ? "TuMa: AUD \${$net} sent to your bank (fee AUD \${$fee} deducted from AUD \${$gross}). Ref: " . $this->match->getDepositReference()
+            : "TuMa: Transaction complete. Ref: " . $this->match->getDepositReference();
     }
 }
