@@ -1,13 +1,12 @@
-<svg width="380" height="80" viewBox="0 0 380 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="shadow">
-      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#0d2e3a" flood-opacity="0.28"/>
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#0d2e3a" flood-opacity="0.3"/>
     </filter>
     <clipPath id="tri">
       <path d="M4 6 L74 40 L4 74 Z"/>
     </clipPath>
   </defs>
-  <!-- Icon -->
   <path d="M4 6 L74 40 L4 74 Z" fill="#1B4D5E" filter="url(#shadow)"/>
   <g clip-path="url(#tri)">
     <circle cx="32" cy="40" r="19" fill="#FDC040"/>
@@ -18,7 +17,4 @@
     <rect x="44" y="30" width="20" height="20" fill="#1B4D5E"/>
   </g>
   <path d="M14 2 L18.5 13 L13 13 L17.5 24 L9 11 L15 11 Z" fill="#FDC040"/>
-  <!-- Wordmark: eZim in teal, Connect in yellow-gold -->
-  <text x="90" y="53" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="700" fill="#1B4D5E">eZim</text>
-  <text x="187" y="53" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="700" fill="#FDC040">Connect</text>
 </svg>

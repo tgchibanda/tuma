@@ -20,21 +20,21 @@ export default {
     computed: {
         reviews() {
             return [
-                { name: 'Tendai M.', location: 'Melbourne to Harare',         avatar: 'T', color: 'bg-green-700',  stars: 5, date: '2 weeks ago',  text: 'Absolutely life-changing. I have been sending money home for years and always lost 8 to 10 percent to fees and bad rates. TuMa matched me in under an hour and my mum got her cash the same afternoon. Zero stress.' },
-                { name: 'Rudo C.',   location: 'Sydney to Bulawayo',          avatar: 'R', color: 'bg-blue-700',   stars: 5, date: '1 month ago',  text: 'I was skeptical at first but the escrow system made me feel completely safe. Sent AUD 800 and my sister confirmed she received every cent. The whole process took 3 hours. Western Union used to charge me over AUD 60 for the same amount.' },
+                { name: 'Tendai M.', location: 'Melbourne to Harare',         avatar: 'T', color: 'bg-green-700',  stars: 5, date: '2 weeks ago',  text: 'Absolutely life-changing. I have been sending money home for years and always lost 8 to 10 percent to fees and bad rates. eZimConnect matched me in under an hour and my mum got her cash the same afternoon. Zero stress.' },
+                { name: 'Rudo C.',   location: 'Sydney to Bulawayo',          avatar: 'R', color: 'bg-blue-700',   stars: 5, date: '1 month ago',  text: 'I was skeptical at first but the escrow system made me feel completely safe. Sent AUD 800 and my sister confirmed she received every cent. The whole process took 3 hours. Other providers used to charge me over AUD 60 for the same amount.' },
                 { name: 'Farai N.',  location: 'Brisbane to Mutare',          avatar: 'F', color: 'bg-purple-700', stars: 5, date: '3 weeks ago',  text: 'The chat feature during the transaction gave me peace of mind. I could talk directly with the person delivering the cash. My mother confirmed receipt immediately. Will never use a remittance service again.' },
-                { name: 'Tatenda K.',location: 'Perth to Gweru',              avatar: 'T', color: 'bg-orange-600', stars: 5, date: '5 days ago',   text: 'As someone who sends money every month, the recurring orders feature is a game changer. I set it once and TuMa handles everything. My family in Gweru now receives reliably on time every month.' },
-                { name: 'Blessing S.',location: 'Adelaide to Victoria Falls', avatar: 'B', color: 'bg-teal-700',   stars: 5, date: '1 week ago',   text: 'I run a small business in Zimbabwe and needed AUD regularly for my Australian suppliers. TuMa directory listing means customers find me. This platform is exactly what our community needed.' },
+                { name: 'Tatenda K.',location: 'Perth to Gweru',              avatar: 'T', color: 'bg-orange-600', stars: 5, date: '5 days ago',   text: 'As someone who sends money every month, the recurring orders feature is a game changer. I set it once and eZimConnect handles everything. My family in Gweru now receives reliably on time every month.' },
+                { name: 'Blessing S.',location: 'Adelaide to Victoria Falls', avatar: 'B', color: 'bg-teal-700',   stars: 5, date: '1 week ago',   text: 'I run a small business in Zimbabwe and needed AUD regularly for my Australian suppliers. eZimConnect directory listing means customers find me. This platform is exactly what our community needed.' },
             ]
         },
         toastPool() {
             return [
                 { icon: '💸', msg: 'T***i from Melbourne just sent AUD 450 to Harare' },
-                { icon: '👋', msg: 'New member from Sydney just joined TuMa' },
+                { icon: '👋', msg: 'New member from Sydney just joined eZimConnect' },
                 { icon: '💸', msg: 'R***o from Brisbane sent AUD 700 to Bulawayo' },
                 { icon: '⭐', msg: 'F***i just left a 5-star review — Delivered same day!' },
                 { icon: '💸', msg: 'B***g from Perth sent AUD 200 to Mutare' },
-                { icon: '👋', msg: 'New member from Adelaide just joined TuMa' },
+                { icon: '👋', msg: 'New member from Adelaide just joined eZimConnect' },
                 { icon: '💸', msg: 'C***o from Sydney sent AUD 550 to Harare' },
                 { icon: '⭐', msg: 'T***a just left a 5-star review — No fees, lightning fast!' },
             ]
@@ -170,8 +170,7 @@ export default {
         </div>
         <div>
           <div class="leading-none flex items-baseline">
-            <span class="text-xl font-black" style="color:#1a6b3c;font-family:Georgia,serif;">Tu</span>
-            <span class="text-xl font-black" style="color:#f59e0b;font-family:Georgia,serif;">Ma</span>
+            <img src="/images/logo.svg" alt="eZimConnect" class="h-8 w-auto brightness-0 invert">
           </div>
           <p class="text-[8px] font-bold tracking-widest text-gray-400 uppercase">Swap · Send · Settle</p>
         </div>
@@ -206,7 +205,7 @@ export default {
             Send money to Zimbabwe<br><span style="color:#f59e0b;">without the fees</span>
           </h1>
           <p class="text-green-100 text-lg mb-8 leading-relaxed max-w-md">
-            TuMa connects Australians directly with trusted community members to swap
+            eZimConnect connects Australians directly with trusted community members to swap
             AUD for USD cash. Peer-to-peer, secured by escrow, at just 1.5%.
           </p>
           <div class="flex flex-wrap gap-3 mb-8">
@@ -260,7 +259,7 @@ export default {
             </div>
             <div class="flex items-center gap-2 rounded-xl px-3 py-2.5 mb-4 text-xs text-green-300" style="background:rgba(34,197,94,0.1);">
               <i class="fas fa-piggy-bank text-green-400"></i>
-              Save approx. AUD 17.50 vs Western Union
+              Save approx. AUD 17.50 vs other providers
             </div>
             <router-link to="/register" class="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold hover:opacity-90 transition-all" style="background:#f59e0b;color:#1a1a1a;">
               Get started free <i class="fas fa-arrow-right text-xs"></i>
@@ -302,7 +301,7 @@ export default {
     <div class="max-w-5xl mx-auto px-5">
       <div class="text-center mb-12">
         <span class="inline-block text-xs font-bold tracking-widest uppercase text-green-700 bg-green-50 px-4 py-1.5 rounded-full mb-3">Simple process</span>
-        <h2 class="text-4xl font-black text-gray-900 mb-3" style="font-family:Georgia,serif;">How TuMa works</h2>
+        <h2 class="text-4xl font-black text-gray-900 mb-3" style="font-family:Georgia,serif;">How eZimConnect works</h2>
         <p class="text-gray-500 max-w-md mx-auto">Five steps from signup to your recipient receiving cash in Zimbabwe.</p>
       </div>
       <div class="flex flex-wrap gap-2 justify-center mb-10">
@@ -381,7 +380,7 @@ export default {
   <section class="py-20 bg-white">
     <div class="max-w-3xl mx-auto px-5">
       <div class="text-center mb-10">
-        <h2 class="text-3xl font-black text-gray-900 mb-2" style="font-family:Georgia,serif;">TuMa vs Traditional remittance</h2>
+        <h2 class="text-3xl font-black text-gray-900 mb-2" style="font-family:Georgia,serif;">eZimConnect vs Traditional remittance</h2>
         <p class="text-gray-500 text-sm">For AUD 500 sent to Zimbabwe</p>
       </div>
       <div class="rounded-3xl border-2 border-gray-100 overflow-hidden shadow-xl">
@@ -394,7 +393,7 @@ export default {
                   <img src="/images/logo.svg" alt="eZimConnect" class="h-5 w-auto inline">
                 </div>
               </th>
-              <th class="py-4 px-5 text-center bg-gray-50 font-semibold text-gray-400">Western Union</th>
+              <th class="py-4 px-5 text-center bg-gray-50 font-semibold text-gray-400">Other Providers</th>
             </tr>
           </thead>
           <tbody>
@@ -587,7 +586,7 @@ export default {
         </div>
       </div>
       <div class="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
-        <p class="text-gray-600 text-xs">Copyright 2025 TuMa Pty Ltd. All rights reserved.</p>
+        <p class="text-gray-600 text-xs">Copyright 2025 eZimConnect Pty Ltd. All rights reserved.</p>
         <div class="flex items-center gap-4 text-gray-600 text-xs">
           <router-link to="/privacy" class="hover:text-gray-400 transition-colors">Privacy</router-link>
           <router-link to="/terms"   class="hover:text-gray-400 transition-colors">Terms</router-link>
