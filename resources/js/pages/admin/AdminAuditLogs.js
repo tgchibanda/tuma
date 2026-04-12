@@ -69,8 +69,8 @@ export default {
               </span>
               <div class="min-w-0">
                 <p class="text-sm font-medium text-gray-900 truncate">
-                  {{ log.user?.name }} {{  }}
-                  <span class="text-gray-400 font-normal">· {{ log.user?.email }}</span>
+                  {{ log.user && log.user.name }} 
+                  <span class="text-gray-400 font-normal">· {{ log.user && log.user.email }}</span>
                 </p>
                 <p v-if="log.new_values ? JSON.stringify(log.new_values).slice(0,80) : log.action" class="text-xs text-gray-500 mt-0.5 truncate">{{ log.new_values ? JSON.stringify(log.new_values).slice(0,80) : log.action }}</p>
                 <p v-if="log.ip_address" class="text-xs text-gray-400 mt-0.5">IP: {{ log.ip_address }}</p>

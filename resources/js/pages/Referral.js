@@ -34,7 +34,7 @@ export default {
   <div class="max-w-2xl mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold text-gray-900 mb-2">Refer a Friend</h1>
     <p class="text-gray-500 text-sm mb-6">
-      Invite friends to TuMa. When they complete their first trade,
+      Invite friends to eZimConnect. When they complete their first trade,
       you both get <strong>50% off</strong> the platform fee on your next trade.
     </p>
 
@@ -86,7 +86,7 @@ export default {
           </div>
           <div class="flex items-start gap-2">
             <span class="w-5 h-5 bg-green-700 text-white rounded-full text-xs flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-            <p>They sign up with your link and complete their first trade on TuMa.</p>
+            <p>They sign up with your link and complete their first trade on eZimConnect.</p>
           </div>
           <div class="flex items-start gap-2">
             <span class="w-5 h-5 bg-green-700 text-white rounded-full text-xs flex items-center justify-center flex-shrink-0 mt-0.5">3</span>

@@ -24,12 +24,12 @@ class MatchCancelledNotification extends Notification implements ShouldQueue
     public function toMail(mixed $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('TuMa — Transaction Update')
+            ->subject('eZimConnect — Transaction Update')
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
-            ->line('You have a new update on your TuMa transaction.')
+            ->line('You have a new update on your eZimConnect transaction.')
             ->line('Reference: ' . $this->match->getDepositReference())
             ->action('View Transaction', url('/matches/' . $this->match->ulid))
-            ->line('Thank you for using TuMa.');
+            ->line('Thank you for using eZimConnect.');
     }
 
     public function toDatabase(mixed $notifiable): array
@@ -44,6 +44,6 @@ class MatchCancelledNotification extends Notification implements ShouldQueue
 
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa: You have a new transaction update. Ref: ' . $this->match->getDepositReference();
+        return 'eZimConnect: You have a new transaction update. Ref: ' . $this->match->getDepositReference();
     }
 }

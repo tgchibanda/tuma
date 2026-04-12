@@ -30,7 +30,7 @@ class TwoFactorController extends Controller
         $user->two_fa_secret = $secret;
         $user->save();
 
-        $issuer    = urlencode('TuMa');
+        $issuer    = urlencode('eZimConnect');
         $account   = urlencode($user->email);
         $qrContent = "otpauth://totp/{$issuer}:{$account}?secret={$secret}&issuer={$issuer}";
 

@@ -119,7 +119,7 @@ class AdminReconciliationController extends Controller
     }
 
     /**
-     * Try to find the TuMa reference (TM-XXXXXXXX) in any column.
+     * Try to find the eZimConnect reference (TM-XXXXXXXX) in any column.
      */
     private function extractReference(array $row): ?string
     {

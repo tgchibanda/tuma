@@ -159,7 +159,7 @@ class KycService
 
         if (SystemSetting::get('maintenance_mode') === 'true') {
             throw new \App\Exceptions\TumaException(
-                SystemSetting::get('maintenance_message', 'TuMa is under maintenance.'),
+                SystemSetting::get('maintenance_message', 'eZimConnect is under maintenance.'),
                 503
             );
         }

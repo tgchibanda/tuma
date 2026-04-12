@@ -436,7 +436,7 @@ export default {
               <label class="text-xs text-gray-600 mb-1.5 block font-medium">Payout preference</label>
               <select v-model="riskPayoutMethod"
                 class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:border-green-500">
-                <option value="platform_then_bank">Via TuMa escrow then to my bank</option>
+                <option value="platform_then_bank">Via eZimConnect escrow then to my bank</option>
                 <option value="direct_bank">Direct to my Australian bank account</option>
               </select>
             </div>
@@ -481,7 +481,7 @@ export default {
             <div class="bg-blue-50 rounded-xl p-4 mb-4 text-sm space-y-1.5">
               <p class="font-semibold text-blue-800 mb-2">Transfer details:</p>
               <p><span class="text-blue-600">Bank:</span> <strong>National Australia Bank</strong></p>
-              <p><span class="text-blue-600">Account:</span> <strong>TuMa Pty Ltd Trust Account</strong></p>
+              <p><span class="text-blue-600">Account:</span> <strong>eZimConnect Pty Ltd Trust Account</strong></p>
               <p>
                 <span class="text-blue-600">Amount:</span>
                 <strong>{{ $fmt.aud(match.agreed_aud) }}</strong>
@@ -603,7 +603,7 @@ export default {
                 :src="match.receive_order.owner.avatar_url"
                 class="w-12 h-12 rounded-xl object-cover">
               <div v-else class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-700 font-black text-lg">
-                {{ (match.receive_order?.owner?.display_name || '?')[0] }}
+                {{ match.receive_order && match.receive_order.owner && match.receive_order.owner.display_name ? match.receive_order.owner.display_name[0] : '?' }}
               </div>
             </div>
             <div v-else>
@@ -611,19 +611,19 @@ export default {
                 :src="match.send_order.owner.avatar_url"
                 class="w-12 h-12 rounded-xl object-cover">
               <div v-else class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-700 font-black text-lg">
-                {{ (match.send_order?.owner?.display_name || '?')[0] }}
+                {{ match.send_order && match.send_order.owner && match.send_order.owner.display_name ? match.send_order.owner.display_name[0] : '?' }}
               </div>
             </div>
             <div class="flex-1">
               <p class="font-bold text-gray-900">
-                {{ isSender ? match.receive_order?.owner?.display_name : match.send_order?.owner?.display_name }}
+                {{ isSender ? (match.receive_order && match.receive_order.owner ? match.receive_order.owner.display_name : '—') : (match.send_order && match.send_order.owner ? match.send_order.owner.display_name : '—') }}
               </p>
               <p class="text-xs text-gray-500">
-                Rating: {{ isSender ? (match.receive_order?.owner?.rating || '—') : (match.send_order?.owner?.rating || '—') }}
-                · Trust: {{ isSender ? (match.receive_order?.owner?.trust_score || '—') : (match.send_order?.owner?.trust_score || '—') }}
+                Rating: {{ isSender ? (match.receive_order && match.receive_order.owner && match.receive_order.owner.rating ? match.receive_order.owner.rating : '—') : (match.send_order && match.send_order.owner && match.send_order.owner.rating ? match.send_order.owner.rating : '—') }}
+                · Trust: {{ isSender ? (match.receive_order && match.receive_order.owner ? match.receive_order.owner.trust_score : '—') : (match.send_order && match.send_order.owner ? match.send_order.owner.trust_score : '—') }}
               </p>
             </div>
-            <button @click="$router.push('/profile/' + (isSender ? match.receive_order?.owner?.ulid : match.send_order?.owner?.ulid))"
+            <button @click="$router.push('/profile/' + (isSender ? (match.receive_order && match.receive_order.owner ? match.receive_order.owner.ulid : '') : (match.send_order && match.send_order.owner ? match.send_order.owner.ulid : '')))"
               class="text-xs text-green-700 font-semibold border border-green-200 px-3 py-1.5 rounded-lg hover:bg-green-50">
               View profile
             </button>

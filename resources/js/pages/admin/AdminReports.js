@@ -42,7 +42,7 @@ export default {
         }
     },
     template: `
-<div class="min-h-screen bg-gray-100">
+<div class="min-h-screen bg-gray-100 lg:pl-60">
   <admin-nav />
 
   <!-- Resolve modal -->

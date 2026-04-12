@@ -252,7 +252,7 @@ class AuthController extends Controller
         cache()->put('phone_otp_' . $user->id, $otp, now()->addMinutes(10));
 
         // TODO: Send via real SMS provider (Twilio, AWS SNS, etc.)
-        // app(SmsService::class)->send($user->phone, "Your TuMa code is: {$otp}");
+        // app(SmsService::class)->send($user->phone, "Your eZimConnect code is: {$otp}");
 
         return $this->success(null, 'Verification code sent to your phone.');
     }

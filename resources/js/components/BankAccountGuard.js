@@ -24,7 +24,7 @@ export const BankAccountGuard = {
     </div>
     <h2 class="text-xl font-bold text-gray-900 mb-2">Bank Account Required</h2>
     <p class="text-gray-500 text-sm mb-6">
-      To send or receive money on TuMa, you need to add your Australian bank account first.
+      To send or receive money on eZimConnect, you need to add your Australian bank account first.
       This is where your AUD will be deposited or debited.
     </p>
     <router-link to="/bank-accounts"

@@ -46,8 +46,13 @@ import AdminLocations     from './pages/admin/AdminLocations'
 import AdminAuditLogs     from './pages/admin/AdminAuditLogs'
 import AdminNoticeboard   from './pages/admin/AdminNoticeboard'
 import AdminReports       from './pages/admin/AdminReports'
+import AdminSupport      from './pages/admin/AdminSupport'
 
 import Support         from './pages/Support'
+import HowItWorks      from './pages/public/HowItWorks'
+import SafetyAndEscrow from './pages/public/SafetyAndEscrow'
+import PublicTerms     from './pages/public/PublicTerms'
+import PublicPrivacy   from './pages/public/PublicPrivacy'
 import TermsOfService  from './pages/legal/TermsOfService'
 import PrivacyPolicy   from './pages/legal/PrivacyPolicy'
 import AmlPolicy       from './pages/legal/AmlPolicy'
@@ -64,9 +69,12 @@ const router = new VueRouter({
         { path: '/forgot-password', component: ForgotPassword, name: 'forgot'         },
         { path: '/reset-password',  component: ResetPassword,  name: 'reset'          },
         { path: '/directory',       component: Directory,      name: 'directory'      },
+        // Public info pages
+        { path: '/how-it-works',    component: HowItWorks,      name: 'how-it-works'    },
+        { path: '/safety-and-escrow', component: SafetyAndEscrow, name: 'safety-escrow'  },
         // Legal pages — public, no auth required
-        { path: '/terms',           component: TermsOfService, name: 'terms'           },
-        { path: '/privacy',         component: PrivacyPolicy,  name: 'privacy'         },
+        { path: '/terms',           component: PublicTerms,    name: 'terms'           },
+        { path: '/privacy',         component: PublicPrivacy,  name: 'privacy'         },
         { path: '/aml-policy',      component: AmlPolicy,      name: 'aml'             },
         { path: '/acceptable-use',  component: AcceptableUse,  name: 'acceptable-use'  },
         // Public profile — /profile/:ulid used by Directory and Browse "View profile" buttons
@@ -120,6 +128,7 @@ const router = new VueRouter({
         { path: '/admin/audit-logs',      component: AdminAuditLogs,    meta: { admin: true } },
         { path: '/admin/noticeboard',     component: AdminNoticeboard,  meta: { admin: true } },
         { path: '/admin/reports',         component: AdminReports,      meta: { admin: true } },
+        { path: '/admin/support',         component: AdminSupport,      meta: { admin: true } },
 
         // Catch-all
         { path: '*', redirect: '/' },

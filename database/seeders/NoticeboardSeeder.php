@@ -9,7 +9,7 @@ class NoticeBoardSeeder extends Seeder
 {
     public function run(): void
     {
-        $adminId = DB::table('users')->where('email', 'admin@tuma.com')->value('id');
+        $adminId = DB::table('users')->where('email', 'admin@ezimconnect.com')->value('id');
 
         if (! $adminId) {
             $this->command->warn('  ⚠ Admin user not found. Skipping noticeboard seed.');
@@ -18,8 +18,8 @@ class NoticeBoardSeeder extends Seeder
 
         $posts = [
             [
-                'title'        => 'Welcome to TuMa!',
-                'content'      => 'TuMa is a peer-to-peer currency swap platform connecting Australians with their families in Zimbabwe. Send money home without the high fees of traditional remittance services. Our escrow system keeps your funds safe every step of the way. Get started by completing your KYC verification, then create your first order.',
+                'title'        => 'Welcome to eZimConnect!',
+                'content'      => 'eZimConnect is a peer-to-peer currency swap platform connecting Australians with their families in Zimbabwe. Send money home without the high fees of traditional remittance services. Our escrow system keeps your funds safe every step of the way. Get started by completing your KYC verification, then create your first order.',
                 'post_type'    => 'announcement',
                 'is_pinned'    => 1,
                 'is_published' => 1,
@@ -29,8 +29,8 @@ class NoticeBoardSeeder extends Seeder
                 'view_count'   => 0,
             ],
             [
-                'title'        => 'How to stay safe on TuMa',
-                'content'      => 'Tips for safe trading: (1) Always complete your KYC before trading. (2) Never share your transaction PIN with anyone, including TuMa staff. (3) Only use the in-app chat for transaction communication — do not move conversations to WhatsApp or SMS. (4) Always verify the recipient details before confirming cash delivery. (5) If something feels wrong, raise a dispute immediately.',
+                'title'        => 'How to stay safe on eZimConnect',
+                'content'      => 'Tips for safe trading: (1) Always complete your KYC before trading. (2) Never share your transaction PIN with anyone, including eZimConnect staff. (3) Only use the in-app chat for transaction communication — do not move conversations to WhatsApp or SMS. (4) Always verify the recipient details before confirming cash delivery. (5) If something feels wrong, raise a dispute immediately.',
                 'post_type'    => 'tip',
                 'is_pinned'    => 0,
                 'is_published' => 1,

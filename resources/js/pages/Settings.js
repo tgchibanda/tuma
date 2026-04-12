@@ -136,7 +136,7 @@ export default {
         <div class="space-y-4">
           <div v-for="pref in [
             {key:'email',        label:'Email notifications',     desc:'Receive updates by email'},
-            {key:'inapp',        label:'In-app notifications',    desc:'Notifications inside TuMa'},
+            {key:'inapp',        label:'In-app notifications',    desc:'Notifications inside eZimConnect'},
             {key:'sms',          label:'SMS notifications',       desc:'Text message alerts'},
             {key:'push',         label:'Push notifications',      desc:'Browser push notifications'},
             {key:'rate_alerts',  label:'Rate alerts',             desc:'Notify when target rate is reached'},

@@ -13,11 +13,11 @@ class KycRejectedNotification extends Notification implements ShouldQueue
     public function toMail(mixed $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('TuMa — Account Update')
+            ->subject('eZimConnect — Account Update')
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
-            ->line('You have a new update on your TuMa account.')
-            ->action('View on TuMa', url('/dashboard'))
-            ->line('Thank you for using TuMa.');
+            ->line('You have a new update on your eZimConnect account.')
+            ->action('View on eZimConnect', url('/dashboard'))
+            ->line('Thank you for using eZimConnect.');
     }
     public function toDatabase(mixed $notifiable): array
     {
@@ -25,6 +25,6 @@ class KycRejectedNotification extends Notification implements ShouldQueue
     }
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa: You have a new account update. Log in to see details.';
+        return 'eZimConnect: You have a new account update. Log in to see details.';
     }
 }

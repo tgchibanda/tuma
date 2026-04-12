@@ -30,6 +30,10 @@ export default {
         },
         reset() { this.search = ''; this.orderType = ''; this.city = ''; this.load() },
         viewProfile(ulid) { this.$router.push('/profile/' + ulid) },
+        fixUrl(url) {
+            if (!url) return null
+            try { const u = new URL(url); return window.location.origin + u.pathname } catch { return url }
+        },
         trustColor(s) {
             if (s >= 70) return 'text-green-600'
             if (s >= 40) return 'text-yellow-600'
@@ -81,8 +85,14 @@ export default {
         @click="viewProfile(item.ulid)"
         class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-green-200 transition-all cursor-pointer p-5">
         <div class="flex items-start gap-3 mb-3">
-          <div class="w-12 h-12 rounded-2xl bg-green-100 flex items-center justify-center text-green-700 font-black text-xl flex-shrink-0">
-            {{ item.display_name?.[0]?.toUpperCase() || '?' }}
+          <div class="w-12 h-12 rounded-2xl bg-green-100 flex-shrink-0 overflow-hidden flex items-center justify-center">
+            <img v-if="item.avatar_url"
+              :src="fixUrl(item.avatar_url)"
+              class="w-12 h-12 object-cover"
+              @error="$event.target.style.display='none'">
+            <span v-if="!item.avatar_url" class="text-green-700 font-black text-xl">
+              {{ item.display_name ? item.display_name[0].toUpperCase() : '?' }}
+            </span>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5 flex-wrap">

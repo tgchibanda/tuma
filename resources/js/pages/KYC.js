@@ -144,7 +144,7 @@ export default {
       <h1 class="text-2xl font-bold text-gray-900 mb-1">Identity Verification</h1>
       <p class="text-gray-500 text-sm">
         Verify your identity to build trust with other traders.
-        Your documents are stored securely and only reviewed by the TuMa team.
+        Your documents are stored securely and only reviewed by the eZimConnect team.
       </p>
     </div>
 

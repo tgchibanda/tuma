@@ -13,7 +13,7 @@ export default {
       <div class="prose max-w-none text-gray-700 space-y-6 text-sm leading-relaxed">
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Our Commitment</h2>
-          <p>TuMa is committed to complying with Australian Anti-Money Laundering and Counter-Terrorism Financing (AML/CTF) laws, including the <em>Anti-Money Laundering and Counter-Terrorism Financing Act 2006</em> (Cth) and all relevant AUSTRAC obligations.</p>
+          <p>eZimConnect is committed to complying with Australian Anti-Money Laundering and Counter-Terrorism Financing (AML/CTF) laws, including the <em>Anti-Money Laundering and Counter-Terrorism Financing Act 2006</em> (Cth) and all relevant AUSTRAC obligations.</p>
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Know Your Customer (KYC)</h2>
@@ -21,11 +21,11 @@ export default {
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Transaction Monitoring</h2>
-          <p>TuMa monitors all transactions for suspicious patterns. Transactions that trigger risk thresholds are reviewed by our compliance team. We report suspicious matters to AUSTRAC as required by law.</p>
+          <p>eZimConnect monitors all transactions for suspicious patterns. Transactions that trigger risk thresholds are reviewed by our compliance team. We report suspicious matters to AUSTRAC as required by law.</p>
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Prohibited Activities</h2>
-          <p>The following activities are strictly prohibited on TuMa: transactions involving sanctioned individuals or entities; structuring transactions to avoid reporting thresholds; use of the platform for terrorism financing; and transactions involving proceeds of crime.</p>
+          <p>The following activities are strictly prohibited on eZimConnect: transactions involving sanctioned individuals or entities; structuring transactions to avoid reporting thresholds; use of the platform for terrorism financing; and transactions involving proceeds of crime.</p>
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Record Keeping</h2>
@@ -33,7 +33,7 @@ export default {
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Contact</h2>
-          <p>To report suspicious activity or for compliance enquiries: <a href="mailto:compliance@tuma.com.au" class="text-green-700 hover:underline">compliance@tuma.com.au</a></p>
+          <p>To report suspicious activity or for compliance enquiries: <a href="mailto:compliance@ezimconnect.com.au" class="text-green-700 hover:underline">compliance@ezimconnect.com.au</a></p>
         </section>
       </div>
     </div>

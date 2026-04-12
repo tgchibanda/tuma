@@ -24,8 +24,8 @@ export default {
 
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">2. How We Use Your Information</h2>
-          <p>We use your data to: provide and operate the TuMa platform; verify your identity under our AML/KYC obligations; process and secure transactions; prevent fraud and money laundering; respond to support requests; send transaction notifications and service communications; and improve our platform.</p>
-          <p class="mt-2">We will not sell your personal information to third parties or use it for advertising purposes unrelated to TuMa.</p>
+          <p>We use your data to: provide and operate the eZimConnect platform; verify your identity under our AML/KYC obligations; process and secure transactions; prevent fraud and money laundering; respond to support requests; send transaction notifications and service communications; and improve our platform.</p>
+          <p class="mt-2">We will not sell your personal information to third parties or use it for advertising purposes unrelated to eZimConnect.</p>
         </section>
 
         <section>
@@ -61,7 +61,7 @@ export default {
 
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">9. Contact</h2>
-          <p>For privacy enquiries or to exercise your rights, contact our Privacy Officer at <a href="mailto:privacy@tuma.com.au" class="text-green-700 hover:underline">privacy@tuma.com.au</a> or via our support system.</p>
+          <p>For privacy enquiries or to exercise your rights, contact our Privacy Officer at <a href="mailto:privacy@ezimconnect.com.au" class="text-green-700 hover:underline">privacy@ezimconnect.com.au</a> or via our support system.</p>
         </section>
       </div>
     </div>

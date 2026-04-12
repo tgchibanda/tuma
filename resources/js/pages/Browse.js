@@ -106,8 +106,13 @@ export default {
         clearCities()       { this.filters.location_ids = [] },
 
         resetFilters() {
-            this.filters = { location_ids: [], order_type: '', min_aud: '', max_aud: '', sort: 'newest' }
+            this.filters = { location_ids: [], order_type: '', min_aud: '', max_aud: '', sort: 'newest', user_ulid: '' }
+            this.sendMoneyViaName = ''
             this.load()
+        },
+        fixUrl(url) {
+            if (!url) return null
+            try { const u = new URL(url); return window.location.origin + u.pathname } catch { return url }
         },
 
         openPropose(order) {
@@ -144,7 +149,7 @@ export default {
             this.propose_error     = null
             try {
                 const { data } = await this.$http.post(
-                    '/orders/' + this.proposeForm.my_order_ulid + '/propose-match',
+                    '/orders/' + this.proposing.ulid + '/propose-match',
                     {
                         target_order_ulid: this.proposing.ulid,
                         proposed_aud:      parseFloat(this.proposeForm.proposed_aud),
@@ -199,15 +204,15 @@ export default {
             <p class="text-sm text-gray-500 mt-0.5">{{ $fmt.usd(proposing.amount_usd) }}</p>
             <p class="text-xs text-gray-400 mt-0.5">
               <i class="fas fa-map-marker-alt text-green-600 mr-0.5"></i>
-              {{ proposing.delivery_location?.name }}
+              {{ proposing.delivery_location && proposing.delivery_location.name }}
             </p>
           </div>
           <div class="text-right">
-            <p class="text-sm font-semibold text-gray-800">{{ proposing.owner?.display_name }}</p>
+            <p class="text-sm font-semibold text-gray-800">{{ proposing.owner ? proposing.owner.display_name : '' }}</p>
             <div class="flex items-center gap-1 justify-end mt-0.5">
               <i class="fas fa-star text-yellow-400 text-xs"></i>
               <span class="text-xs text-gray-500">
-                {{ proposing.owner?.rating ? parseFloat(proposing.owner.rating).toFixed(1) : 'No ratings' }}
+                {{ proposing.owner ? proposing.owner.rating : null ? parseFloat(proposing.owner.rating).toFixed(1) : 'No ratings' }}
               </span>
             </div>
           </div>
@@ -225,7 +230,7 @@ export default {
             <option v-for="o in myOpenOrders" :key="o.ulid" :value="o.ulid">
               {{ o.order_type === 'send_to_zim' ? 'Send' : 'Receive' }}
               · {{ $fmt.aud(o.amount_aud) }}
-              · {{ o.delivery_location?.name || 'Unknown city' }}
+              · {{ o.delivery_location && o.delivery_location.name ? o.delivery_location.name : 'Unknown city' }}
             </option>
           </select>
           <router-link v-if="!myOpenOrders.length" to="/orders/create"
@@ -430,7 +435,7 @@ export default {
 
         <div v-else-if="orders.length" class="space-y-3">
           <div class="flex items-center justify-between text-xs text-gray-400 px-1 mb-2">
-            <span>{{ meta?.total || orders.length }} order{{ (meta?.total || orders.length) !== 1 ? 's' : '' }} found</span>
+            <span>{{ meta && meta.total || orders.length }} order{{ (meta && meta.total || orders.length) !== 1 ? 's' : '' }} found</span>
             <span>Boosted orders appear first</span>
           </div>
 
@@ -461,7 +466,7 @@ export default {
                 <p class="text-2xl font-black text-gray-900">{{ $fmt.aud(order.amount_aud) }}</p>
                 <p class="text-sm text-gray-500 mt-0.5">
                   {{ $fmt.usd(order.amount_usd) }}
-                  <span v-if="order.delivery_location?.name">
+                  <span v-if="order.delivery_location && order.delivery_location.name">
                     <i class="fas fa-map-marker-alt text-green-600 text-xs ml-2 mr-0.5"></i>
                     {{ order.delivery_location.name }}
                     <span v-if="order.delivery_location.province" class="text-gray-400">, {{ order.delivery_location.province }}</span>
@@ -469,21 +474,27 @@ export default {
                 </p>
 
                 <div class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-50">
-                  <div class="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm flex-shrink-0">
-                    {{ order.owner?.display_name?.[0]?.toUpperCase() || '?' }}
+                  <div class="w-9 h-9 rounded-xl bg-green-100 flex-shrink-0 overflow-hidden relative">
+                    <img v-if="order.owner && order.owner.avatar_url"
+                      :src="fixUrl(order.owner.avatar_url)"
+                      class="w-full h-full object-cover"
+                      @error="$event.target.style.display='none'">
+                    <div class="absolute inset-0 flex items-center justify-center text-green-700 font-bold text-sm">
+                      {{ order.owner && order.owner.display_name ? order.owner.display_name[0].toUpperCase() : '?' }}
+                    </div>
                   </div>
                   <div>
-                    <p class="text-sm font-semibold text-gray-800">{{ order.owner?.display_name }}</p>
+                    <p class="text-sm font-semibold text-gray-800">{{ order.owner ? order.owner.display_name : '' }}</p>
                     <div class="flex items-center flex-wrap gap-3 text-xs text-gray-400 mt-0.5">
-                      <span v-if="order.owner?.rating">
+                      <span v-if="order.owner && order.owner.rating">
                         <i class="fas fa-star text-yellow-400"></i>
                         {{ parseFloat(order.owner.rating).toFixed(1) }}
                       </span>
-                      <span>{{ order.owner?.total_trades }} trades</span>
-                      <span :class="['font-semibold', trustColor(order.owner?.trust_score || 0)]">
-                        Trust {{ order.owner?.trust_score }}
+                      <span>{{ order.owner && order.owner.total_trades }} trades</span>
+                      <span :class="['font-semibold', trustColor(order.owner && order.owner.trust_score || 0)]">
+                        Trust {{ order.owner && order.owner.trust_score }}
                       </span>
-                      <span v-if="order.owner?.kyc_verified" class="text-green-600 font-medium">
+                      <span v-if="order.owner && order.owner.kyc_verified" class="text-green-600 font-medium">
                         <i class="fas fa-check-circle text-xs"></i> Verified
                       </span>
                       <span>{{ order.created_human }}</span>
@@ -500,7 +511,7 @@ export default {
                   <i class="fas fa-handshake text-xs"></i> Propose match
                 </button>
                 <!-- Use programmatic navigation to avoid route conflicts with /profile/:ulid -->
-                <button v-if="order.owner?.ulid" @click="viewProfile(order.owner.ulid)"
+                <button v-if="order.owner && order.owner.ulid" @click="viewProfile(order.owner.ulid)"
                   class="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors justify-center">
                   <i class="fas fa-user text-xs"></i> View profile
                 </button>

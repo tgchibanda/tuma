@@ -12,7 +12,7 @@ export default {
             this.loading = false
         },
         async verifyDeposit() {
-            if (!confirm('Confirm AUD deposit has arrived in the TuMa bank account?')) return
+            if (!confirm('Confirm AUD deposit has arrived in the eZimConnect bank account?')) return
             this.actionLoading = true
             try {
                 await this.$http.put('/../../api/v1/admin/matches/' + this.match.ulid + '/verify-deposit')
@@ -62,7 +62,7 @@ export default {
     <div class="w-7 h-7 bg-green-700 rounded-lg flex items-center justify-center">
       <span class="text-white font-bold text-xs">Tu</span>
     </div>
-    <span class="font-bold text-gray-900">TuMa <span class="text-green-600 text-sm">Admin</span></span>
+    <span class="font-bold text-gray-900">eZimConnect <span class="text-green-600 text-sm">Admin</span></span>
     <span class="text-gray-400 mx-1">›</span>
     <span class="text-sm text-gray-600">Match Detail</span>
   </div>

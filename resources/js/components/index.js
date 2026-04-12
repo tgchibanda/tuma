@@ -35,7 +35,7 @@ export const AlertBanner = {
 export const StatusBadge = {
     props: { status: String },
     computed: {
-        label() { return this.$fmt?.statusLabel(this.status) || this.status },
+        label() { return this.$fmt ? this.$fmt.statusLabel(this.status) : this.status },
         colorClass() {
             const s = this.status
             if (['completed'].includes(s)) return 'bg-green-100 text-green-800'
@@ -60,7 +60,7 @@ export const UserAvatar = {
         },
         bgColor() {
             const colors = ['bg-green-500', 'bg-blue-500', 'bg-purple-500', 'bg-orange-500', 'bg-teal-500']
-            const idx = (this.user?.id || 0) % colors.length
+            const idx = (this.user && this.user.id || 0) % colors.length
             return colors[idx]
         }
     },
@@ -183,7 +183,7 @@ export const FileUpload = {
     data() { return { fileName: '', dragOver: false } },
     methods: {
         onFile(e) {
-            const file = (e.target?.files || e.dataTransfer?.files)?.[0]
+            const file = (e.target && e.target.files ? e.target.files[0] : (e.dataTransfer ? e.dataTransfer.files[0] : null))
             if (!file) return
             this.fileName = file.name
             this.$emit('change', file)

@@ -22,7 +22,7 @@ export default {
       <div class="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-900/40">
         <i class="fas fa-shield-alt text-white text-xl"></i>
       </div>
-      <h1 class="text-xl font-bold text-white">TuMa Admin Panel</h1>
+      <h1 class="text-xl font-bold text-white">eZimConnect Admin Panel</h1>
       <p class="text-sm text-gray-500 mt-1">Authorised personnel only</p>
     </div>
     <div class="bg-gray-900 rounded-2xl border border-gray-800 shadow-xl p-7">
@@ -32,7 +32,7 @@ export default {
           <label class="text-sm font-medium text-gray-300 block mb-1.5">Email</label>
           <input v-model="email" type="email" @keyup.enter="submit"
             class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
-            placeholder="admin@tuma.com">
+            placeholder="admin@ezimconnect.com">
         </div>
         <div>
           <label class="text-sm font-medium text-gray-300 block mb-1.5">Password</label>

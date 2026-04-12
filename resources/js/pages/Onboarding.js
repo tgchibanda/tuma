@@ -65,7 +65,7 @@ export default {
         </div>
         <h2 class="text-2xl font-bold text-gray-900 mb-2">Welcome, {{ user?.first_name }}!</h2>
         <p class="text-gray-500 mb-6">
-          TuMa lets you swap AUD and USD cash directly with other community members — no bank fees, no bad rates.
+          eZimConnect lets you swap AUD and USD cash directly with other community members — no bank fees, no bad rates.
         </p>
         <div class="grid gap-3 text-left mb-6">
           <div v-for="item in [

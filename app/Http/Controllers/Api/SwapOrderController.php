@@ -74,14 +74,11 @@ class SwapOrderController extends Controller
             return $this->error("Minimum order amount is AUD \${$minAud}.", 422);
         }
 
-        // KYC tier limit check
-        if (! $this->kycService->validateOrderAmount($user, $amountAud)) {
-            $tier = $this->kycService->getUserTier($user);
-            return $this->error(
-                "Your current trading tier allows a maximum of AUD \${$tier['max_order_aud']} per order. " .
-                "Complete more trades to increase your limit.",
-                422
-            );
+        // KYC / amount validation — installed KycService::validateOrderAmount throws on failure
+        try {
+            $this->kycService->validateOrderAmount($user, $amountAud);
+        } catch (\App\Exceptions\TumaException $e) {
+            return $this->error($e->getMessage(), $e->getStatusCode());
         }
 
         // Validate delivery location belongs to an active country
@@ -115,14 +112,14 @@ class SwapOrderController extends Controller
 
         $feeCalc = $this->feeService->calculateUsd($amountAud, $rate, $user);
 
-        // Fraud detection: amount exactly at tier limit
-        $tier = $this->kycService->getUserTier($user);
-        if ($amountAud == $tier['max_order_aud'] && (bool) SystemSetting::get('auto_flag_tier_limit_orders', true)) {
+        // Fraud detection: high-value order flagging
+        $maxAud = (float) SystemSetting::get('max_order_amount_aud', 5000);
+        if ($amountAud >= ($maxAud * 0.9) && (bool) SystemSetting::get('auto_flag_tier_limit_orders', true)) {
             $this->auditService->flag(
-                'fraud.exact_tier_limit',
+                'fraud.high_value_order',
                 $user,
                 null,
-                "Order amount exactly at tier limit: {$amountAud}"
+                "High-value order: AUD {$amountAud}"
             );
         }
 
@@ -138,7 +135,7 @@ class SwapOrderController extends Controller
                 'platform_fee_aud'         => $feeCalc['fee_aud'],
                 'platform_fee_percent'     => $feeCalc['fee_percent'],
                 'fee_discount_id'          => $feeCalc['discount_id'],
-                'discounted_fee_aud'       => $feeCalc['discounted_fee_aud'],
+                'discounted_fee_aud'       => $feeCalc['discount_id'] ? $feeCalc['fee_aud'] : null,
                 'zim_recipient_name'       => $request->zim_recipient_name,
                 'zim_recipient_phone'      => $request->zim_recipient_phone,
                 'zim_delivery_location_id' => $request->zim_delivery_location_id,
@@ -149,11 +146,6 @@ class SwapOrderController extends Controller
                 'status'                   => SwapOrder::STATUS_OPEN,
                 'expires_at'               => now()->addHours($expiryHours),
             ]);
-
-            // If discount was applied, decrement the uses_remaining
-            if ($feeCalc['discount_id']) {
-                \App\Models\FeeDiscount::where('id', $feeCalc['discount_id'])->decrement('uses_remaining');
-            }
 
             // Save recipient if requested
             if ($request->boolean('save_recipient')) {
@@ -173,7 +165,7 @@ class SwapOrderController extends Controller
                 $recipient = SavedRecipient::where('id', $request->saved_recipient_id)
                     ->where('user_id', $user->id)
                     ->first();
-                $recipient?->incrementUseCount();
+                if ($recipient) { $recipient->increment('use_count'); $recipient->update(['last_used_at' => now()]); }
             }
 
             return $order;
@@ -385,17 +377,6 @@ class SwapOrderController extends Controller
         }
         if ($request->filled('max_aud')) {
             $query->where('amount_aud', '<=', $request->max_aud);
-        }
-
-        // Filter by specific user ("send money via" feature)
-        if ($request->filled('user_ulid')) {
-            $query->whereHas('user', fn($q) => $q->where('ulid', $request->user_ulid));
-        }
-
-        // Also support multi-location filter (comma-separated IDs)
-        if ($request->filled('zim_location_ids')) {
-            $ids = array_filter(array_map('intval', explode(',', $request->zim_location_ids)));
-            if (!empty($ids)) $query->whereIn('zim_delivery_location_id', $ids);
         }
 
         // Sort override

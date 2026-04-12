@@ -25,13 +25,13 @@ class RateAlertTriggeredNotification extends Notification implements ShouldQueue
         $pair      = $this->alert->from_currency . '/' . $this->alert->to_currency;
 
         return (new MailMessage)
-            ->subject("TuMa Rate Alert — {$pair} has {$direction} {$this->alert->target_rate}")
+            ->subject("eZimConnect Rate Alert — {$pair} has {$direction} {$this->alert->target_rate}")
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
             ->line("Your rate alert has been triggered!")
             ->line("The {$pair} exchange rate has {$direction} your target of {$this->alert->target_rate}.")
             ->line("Current rate: {$this->currentRate}")
             ->action('Create an Order Now', url('/orders/create'))
-            ->line('Thank you for using TuMa.');
+            ->line('Thank you for using eZimConnect.');
     }
 
     public function toDatabase(mixed $notifiable): array

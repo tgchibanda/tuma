@@ -27,7 +27,7 @@ class DepositController extends Controller
 
         $deposit     = $match->deposit;
         $bankName    = SystemSetting::get('tuma_bank_name',       'National Australia Bank');
-        $accountName = SystemSetting::get('tuma_account_name',    'TuMa Pty Ltd Trust Account');
+        $accountName = SystemSetting::get('tuma_account_name',    'eZimConnect Pty Ltd Trust Account');
         $bsb         = SystemSetting::get('tuma_bsb',             '083-001');
         $accountNum  = SystemSetting::get('tuma_account_number',  '000000000');
 

@@ -25,26 +25,26 @@ class FundsReleasedNotification extends Notification implements ShouldQueue
 
         if ($isReceiver) {
             return (new MailMessage)
-                ->subject("TuMa — AUD \${$netAud} has been released to your account")
+                ->subject("eZimConnect — AUD \${$netAud} has been released to your account")
                 ->greeting('Hi ' . $notifiable->display_first_name . ',')
                 ->line('Great news! Your transaction is complete and funds have been released.')
                 ->line("Gross amount agreed: AUD \${$grossAud}")
-                ->line("TuMa platform fee: AUD \${$feeAud}")
+                ->line("eZimConnect platform fee: AUD \${$feeAud}")
                 ->line("**Net amount transferred to your bank: AUD \${$netAud}**")
                 ->line('Reference: ' . $this->match->getDepositReference())
                 ->line('Please allow 1–3 business days for the transfer to appear in your account.')
                 ->action('View Transaction', url('/matches/' . $this->match->ulid))
-                ->line('Thank you for using TuMa!');
+                ->line('Thank you for using eZimConnect!');
         }
 
         return (new MailMessage)
-            ->subject("TuMa — Transaction complete (Ref: " . $this->match->getDepositReference() . ")")
+            ->subject("eZimConnect — Transaction complete (Ref: " . $this->match->getDepositReference() . ")")
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
             ->line('Your transaction is complete. AUD funds have been released to your partner.')
             ->line("Amount: AUD \${$grossAud}")
             ->line('Reference: ' . $this->match->getDepositReference())
             ->action('View Transaction', url('/matches/' . $this->match->ulid))
-            ->line('Thank you for using TuMa!');
+            ->line('Thank you for using eZimConnect!');
     }
 
     public function toDatabase(mixed $notifiable): array
@@ -75,7 +75,7 @@ class FundsReleasedNotification extends Notification implements ShouldQueue
         $net   = number_format((float) $this->match->agreed_aud - (float) ($this->match->platform_fee_aud ?? 0), 2);
         $isReceiver = $this->match->receiveOrder?->user_id === $notifiable->id;
         return $isReceiver
-            ? "TuMa: AUD \${$net} sent to your bank (fee AUD \${$fee} deducted from AUD \${$gross}). Ref: " . $this->match->getDepositReference()
-            : "TuMa: Transaction complete. Ref: " . $this->match->getDepositReference();
+            ? "eZimConnect: AUD \${$net} sent to your bank (fee AUD \${$fee} deducted from AUD \${$gross}). Ref: " . $this->match->getDepositReference()
+            : "eZimConnect: Transaction complete. Ref: " . $this->match->getDepositReference();
     }
 }

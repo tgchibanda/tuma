@@ -26,7 +26,7 @@ export default {
         typeBadge(t) { return t === 'send_to_zim' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }
     },
     template: `
-<div class="min-h-screen bg-gray-100">
+<div class="min-h-screen bg-gray-100 lg:pl-60">
   <admin-nav />
   <div class="max-w-6xl mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold text-gray-900 mb-6">All Orders</h1>

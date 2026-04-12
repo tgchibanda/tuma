@@ -40,7 +40,7 @@ export default {
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-gray-900">
           Good {{ new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening' }},
-          {{ user?.first_name }} 👋
+          {{ user && user.first_name }} 👋
         </h1>
         <router-link to="/orders/create"
           class="inline-flex items-center gap-2 px-5 py-2.5 bg-green-700 text-white rounded-xl text-sm font-semibold hover:bg-green-800 transition shadow-sm">
@@ -48,9 +48,9 @@ export default {
         </router-link>
       </div>
 
-      <alert-banner v-if="user?.kyc_status === 'pending'" type="warning"
+      <alert-banner v-if="user && user.kyc_status === 'pending'" type="warning"
         message="Complete your identity verification (KYC) to start trading." :dismissible="false" />
-      <alert-banner v-if="user?.kyc_status === 'rejected'" type="error"
+      <alert-banner v-if="user && user.kyc_status === 'rejected'" type="error"
         message="Your KYC was rejected. Please re-submit your documents." :dismissible="false" />
 
       <!-- Holiday alerts -->
@@ -62,10 +62,10 @@ export default {
       <!-- Stats cards -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div v-for="(card, i) in [
-          {label:'Active Orders', value: stats?.active_orders||0, icon:'fa-list-alt', to:'/orders', color:'blue'},
-          {label:'Active Matches', value: stats?.active_matches||0, icon:'fa-handshake', to:'/matches', color:'green'},
-          {label:'Completed Trades', value: stats?.completed_trades||0, icon:'fa-check-circle', to:'/history', color:'teal'},
-          {label:'Your Rating', value: stats?.rating ? parseFloat(stats.rating).toFixed(1)+'★' : 'New', icon:'fa-star', to:'/profile', color:'yellow'},
+          {label:'Active Orders', value: stats && stats.active_orders||0, icon:'fa-list-alt', to:'/orders', color:'blue'},
+          {label:'Active Matches', value: stats && stats.active_matches||0, icon:'fa-handshake', to:'/matches', color:'green'},
+          {label:'Completed Trades', value: stats && stats.completed_trades||0, icon:'fa-check-circle', to:'/history', color:'teal'},
+          {label:'Your Rating', value: stats && stats.rating ? parseFloat(stats.rating).toFixed(1)+'★' : 'New', icon:'fa-star', to:'/profile', color:'yellow'},
         ]" :key="i">
           <router-link :to="card.to"
             :class="['block bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-shadow']">

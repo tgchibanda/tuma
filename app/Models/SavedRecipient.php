@@ -1,13 +1,32 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SavedRecipient extends Model {
+class SavedRecipient extends Model
+{
     use SoftDeletes;
-    protected $fillable = ['user_id','nickname','recipient_name','recipient_phone','delivery_location_id','delivery_address','delivery_notes','is_favourite','use_count','last_used_at'];
-    protected $casts = ['is_favourite' => 'boolean','last_used_at' => 'datetime'];
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
+
+    protected $fillable = [
+        'user_id', 'nickname', 'recipient_name', 'recipient_phone',
+        'delivery_location_id', 'delivery_address', 'delivery_notes',
+        'is_favourite', 'use_count', 'last_used_at',
+    ];
+
+    protected $casts = [
+        'is_favourite' => 'boolean',
+        'last_used_at' => 'datetime',
+    ];
+
+    public function user(): BelongsTo            { return $this->belongsTo(User::class); }
     public function deliveryLocation(): BelongsTo { return $this->belongsTo(DeliveryLocation::class); }
+
+    public function incrementUseCount(): void
+    {
+        $this->increment('use_count');
+        $this->update(['last_used_at' => now()]);
+    }
 }

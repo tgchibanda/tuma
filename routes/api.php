@@ -312,6 +312,12 @@ Route::prefix('v1')->group(function () {
 
             // Reports, referrals, boosts, audit
             Route::get('/reports',               [AdminReportController::class, 'index']);
+
+            // Admin support ticket management
+            Route::get('/support',                    [\App\Http\Controllers\Admin\AdminSupportController::class, 'index']);
+            Route::get('/support/{id}',               [\App\Http\Controllers\Admin\AdminSupportController::class, 'show']);
+            Route::post('/support/{id}/reply',        [\App\Http\Controllers\Admin\AdminSupportController::class, 'reply']);
+            Route::put('/support/{id}/status',        [\App\Http\Controllers\Admin\AdminSupportController::class, 'updateStatus']);
             Route::get('/reports/{id}',          [AdminReportController::class, 'show']);
             Route::put('/reports/{id}/resolve',  [AdminReportController::class, 'resolve']);
             Route::get('/referrals',             [AdminReferralController::class, 'index']);

@@ -64,7 +64,7 @@ export default {
         }
     },
     template: `
-<div class="min-h-screen bg-gray-100">
+<div class="min-h-screen bg-gray-100 lg:pl-60">
   <admin-nav />
   <div class="max-w-6xl mx-auto px-4 py-8">
 
@@ -128,8 +128,8 @@ export default {
               class="hover:bg-gray-50 cursor-pointer transition-colors">
               <td class="py-3 px-4 font-mono text-xs text-gray-500">{{ t.ref }}</td>
               <td class="py-3 px-4">
-                <p class="font-medium text-gray-900">{{ t.user?.name }}</p>
-                <p class="text-xs text-gray-400">{{ t.user?.email }}</p>
+                <p class="font-medium text-gray-900">{{ t.user && t.user.name }}</p>
+                <p class="text-xs text-gray-400">{{ t.user && t.user.email }}</p>
               </td>
               <td class="py-3 px-4">
                 <p class="font-medium text-gray-900 truncate max-w-xs">{{ t.subject }}</p>
@@ -213,9 +213,9 @@ export default {
         <div class="space-y-4">
           <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
             <p class="text-xs font-bold text-gray-500 uppercase mb-3">User</p>
-            <p class="font-bold text-gray-900">{{ selected.user?.name }}</p>
-            <p class="text-sm text-gray-500">{{ selected.user?.email }}</p>
-            <router-link v-if="selected.user?.id" :to="'/admin/users/' + selected.user.id"
+            <p class="font-bold text-gray-900">{{ selected.user && selected.user.name }}</p>
+            <p class="text-sm text-gray-500">{{ selected.user && selected.user.email }}</p>
+            <router-link v-if="selected.user && selected.user.id" :to="'/admin/users/' + selected.user.id"
               class="mt-3 block text-xs text-green-700 font-semibold hover:underline">View user profile →</router-link>
           </div>
 

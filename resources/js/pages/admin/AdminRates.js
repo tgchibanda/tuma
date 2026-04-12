@@ -33,7 +33,7 @@ export default {
         }
     },
     template: `
-<div class="min-h-screen bg-gray-100">
+<div class="min-h-screen bg-gray-100 lg:pl-60">
   <admin-nav />
   <div class="max-w-3xl mx-auto px-4 py-8">
     <div class="flex items-center justify-between mb-6">
@@ -77,7 +77,7 @@ export default {
             placeholder="e.g. 0.6350">
           <p class="text-xs text-gray-400 mt-1">
             <span v-if="form.rate && parseFloat(form.rate) > 0">
-              AUD 500 → USD {{ (500 * 0.985 * parseFloat(form.rate || 0)).toFixed(2) }} (after 0.5% fee)
+              AUD 500 → USD {{ (500 * 0.985 * parseFloat(form.rate || 0)).toFixed(2) }} (after 1.5% fee)
             </span>
           </p>
         </div>
