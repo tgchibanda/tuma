@@ -21,6 +21,11 @@ return [
         'scheme' => 'https',
     ],
 
+    'hcaptcha' => [
+        'secret'   => env('HCAPTCHA_SECRET'),
+        'site_key' => env('HCAPTCHA_SITE_KEY'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
