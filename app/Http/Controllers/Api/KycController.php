@@ -83,7 +83,7 @@ class KycController extends Controller
             ->first();
 
         if ($existing) {
-            Storage::disk('local')->delete($existing->file_path);
+            Storage::disk('public')->delete($existing->file_path);
             $existing->delete();
         }
 
@@ -144,7 +144,7 @@ class KycController extends Controller
         $user = $request->user();
 
         // Remove file from disk
-        Storage::disk('local')->delete($doc->file_path);
+        Storage::disk('public')->delete($doc->file_path);
         $doc->delete();
 
         // Recalculate KYC status:
