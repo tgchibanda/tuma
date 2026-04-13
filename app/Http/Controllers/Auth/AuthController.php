@@ -119,7 +119,7 @@ class AuthController extends Controller
 
         $this->auditService->log('user.registered', $user, $user, [], $user->toArray());
 
-        $token = $user->createToken('tuma-auth')->plainTextToken;
+        $token = $user->createToken('ezimconnect-auth')->plainTextToken;
 
         return $this->created([
             'token' => $token,
@@ -167,7 +167,7 @@ class AuthController extends Controller
 
         // Revoke old tokens and issue new one
         $user->tokens()->delete();
-        $token = $user->createToken('tuma-auth')->plainTextToken;
+        $token = $user->createToken('ezimconnect-auth')->plainTextToken;
 
         // Update last login
         $user->last_login_at = now();
@@ -312,7 +312,7 @@ class AuthController extends Controller
         // Send SMS
         $this->smsService->send(
             $request->phone,
-            "Your TuMa verification code is: {$otp}. Valid for 10 minutes."
+            "Your eZimConnect verification code is: {$otp}. Valid for 10 minutes."
         );
 
         return $this->success(null, 'Verification code sent to ' . $request->phone . '.');
