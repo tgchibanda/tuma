@@ -42,7 +42,7 @@ export default {
         steps() {
             return [
                 { n: '01', icon: 'fa-user-plus',    title: 'Create account',  colorClass: 'text-green-600',  bgClass: 'bg-green-50',  iconBg: 'bg-green-600',  desc: 'Sign up free in 2 minutes. Add your Australian bank account. No setup fees ever.',              detail: 'Your real details are always private. Choose to show your profile as public or anonymous.' },
-                { n: '02', icon: 'fa-plus-circle',  title: 'Post your order', colorClass: 'text-blue-600',   bgClass: 'bg-blue-50',   iconBg: 'bg-blue-600',   desc: 'State how much AUD to send and who receives USD cash in Zimbabwe. Any amount from AUD 50.',   detail: 'Our live calculator shows exactly what your recipient gets after our 1.5% flat fee.' },
+                { n: '02', icon: 'fa-plus-circle',  title: 'Post your order', colorClass: 'text-blue-600',   bgClass: 'bg-blue-50',   iconBg: 'bg-blue-600',   desc: 'State how much AUD to send and who receives USD cash in Zimbabwe. Any amount from AUD 50.',   detail: 'Our live calculator shows exactly what your recipient gets after our 0.5% flat fee.' },
                 { n: '03', icon: 'fa-handshake',    title: 'Match and agree', colorClass: 'text-purple-600', bgClass: 'bg-purple-50', iconBg: 'bg-purple-600', desc: 'Match with someone who has the opposite need. Negotiate the rate via in-app chat.',           detail: 'Choose Secure delivery (AUD first) or Risk delivery (cash first). Your choice every time.' },
                 { n: '04', icon: 'fa-shield-alt',   title: 'Escrow protects', colorClass: 'text-orange-500', bgClass: 'bg-orange-50', iconBg: 'bg-orange-500', desc: 'Your AUD is held in our Trust Account until delivery is confirmed with photo proof.',        detail: 'Recipient ID photo plus cash handover photo required before any funds move.' },
                 { n: '05', icon: 'fa-check-circle', title: 'Funds released',  colorClass: 'text-teal-600',   bgClass: 'bg-teal-50',   iconBg: 'bg-teal-600',   desc: 'Recipient confirms cash received. AUD released to deliverer. Transaction complete.',         detail: 'The whole process typically takes 2 to 6 hours. Faster than any bank wire.' },
@@ -187,7 +187,7 @@ export default {
           </h1>
           <p class="text-green-100 text-lg mb-8 leading-relaxed max-w-md">
             eZimConnect connects Australians directly with trusted community members to swap
-            AUD for USD cash. Peer-to-peer, secured by escrow, at just 1.5%.
+            AUD for USD cash. Peer-to-peer, secured by escrow, at just 0.5%.
           </p>
           <div class="flex flex-wrap gap-3 mb-8">
             <router-link to="/register" class="flex items-center gap-2 px-7 py-3.5 text-sm font-bold rounded-xl shadow-lg hover:scale-105 transition-transform" style="background:#f59e0b;color:#1a1a1a;">
@@ -230,7 +230,7 @@ export default {
                 <div class="flex items-center gap-2 rounded-xl px-3 py-1.5" style="background:rgba(255,255,255,0.15);"><span>🇦🇺</span><span class="text-white font-bold text-sm">AUD</span></div>
               </div>
             </div>
-            <div class="text-center text-xs text-green-300 py-2 opacity-80">Platform fee: AUD 7.50 (1.5%)</div>
+            <div class="text-center text-xs text-green-300 py-2 opacity-80">Platform fee: AUD 2.50 (0.5%)</div>
             <div class="rounded-2xl p-4 mb-4" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);">
               <p class="text-yellow-300 text-xs mb-1">Recipient gets</p>
               <div class="flex items-center justify-between">
@@ -246,7 +246,7 @@ export default {
               Get started free <i class="fas fa-arrow-right text-xs"></i>
             </router-link>
           </div>
-          <div class="absolute -right-3 -bottom-4 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-2.5 flex items-center gap-3 tuma-float">
+          <div class="absolute -right-3 -bottom-4 bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-2.5 flex items-center gap-3 ezimconnect-float">
             <div class="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
               <i class="fas fa-check text-green-600 text-sm"></i>
             </div>
@@ -379,7 +379,7 @@ export default {
           </thead>
           <tbody>
             <tr v-for="(r,i) in [
-              ['Platform fee',            '1.5% = AUD 7.50',     '4 to 5 pct plus fixed fee'],
+              ['Platform fee on AUD 500',            '0.5% = AUD 2.50',     '4 to 5 pct plus fixed fee'],
               ['Exchange rate',           'Peer negotiated',     'Bank retail rate'],
               ['AUD protection',          'Full escrow',         'None'],
               ['Delivery proof required', 'ID and cash photo',   'None'],
@@ -550,8 +550,6 @@ export default {
         <div>
           <p class="text-white font-semibold text-sm mb-4">Company</p>
           <div class="space-y-2.5">
-            <router-link to="/how-it-works"    class="block text-sm text-gray-400 hover:text-white transition-colors">How it works</router-link>
-            <router-link to="/safety-and-escrow"  class="block text-sm text-gray-400 hover:text-white transition-colors">Safety &amp; Escrow</router-link>
             <router-link to="/privacy"            class="block text-sm text-gray-400 hover:text-white transition-colors">Privacy Policy</router-link>
             <router-link to="/terms"              class="block text-sm text-gray-400 hover:text-white transition-colors">Terms of Service</router-link>
           </div>
@@ -576,8 +574,8 @@ export default {
   .review-slide-enter-active, .review-slide-leave-active { transition: all 0.4s ease; }
   .review-slide-enter { opacity: 0; transform: translateX(24px); }
   .review-slide-leave-to { opacity: 0; transform: translateX(-24px); }
-  @keyframes tuma-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
-  .tuma-float { animation: tuma-float 3s ease-in-out infinite; }
+  @keyframes ezimconnect-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+  .ezimconnect-float { animation: ezimconnect-float 3s ease-in-out infinite; }
   </style>
 </div>`
 }

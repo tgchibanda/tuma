@@ -21,7 +21,7 @@ class DeliveryProofUploadedNotification extends Notification implements ShouldQu
         $usd = number_format((float) $this->match->agreed_usd, 2);
 
         return (new MailMessage)
-            ->subject('TuMa — Cash delivery proof uploaded')
+            ->subject('eZimConnect — Cash delivery proof uploaded')
             ->greeting('Hi ' . $notifiable->display_first_name . ',')
             ->line("The deliverer has uploaded proof that USD \${$usd} cash has been delivered.")
             ->line('Please confirm that your recipient received the money.')
@@ -43,7 +43,7 @@ class DeliveryProofUploadedNotification extends Notification implements ShouldQu
 
     public function toSms(mixed $notifiable): string
     {
-        return 'TuMa: USD $' . number_format((float) $this->match->agreed_usd, 2)
+        return 'eZimConnect: USD $' . number_format((float) $this->match->agreed_usd, 2)
             . ' delivery proof uploaded. Open the app to confirm receipt. Ref: '
             . $this->match->getDepositReference();
     }
