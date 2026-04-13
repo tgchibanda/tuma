@@ -83,7 +83,7 @@ export default {
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">12. Contact</h2>
-          <p>Questions about these Terms? Contact us at <a href="mailto:legal@tuma.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">legal@tuma.com.au</a></p>
+          <p>Questions about these Terms? Contact us at <a href="mailto:admin@ezimconnect.com" class="font-medium hover:underline" style="color:#1a6b3c;">admin@ezimconnect.com</a></p>
         </section>
       </div>
 

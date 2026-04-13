@@ -6102,7 +6102,7 @@
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">12. Contact</h2>
-          <p>Questions about these Terms? Contact us at <a href="mailto:legal@tuma.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">legal@tuma.com.au</a></p>
+          <p>Questions about these Terms? Contact us at <a href="mailto:admin@ezimconnect.com" class="font-medium hover:underline" style="color:#1a6b3c;">admin@ezimconnect.com</a></p>
         </section>
       </div>
 
@@ -6188,7 +6188,7 @@
 
         <section>
           <h2 class="font-bold text-gray-900 text-base mb-2">9. Contact</h2>
-          <p>Privacy enquiries: <a href="mailto:privacy@tuma.com.au" class="font-medium hover:underline" style="color:#1a6b3c;">privacy@tuma.com.au</a></p>
+          <p>Privacy enquiries: <a href="mailto:admin@ezimconnect.com" class="font-medium hover:underline" style="color:#1a6b3c;">admin@ezimconnect.com</a></p>
         </section>
       </div>
 
@@ -6237,7 +6237,7 @@
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Contact</h2>
-          <p>To report suspicious activity or for compliance enquiries: <a href="mailto:compliance@ezimconnect.com.au" class="text-green-700 hover:underline">compliance@ezimconnect.com.au</a></p>
+          <p>To report suspicious activity or for compliance enquiries: <a href="mailto:admin@ezimconnect.com.au" class="text-green-700 hover:underline">admin@ezimconnect.com.au</a></p>
         </section>
       </div>
     </div>
@@ -6276,7 +6276,7 @@
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Reporting Violations</h2>
-          <p>To report a member who has violated this policy, use the "Report user" feature on their profile or contact <a href="mailto:safety@ezimconnect.com.au" class="text-green-700 hover:underline">safety@ezimconnect.com.au</a>.</p>
+          <p>To report a member who has violated this policy, use the "Report user" feature on their profile or contact <a href="mailto:admin@ezimconnect.com.au" class="text-green-700 hover:underline">admin@ezimconnect.com.au</a>.</p>
         </section>
       </div>
     </div>

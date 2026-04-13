@@ -33,7 +33,7 @@ export default {
         </section>
         <section>
           <h2 class="text-base font-bold text-gray-900 mb-2">Reporting Violations</h2>
-          <p>To report a member who has violated this policy, use the "Report user" feature on their profile or contact <a href="mailto:safety@ezimconnect.com.au" class="text-green-700 hover:underline">safety@ezimconnect.com.au</a>.</p>
+          <p>To report a member who has violated this policy, use the "Report user" feature on their profile or contact <a href="mailto:admin@ezimconnect.com.au" class="text-green-700 hover:underline">admin@ezimconnect.com.au</a>.</p>
         </section>
       </div>
     </div>
