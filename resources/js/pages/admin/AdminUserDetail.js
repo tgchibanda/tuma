@@ -1,83 +1,100 @@
 export default {
-    name: 'AdminUserDetail',
-    data() {
-        return {
-            user: null, documents: [], bankAccounts: [], recentMatches: [],
-            reviews: [], loginActivity: [], badges: [],
-            loading: true, actionLoading: false,
-            activeTab: 'overview',
-            suspendForm: { reason: '', days: 7 },
-            rejectForm:  { reason: '' },
-            showSuspendModal: false,
-            showRejectModal:  false,
-        }
+  name: 'AdminUserDetail',
+  data() {
+    return {
+      user: null, documents: [], bankAccounts: [], recentMatches: [],
+      reviews: [], loginActivity: [], badges: [],
+      loading: true, actionLoading: false,
+      activeTab: 'overview',
+      suspendForm: { reason: '', days: 7 },
+      rejectForm: { reason: '' },
+      showSuspendModal: false,
+      showRejectModal: false,
+    }
+  },
+  computed: {
+    userId() { return this.$route.params.id }
+  },
+  async mounted() { await this.load() },
+  methods: {
+    async viewDocument(id) {
+      try {
+        const { data } = await this.$http.get(
+          `/admin/documents/${id}/file`,
+          { responseType: 'blob' }
+        )
+
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(data)
+        link.target = '_blank'
+        link.click()
+
+      } catch (e) {
+        console.error(e)
+        this.$toast?.error?.('Failed to open document')
+      }
     },
-    computed: {
-        userId() { return this.$route.params.id }
+    async load() {
+      this.loading = true
+      try {
+        const { data } = await this.$http.get('/admin/users/' + this.userId)
+        // API returns data.data = { user, documents, bank_accounts, recent_matches, reviews, login_activity, badges }
+        const d = data.data
+        this.user = d.user
+        this.documents = d.documents || []
+        this.bankAccounts = d.bank_accounts || []
+        this.recentMatches = d.recent_matches || []
+        this.reviews = d.reviews || []
+        this.loginActivity = d.login_activity || []
+        this.badges = d.badges || []
+      } catch { this.$router.push('/admin/users') }
+      this.loading = false
     },
-    async mounted() { await this.load() },
-    methods: {
-        async load() {
-            this.loading = true
-            try {
-                const { data } = await this.$http.get('/admin/users/' + this.userId)
-                // API returns data.data = { user, documents, bank_accounts, recent_matches, reviews, login_activity, badges }
-                const d = data.data
-                this.user          = d.user
-                this.documents     = d.documents     || []
-                this.bankAccounts  = d.bank_accounts || []
-                this.recentMatches = d.recent_matches|| []
-                this.reviews       = d.reviews       || []
-                this.loginActivity = d.login_activity|| []
-                this.badges        = d.badges        || []
-            } catch { this.$router.push('/admin/users') }
-            this.loading = false
-        },
-        async approveKyc() {
-            if (!confirm('Approve KYC for ' + this.user.first_name + '?')) return
-            this.actionLoading = true
-            try { await this.$http.put('/admin/users/' + this.userId + '/kyc/approve'); this.$toast.success('KYC approved.'); await this.load() } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed.') }
-            this.actionLoading = false
-        },
-        async rejectKyc() {
-            if (!this.rejectForm.reason) { this.$toast.error('Please enter a rejection reason.'); return }
-            this.actionLoading = true
-            try { await this.$http.put('/admin/users/' + this.userId + '/kyc/reject', { reason: this.rejectForm.reason }); this.$toast.success('KYC rejected.'); this.showRejectModal = false; await this.load() } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed.') }
-            this.actionLoading = false
-        },
-        async suspend() {
-            if (!this.suspendForm.reason) { this.$toast.error('Please enter a reason.'); return }
-            this.actionLoading = true
-            try { await this.$http.put('/admin/users/' + this.userId + '/suspend', this.suspendForm); this.$toast.success('User suspended.'); this.showSuspendModal = false; await this.load() } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed.') }
-            this.actionLoading = false
-        },
-        async unsuspend() {
-            if (!confirm('Unsuspend this user?')) return
-            this.actionLoading = true
-            try { await this.$http.put('/admin/users/' + this.userId + '/unsuspend'); this.$toast.success('User unsuspended.'); await this.load() } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed.') }
-            this.actionLoading = false
-        },
-        async ban() {
-            if (!confirm('PERMANENTLY BAN this user? This cannot be undone.')) return
-            this.actionLoading = true
-            try { await this.$http.put('/admin/users/' + this.userId + '/ban'); this.$toast.success('User banned.'); await this.load() } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed.') }
-            this.actionLoading = false
-        },
-        statusBadge(s) {
-            const m = { active:'bg-green-100 text-green-700', suspended:'bg-orange-100 text-orange-700', banned:'bg-red-100 text-red-700' }
-            return m[s] || 'bg-gray-100 text-gray-600'
-        },
-        kycBadge(s) {
-            const m = { approved:'bg-green-100 text-green-700', submitted:'bg-blue-100 text-blue-700', pending:'bg-gray-100 text-gray-600', rejected:'bg-red-100 text-red-700' }
-            return m[s] || 'bg-gray-100 text-gray-600'
-        },
-        matchStatusColor(s) {
-            if (['completed'].includes(s)) return 'bg-green-100 text-green-700'
-            if (['cancelled','expired','refunded','disputed'].includes(s)) return 'bg-red-100 text-red-700'
-            return 'bg-blue-100 text-blue-700'
-        }
+    async approveKyc() {
+      if (!confirm('Approve KYC for ' + this.user.first_name + '?')) return
+      this.actionLoading = true
+      try { await this.$http.put('/admin/users/' + this.userId + '/kyc/approve'); this.$toast.success('KYC approved.'); await this.load() } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed.') }
+      this.actionLoading = false
     },
-    template: `
+    async rejectKyc() {
+      if (!this.rejectForm.reason) { this.$toast.error('Please enter a rejection reason.'); return }
+      this.actionLoading = true
+      try { await this.$http.put('/admin/users/' + this.userId + '/kyc/reject', { reason: this.rejectForm.reason }); this.$toast.success('KYC rejected.'); this.showRejectModal = false; await this.load() } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed.') }
+      this.actionLoading = false
+    },
+    async suspend() {
+      if (!this.suspendForm.reason) { this.$toast.error('Please enter a reason.'); return }
+      this.actionLoading = true
+      try { await this.$http.put('/admin/users/' + this.userId + '/suspend', this.suspendForm); this.$toast.success('User suspended.'); this.showSuspendModal = false; await this.load() } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed.') }
+      this.actionLoading = false
+    },
+    async unsuspend() {
+      if (!confirm('Unsuspend this user?')) return
+      this.actionLoading = true
+      try { await this.$http.put('/admin/users/' + this.userId + '/unsuspend'); this.$toast.success('User unsuspended.'); await this.load() } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed.') }
+      this.actionLoading = false
+    },
+    async ban() {
+      if (!confirm('PERMANENTLY BAN this user? This cannot be undone.')) return
+      this.actionLoading = true
+      try { await this.$http.put('/admin/users/' + this.userId + '/ban'); this.$toast.success('User banned.'); await this.load() } catch (e) { this.$toast.error(e.response?.data?.message || 'Failed.') }
+      this.actionLoading = false
+    },
+    statusBadge(s) {
+      const m = { active: 'bg-green-100 text-green-700', suspended: 'bg-orange-100 text-orange-700', banned: 'bg-red-100 text-red-700' }
+      return m[s] || 'bg-gray-100 text-gray-600'
+    },
+    kycBadge(s) {
+      const m = { approved: 'bg-green-100 text-green-700', submitted: 'bg-blue-100 text-blue-700', pending: 'bg-gray-100 text-gray-600', rejected: 'bg-red-100 text-red-700' }
+      return m[s] || 'bg-gray-100 text-gray-600'
+    },
+    matchStatusColor(s) {
+      if (['completed'].includes(s)) return 'bg-green-100 text-green-700'
+      if (['cancelled', 'expired', 'refunded', 'disputed'].includes(s)) return 'bg-red-100 text-red-700'
+      return 'bg-blue-100 text-blue-700'
+    }
+  },
+  template: `
 <div class="min-h-screen bg-gray-100 lg:pl-60">
   <admin-nav />
 
@@ -318,7 +335,8 @@ export default {
                 <p v-if="doc.rejection_reason" class="text-xs text-red-500 mt-0.5">{{ doc.rejection_reason }}</p>
               </div>
             </div>
-            <a :href="doc.file_url" target="_blank"
+            <a href="#"
+              @click.prevent="viewDocument(doc.id)"
               class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-blue-200 text-blue-700 rounded-xl hover:bg-blue-50">
               <i class="fas fa-eye"></i> View
             </a>
