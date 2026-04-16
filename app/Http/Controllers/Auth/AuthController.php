@@ -43,25 +43,17 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request): JsonResponse
     {
-        // Verify hCaptcha token to block bots
-        $captchaToken = $request->input('captcha_token');
-        if (!$captchaToken) {
+        // Math captcha — client sends answer + base64(answer:salt) token
+        $captchaAnswer = (int) $request->input('captcha_answer');
+        $captchaToken  = $request->input('captcha_token', '');
+        if (! $captchaToken) {
             return $this->error('Please complete the security check.', 422);
         }
-
-        $response = \Illuminate\Support\Facades\Http::asForm()->post(
-            'https://hcaptcha.com/siteverify',
-            [
-                'secret'   => config('services.hcaptcha.secret'),
-                'response' => $captchaToken,
-                'remoteip' => $request->ip(),
-            ]
-        );
-
-        /* if (! ($response->json('success') ?? false)) {
-            return $this->error('Security check failed. Please try again.', 422);
+        $decoded = base64_decode($captchaToken);
+        $expectedAnswer = (int) explode(':', $decoded)[0];
+        if ($captchaAnswer !== $expectedAnswer) {
+            return $this->error('Incorrect security answer. Please try again.', 422);
         }
-            */
 
         // Generate unique referral code
         do {
