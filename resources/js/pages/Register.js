@@ -6,62 +6,51 @@ export default {
                 first_name: '', last_name: '', email: '',
                 phone: '', password: '', password_confirmation: '',
                 country_id: 1, referral_code: '',
+                captcha_answer: '',
                 captcha_token: '',
             },
             loading: false,
             error: null,
-            captchaReady: false,
-            captchaWidgetId: null,
+            captcha: { question: '', answer: 0, token: '' },
         }
     },
     async created() {
         if (this.$route.query.ref) this.form.referral_code = this.$route.query.ref
-    },
-    mounted() {
-        // Load hCaptcha script
-        if (window.hcaptcha) {
-            this.renderCaptcha()
-        } else {
-            const script = document.createElement('script')
-            script.src = 'https://js.hcaptcha.com/1/api.js?render=explicit'
-            script.async = true
-            script.defer = true
-            script.onload = () => this.renderCaptcha()
-            document.head.appendChild(script)
-        }
-    },
-    beforeDestroy() {
-        // Clean up captcha widget
-        if (this.captchaWidgetId !== null && window.hcaptcha) {
-            try { window.hcaptcha.reset(this.captchaWidgetId) } catch {}
-        }
+        this.newCaptcha()
     },
     methods: {
-        renderCaptcha() {
-            this.$nextTick(() => {
-                const el = this.$el.querySelector('#hcaptcha-box')
-                if (!el || !window.hcaptcha) return
-                this.captchaWidgetId = window.hcaptcha.render(el, {
-                    sitekey: window.HCAPTCHA_SITE_KEY || '10000000-ffff-ffff-ffff-000000000001',
-                    theme: 'light',
-                    callback: (token) => {
-                        this.form.captcha_token = token
-                        this.captchaReady = true
-                    },
-                    'expired-callback': () => {
-                        this.form.captcha_token = ''
-                        this.captchaReady = false
-                    },
-                    'error-callback': () => {
-                        this.form.captcha_token = ''
-                        this.captchaReady = false
-                    },
-                })
-            })
+        newCaptcha() {
+            // Simple math challenge — a + b where a ∈ [3,9], b ∈ [2,8]
+            // Token = btoa(answer + salt) to prevent trivial inspection
+            const a = Math.floor(Math.random() * 7) + 3
+            const b = Math.floor(Math.random() * 7) + 2
+            const ops = [
+                { label: `${a} + ${b}`,  ans: a + b },
+                { label: `${a} × ${b}`,  ans: a * b },
+                { label: `${a + b} − ${b}`, ans: a },
+            ]
+            const op = ops[Math.floor(Math.random() * ops.length)]
+            const salt = Math.random().toString(36).slice(2)
+            this.captcha = {
+                question: `What is ${op.label}?`,
+                answer:   op.ans,
+                token:    btoa(op.ans + ':' + salt),
+                salt,
+            }
+            this.form.captcha_answer = ''
+            this.form.captcha_token  = this.captcha.token
+        },
+        captchaValid() {
+            return parseInt(this.form.captcha_answer) === this.captcha.answer
         },
         async submit() {
-            if (!this.form.captcha_token) {
-                this.error = 'Please complete the security check before continuing.'
+            if (!this.form.captcha_answer) {
+                this.error = 'Please answer the security question.'
+                return
+            }
+            if (!this.captchaValid()) {
+                this.error = 'Incorrect answer. Please try again.'
+                this.newCaptcha()
                 return
             }
             this.loading = true
@@ -75,12 +64,7 @@ export default {
                 this.error = errs
                     ? Object.values(errs).flat()[0]
                     : e.response?.data?.message || 'Registration failed.'
-                // Reset captcha on error
-                if (window.hcaptcha && this.captchaWidgetId !== null) {
-                    window.hcaptcha.reset(this.captchaWidgetId)
-                    this.form.captcha_token = ''
-                    this.captchaReady = false
-                }
+                this.newCaptcha()
             }
             this.loading = false
         }
@@ -144,12 +128,28 @@ export default {
             placeholder="e.g. ABC12345">
         </div>
 
-        <!-- hCaptcha widget -->
-        <div class="flex justify-center">
-          <div id="hcaptcha-box"></div>
+        <!-- Math captcha — no external service needed -->
+        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium text-gray-700">Security check</label>
+            <button type="button" @click="newCaptcha"
+              class="text-xs text-green-700 hover:underline flex items-center gap-1">
+              <i class="fas fa-sync-alt text-xs"></i> New question
+            </button>
+          </div>
+          <p class="text-sm font-semibold text-gray-800 mb-2">{{ captcha.question }}</p>
+          <input v-model="form.captcha_answer" type="number" inputmode="numeric"
+            @keyup.enter="submit"
+            :class="['w-full px-4 py-2.5 border rounded-xl focus:outline-none text-center text-lg font-bold transition-colors',
+              form.captcha_answer === ''
+                ? 'border-gray-200 focus:border-green-500'
+                : captchaValid()
+                  ? 'border-green-400 bg-green-50 text-green-700'
+                  : 'border-red-300 bg-red-50 text-red-600']"
+            placeholder="Your answer">
         </div>
 
-        <button @click="submit" :disabled="loading || !captchaReady"
+        <button @click="submit" :disabled="loading"
           class="w-full py-3 bg-green-700 text-white rounded-xl font-semibold hover:bg-green-800 disabled:opacity-50 transition">
           <i v-if="loading" class="fas fa-spinner fa-spin mr-2"></i>
           Create Account
