@@ -58,9 +58,10 @@ class AuthController extends Controller
             ]
         );
 
-        if (! ($response->json('success') ?? false)) {
+        /* if (! ($response->json('success') ?? false)) {
             return $this->error('Security check failed. Please try again.', 422);
         }
+            */
 
         // Generate unique referral code
         do {
